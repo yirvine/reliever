@@ -125,6 +125,8 @@ export default function ExternalFireCase() {
             pressureData={pressureData}
             onChange={handlePressureDataChange}
             caseName="External Fire"
+            isAutoCalculated={true}
+            vesselMawp={vesselData.vesselDesignMawp}
           />
 
           {/* Flow Calculations - Only user inputs (orange fields from Excel) */}
