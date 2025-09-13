@@ -34,6 +34,10 @@ export default function ExternalFireCase() {
     setFlowData(prev => ({ ...prev, [field]: value }))
   }
 
+  const handleFluidPropertiesFound = (heatOfVaporization: number) => {
+    setFlowData(prev => ({ ...prev, heatOfVaporization }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -96,6 +100,7 @@ export default function ExternalFireCase() {
             vesselData={vesselData} 
             onChange={updateVesselData}
             fireExposedArea={calculateFireExposedArea(flowData.applicableFireCode)}
+            onFluidPropertiesFound={handleFluidPropertiesFound}
           />
 
           {/* Flow Calculations - Only user inputs (orange fields from Excel) */}

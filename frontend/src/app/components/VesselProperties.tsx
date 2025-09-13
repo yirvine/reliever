@@ -1,5 +1,8 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+import { getFluidNames, getFluidProperties, getStandardDiameters } from '../../../lib/database'
+
 interface VesselData {
   vesselTag: string
   straightSideHeight: number
@@ -16,9 +19,22 @@ interface VesselPropertiesProps {
   vesselData: VesselData
   onChange: (field: keyof VesselData, value: string | number) => void
   fireExposedArea?: number // Auto-calculated field
+  onFluidPropertiesFound?: (heatOfVaporization: number) => void // Callback for fluid properties
 }
 
-export default function VesselProperties({ vesselData, onChange, fireExposedArea }: VesselPropertiesProps) {
+export default function VesselProperties({ vesselData, onChange, fireExposedArea, onFluidPropertiesFound }: VesselPropertiesProps) {
+  const [fluidNames] = useState(() => getFluidNames())
+  const [standardDiameters] = useState(() => getStandardDiameters())
+
+  const handleFluidChange = (fluidName: string) => {
+    onChange('workingFluid', fluidName)
+    
+    // Get fluid properties and pass heat of vaporization to parent
+    const properties = getFluidProperties(fluidName)
+    if (properties && onFluidPropertiesFound) {
+      onFluidPropertiesFound(properties.heat_of_vaporization)
+    }
+  }
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <h2 className="text-xl font-bold text-gray-900 mb-6">Vessel Properties</h2>
@@ -57,15 +73,19 @@ export default function VesselProperties({ vesselData, onChange, fireExposedArea
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Vessel Diameter (inches)
           </label>
-          <input
-            type="number"
-            step="0.1"
+          <select
             value={vesselData.vesselDiameter || ''}
             onChange={(e) => onChange('vesselDiameter', parseFloat(e.target.value) || 0)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
-            placeholder="e.g., 30.0"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
             required
-          />
+          >
+            <option value="">Select diameter...</option>
+            {standardDiameters.map((diameter) => (
+              <option key={diameter} value={diameter}>
+                {diameter}" OD
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
@@ -87,14 +107,19 @@ export default function VesselProperties({ vesselData, onChange, fireExposedArea
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Working Fluid
           </label>
-          <input
-            type="text"
+          <select
             value={vesselData.workingFluid}
-            onChange={(e) => onChange('workingFluid', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
-            placeholder="e.g., Acetone"
+            onChange={(e) => handleFluidChange(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
             required
-          />
+          >
+            <option value="">Select fluid...</option>
+            {fluidNames.map((fluid) => (
+              <option key={fluid} value={fluid}>
+                {fluid}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>

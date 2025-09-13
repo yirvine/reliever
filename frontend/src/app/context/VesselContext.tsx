@@ -41,20 +41,30 @@ export function VesselProvider({ children }: { children: ReactNode }) {
     setVesselData(prev => ({ ...prev, [field]: value }))
   }
 
-  // Simple fire exposed area calculation based on vessel dimensions
+  // Fire exposed area calculation using database lookup tables
   const calculateFireExposedArea = (fireCode: string): number => {
-    const { vesselDiameter, straightSideHeight } = vesselData
+    const { vesselDiameter, straightSideHeight, headType } = vesselData
     
     if (!vesselDiameter || !straightSideHeight) return 0
     
-    const radius = vesselDiameter / 2 / 12 // Convert inches to feet
-    const height = straightSideHeight / 12 // Convert inches to feet
-    
-    // Simplified calculation - cylindrical surface area
-    const cylindricalArea = 2 * Math.PI * radius * height
-    const headArea = Math.PI * radius * radius // One head (bottom typically exposed)
-    
-    return cylindricalArea + headArea
+    // Import database function dynamically to avoid issues
+    try {
+      const { calculateFireExposedArea: dbCalculateArea } = require('../../../lib/database')
+      return dbCalculateArea(
+        vesselDiameter,
+        straightSideHeight,
+        headType as 'Elliptical' | 'Hemispherical' | 'Flat',
+        fireCode as 'NFPA 30' | 'API 521'
+      )
+    } catch (error) {
+      console.warn('Database calculation failed, using fallback:', error)
+      // Fallback to simple calculation
+      const radius = vesselDiameter / 2 / 12
+      const height = straightSideHeight / 12
+      const cylindricalArea = 2 * Math.PI * radius * height
+      const headArea = Math.PI * radius * radius
+      return cylindricalArea + headArea
+    }
   }
 
   return (
