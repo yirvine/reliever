@@ -42,7 +42,89 @@ const FLUID_PROPERTIES: FluidProperty[] = [
   { id: 20, fluid_name: 'Water', heat_of_vaporization: 970, molecular_weight: 18.01, liquid_density: 4111 }
 ]
 
-// Note: Vessel head areas are now calculated using formulas and lookup tables below
+// Heat input calculation formulas
+export interface HeatInputFormula {
+  areaRangeMin: number // sq ft
+  areaRangeMax: number | null // sq ft, null for unlimited
+  formula: string // Formula as string for display
+  coefficient: number
+  exponent: number
+  description?: string
+}
+
+// NFPA 30 (2018) Heat Input Formulas
+const HEAT_INPUT_FORMULAS_NFPA: HeatInputFormula[] = [
+  { areaRangeMin: 20, areaRangeMax: 200, formula: '20,000A', coefficient: 20000, exponent: 1.0, description: 'Area 20-200 sq ft' },
+  { areaRangeMin: 200, areaRangeMax: 1000, formula: '199,300A^0.566', coefficient: 199300, exponent: 0.566, description: 'Area 200-1000 sq ft' },
+  { areaRangeMin: 1000, areaRangeMax: 2800, formula: '963,400A^0.338', coefficient: 963400, exponent: 0.338, description: 'Area 1000-2800 sq ft' },
+  { areaRangeMin: 2800, areaRangeMax: null, formula: '21,000A^0.82', coefficient: 21000, exponent: 0.82, description: 'Area >2800 sq ft' }
+]
+
+// API 521 (2000) Heat Input Formulas
+export interface API521Formula extends HeatInputFormula {
+  formulaType: 'small' | 'large' | 'no_drainage'
+}
+
+const HEAT_INPUT_FORMULAS_API: API521Formula[] = [
+  { areaRangeMin: 0, areaRangeMax: null, formula: '21,000FA^-0.18', coefficient: 21000, exponent: -0.18, formulaType: 'small', description: 'Small fires (q)' },
+  { areaRangeMin: 0, areaRangeMax: null, formula: '21,000FA^0.82', coefficient: 21000, exponent: 0.82, formulaType: 'large', description: 'Large fires (Q)' },
+  { areaRangeMin: 0, areaRangeMax: null, formula: '34,500FA^0.82', coefficient: 34500, exponent: 0.82, formulaType: 'no_drainage', description: 'No adequate drainage/firefighting (Q)' }
+]
+
+/**
+ * Get heat input formulas for a given standard
+ */
+export function getHeatInputFormulas(standard: 'NFPA 30' | 'API 521'): HeatInputFormula[] {
+  return standard === 'NFPA 30' ? HEAT_INPUT_FORMULAS_NFPA : HEAT_INPUT_FORMULAS_API
+}
+
+/**
+ * Get the appropriate heat input formula based on standard and area
+ */
+export function getHeatInputFormula(
+  standard: 'NFPA 30' | 'API 521', 
+  area: number,
+  hasAdequateDrainageFirefighting?: boolean
+): HeatInputFormula | null {
+  if (standard === 'NFPA 30') {
+    // Find the appropriate NFPA 30 formula based on area range
+    for (const formula of HEAT_INPUT_FORMULAS_NFPA) {
+      if (area >= formula.areaRangeMin && 
+          (formula.areaRangeMax === null || area <= formula.areaRangeMax)) {
+        return formula
+      }
+    }
+  } else if (standard === 'API 521') {
+    // For API 521, choice depends on drainage/firefighting equipment
+    if (hasAdequateDrainageFirefighting === false) {
+      // No adequate drainage/firefighting - use 34,500FA^0.82
+      return HEAT_INPUT_FORMULAS_API.find(f => f.formulaType === 'no_drainage') || null
+    } else {
+      // Has adequate drainage/firefighting - use 21,000FA^0.82 (large fires)
+      return HEAT_INPUT_FORMULAS_API.find(f => f.formulaType === 'large') || null
+    }
+  }
+  
+  return null
+}
+
+/**
+ * Calculate heat input (Q) using the appropriate formula
+ */
+export function calculateHeatInput(
+  standard: 'NFPA 30' | 'API 521',
+  area: number,
+  hasAdequateDrainageFirefighting?: boolean
+): { heatInput: number; formula: HeatInputFormula } | null {
+  const formula = getHeatInputFormula(standard, area, hasAdequateDrainageFirefighting)
+  if (!formula) return null
+  
+  // For API 521, F factor is assumed to be 1.0 for simplicity
+  const F = 1.0
+  const heatInput = formula.coefficient * Math.pow(area, formula.exponent) * (standard === 'API 521' ? F : 1)
+  
+  return { heatInput, formula }
+}
 
 /**
  * Get all available fluid names for dropdown/autocomplete

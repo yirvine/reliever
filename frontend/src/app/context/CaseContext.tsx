@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useState, ReactNode, useCallback } from 'react'
 
 export interface CaseResult {
   caseId: string
@@ -50,12 +50,12 @@ export function CaseProvider({ children }: { children: ReactNode }) {
     setSelectedCases(prev => ({ ...prev, [caseId]: !prev[caseId] }))
   }
 
-  const updateCaseResult = (caseId: string, result: Partial<CaseResult>) => {
+  const updateCaseResult = useCallback((caseId: string, result: Partial<CaseResult>) => {
     setCaseResults(prev => ({
       ...prev,
       [caseId]: { ...prev[caseId], ...result }
     }))
-  }
+  }, [])
 
   const getDesignBasisFlow = () => {
     const calculatedCases = Object.values(caseResults).filter(

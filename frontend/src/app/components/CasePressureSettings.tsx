@@ -39,9 +39,9 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
             value={isAutoCalculated ? autoPercent : (pressureData.maxAllowedVentingPressurePercent || '')}
             onChange={(e) => onChange('maxAllowedVentingPressurePercent', parseFloat(e.target.value) || 0)}
             disabled={isAutoCalculated}
-            className={`w-full px-3 py-2 border rounded-md ${
+            className={`w-full h-10 px-3 py-2 border rounded-md ${
               isAutoCalculated 
-                ? 'border-gray-200 bg-gray-50 text-gray-600' 
+                ? 'border-gray-200 bg-blue-50 text-gray-700 font-medium' 
                 : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400'
             }`}
             placeholder="e.g., 121"
@@ -60,7 +60,7 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
             value={isAutoCalculated ? autoMavp.toFixed(1) : (pressureData.maxAllowedVentingPressure || '')}
             onChange={(e) => onChange('maxAllowedVentingPressure', parseFloat(e.target.value) || 0)}
             disabled={isAutoCalculated}
-            className={`w-full px-3 py-2 border rounded-md ${
+            className={`w-full h-10 px-3 py-2 border rounded-md ${
               isAutoCalculated 
                 ? 'border-gray-200 bg-blue-50 text-gray-700 font-medium' 
                 : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400'
@@ -81,7 +81,7 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
             value={isAutoCalculated ? autoBackpressure.toFixed(1) : (pressureData.maxAllowableBackpressure || '')}
             onChange={(e) => onChange('maxAllowableBackpressure', parseFloat(e.target.value) || 0)}
             disabled={isAutoCalculated}
-            className={`w-full px-3 py-2 border rounded-md ${
+            className={`w-full h-10 px-3 py-2 border rounded-md ${
               isAutoCalculated 
                 ? 'border-gray-200 bg-blue-50 text-gray-700 font-medium' 
                 : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400'

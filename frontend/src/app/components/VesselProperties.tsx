@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { getFluidNames, getFluidProperties, getStandardDiameters } from '../../../lib/database'
 
 interface VesselData {
@@ -46,7 +46,7 @@ export default function VesselProperties({ vesselData, onChange, fireExposedArea
             type="text"
             value={vesselData.vesselTag}
             onChange={(e) => onChange('vesselTag', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
+            className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
             placeholder="e.g., 123"
             required
           />
@@ -61,7 +61,7 @@ export default function VesselProperties({ vesselData, onChange, fireExposedArea
             step="0.1"
             value={vesselData.straightSideHeight || ''}
             onChange={(e) => onChange('straightSideHeight', parseFloat(e.target.value) || 0)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
+            className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
             placeholder="e.g., 24.0"
             required
           />
@@ -74,13 +74,13 @@ export default function VesselProperties({ vesselData, onChange, fireExposedArea
           <select
             value={vesselData.vesselDiameter || ''}
             onChange={(e) => onChange('vesselDiameter', parseFloat(e.target.value) || 0)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+            className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
             required
           >
             <option value="">Select diameter...</option>
             {standardDiameters.map((diameter) => (
               <option key={diameter} value={diameter}>
-                {diameter}" OD
+                {diameter}&quot; OD
               </option>
             ))}
           </select>
@@ -93,7 +93,7 @@ export default function VesselProperties({ vesselData, onChange, fireExposedArea
           <select
             value={vesselData.headType}
             onChange={(e) => onChange('headType', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+            className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
           >
             <option value="Hemispherical">Hemispherical</option>
             <option value="Elliptical">Elliptical</option>
@@ -108,7 +108,7 @@ export default function VesselProperties({ vesselData, onChange, fireExposedArea
           <select
             value={vesselData.workingFluid}
             onChange={(e) => handleFluidChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+            className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
             required
           >
             <option value="">Select fluid...</option>
@@ -129,7 +129,7 @@ export default function VesselProperties({ vesselData, onChange, fireExposedArea
             step="0.1"
             value={vesselData.asmeSetPressure || ''}
             onChange={(e) => onChange('asmeSetPressure', parseFloat(e.target.value) || 0)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
+            className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
             placeholder="e.g., 14.9"
             required
           />
@@ -144,7 +144,7 @@ export default function VesselProperties({ vesselData, onChange, fireExposedArea
             step="0.1"
             value={vesselData.vesselDesignMawp || ''}
             onChange={(e) => onChange('vesselDesignMawp', parseFloat(e.target.value) || 0)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
+            className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
             placeholder="e.g., 14.9"
             required
           />
@@ -159,7 +159,7 @@ export default function VesselProperties({ vesselData, onChange, fireExposedArea
             type="text"
             value="ASME VIII"
             disabled
-            className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-600"
+            className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md bg-blue-50 text-gray-700 font-medium"
           />
         </div>
 
@@ -172,7 +172,7 @@ export default function VesselProperties({ vesselData, onChange, fireExposedArea
               type="text"
               value={fireExposedArea.toFixed(2)}
               disabled
-              className="w-full px-3 py-2 border border-gray-200 rounded-md bg-blue-50 text-gray-700 font-medium"
+              className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md bg-blue-50 text-gray-700 font-medium"
               title="Auto-calculated based on vessel dimensions and fire code"
             />
           </div>

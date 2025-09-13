@@ -1,16 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import VesselProperties from '../../components/VesselProperties'
 import CasePressureSettings from '../../components/CasePressureSettings'
 import { useVessel } from '../../context/VesselContext'
 import { useCase } from '../../context/CaseContext'
+import { calculateHeatInput } from '../../../../lib/database'
 
 interface FlowData {
   applicableFireCode: string
-  approximateRelievingTemp: number
   heatOfVaporization: number
+  hasAdequateDrainageFirefighting?: boolean // For API 521 only
 }
 
 interface CasePressureData {
@@ -25,9 +26,22 @@ export default function ExternalFireCase() {
 
   const [flowData, setFlowData] = useState<FlowData>({
     applicableFireCode: 'NFPA 30',
-    approximateRelievingTemp: 400,
-    heatOfVaporization: 0
+    heatOfVaporization: 0,
+    hasAdequateDrainageFirefighting: undefined
   })
+
+  // Load from localStorage after component mounts (client-side only)
+  useEffect(() => {
+    const saved = localStorage.getItem('external-fire-flow-data')
+    if (saved) {
+      try {
+        const parsedData = JSON.parse(saved)
+        setFlowData(parsedData)
+      } catch {
+        // If parsing fails, keep defaults
+      }
+    }
+  }, [])
 
   const [pressureData, setPressureData] = useState<CasePressureData>({
     maxAllowedVentingPressure: 0,
@@ -35,50 +49,91 @@ export default function ExternalFireCase() {
     maxAllowedVentingPressurePercent: 0
   })
 
-  const [results, setResults] = useState<{
-    calculatedRelievingFlow: number
-    asmeVIIIDesignRelievingFlow: number
-    equivalentAirFlow: number
-    isDesignBasisFlow: boolean
-  } | null>(null)
-  const [loading, setLoading] = useState(false)
 
-  const handleFlowDataChange = (field: keyof FlowData, value: string | number) => {
-    setFlowData(prev => ({ ...prev, [field]: value }))
+  const handleFlowDataChange = (field: keyof FlowData, value: string | number | boolean) => {
+    const newData = { ...flowData, [field]: value }
+    setFlowData(newData)
+    
+    // Save to localStorage (client-side only)
+    localStorage.setItem('external-fire-flow-data', JSON.stringify(newData))
   }
 
+  // Calculate preview values in real-time
+  const calculatePreview = () => {
+    try {
+      // Check if we have all required data
+      if (!flowData.heatOfVaporization || flowData.heatOfVaporization === 0) {
+        return { calculatedRelievingFlow: null, asmeVIIIDesignFlow: null, equivalentAirFlow: null, reason: 'No heat of vaporization' }
+      }
+
+      if (!vesselData.vesselDiameter || !vesselData.straightSideHeight || !vesselData.headType) {
+        return { calculatedRelievingFlow: null, asmeVIIIDesignFlow: null, equivalentAirFlow: null, reason: 'Missing vessel data' }
+      }
+
+      const fireExposedArea = calculateFireExposedArea(flowData.applicableFireCode)
+      
+      if (!fireExposedArea || fireExposedArea <= 0) {
+        return { calculatedRelievingFlow: null, asmeVIIIDesignFlow: null, equivalentAirFlow: null, reason: 'Invalid fire exposed area' }
+      }
+      
+      // For API 521, require drainage/firefighting selection
+      if (flowData.applicableFireCode === 'API 521' && flowData.hasAdequateDrainageFirefighting === undefined) {
+        return { calculatedRelievingFlow: null, asmeVIIIDesignFlow: null, equivalentAirFlow: null, reason: 'API 521 requires drainage selection' }
+      }
+
+      const heatInputResult = calculateHeatInput(
+        flowData.applicableFireCode as 'NFPA 30' | 'API 521',
+        fireExposedArea,
+        flowData.hasAdequateDrainageFirefighting
+      )
+
+      if (!heatInputResult || !heatInputResult.heatInput) {
+        // Check if it's because NFPA area is too small
+        if (flowData.applicableFireCode === 'NFPA 30' && fireExposedArea < 20) {
+          return { 
+            calculatedRelievingFlow: null, 
+            asmeVIIIDesignFlow: null, 
+            equivalentAirFlow: null, 
+            reason: `NFPA 30 requires area ≥ 20 sq ft (current: ${fireExposedArea.toFixed(1)} sq ft)` 
+          }
+        }
+        return { calculatedRelievingFlow: null, asmeVIIIDesignFlow: null, equivalentAirFlow: null, reason: 'Heat input calculation failed' }
+      }
+
+      const { heatInput } = heatInputResult
+      const calculatedRelievingFlow = Math.round(heatInput / flowData.heatOfVaporization)
+      const asmeVIIIDesignFlow = Math.round(calculatedRelievingFlow * 1.11)
+      const equivalentAirFlow = Math.round(calculatedRelievingFlow * 10.28)
+
+      return { calculatedRelievingFlow, asmeVIIIDesignFlow, equivalentAirFlow, reason: null }
+    } catch (error) {
+      return { calculatedRelievingFlow: null, asmeVIIIDesignFlow: null, equivalentAirFlow: null, reason: 'Calculation error' }
+    }
+  }
+
+  const previewValues = calculatePreview()
+
   const handleFluidPropertiesFound = (heatOfVaporization: number) => {
-    setFlowData(prev => ({ ...prev, heatOfVaporization }))
+    const newData = { ...flowData, heatOfVaporization }
+    setFlowData(newData)
+    
+    // Save to localStorage (client-side only)
+    localStorage.setItem('external-fire-flow-data', JSON.stringify(newData))
   }
 
   const handlePressureDataChange = (field: keyof CasePressureData, value: number) => {
     setPressureData(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    
-    // For now, just simulate a calculation with mock data
-    setTimeout(() => {
-      const mockResults = {
-        calculatedRelievingFlow: 2279,
-        asmeVIIIDesignRelievingFlow: 2533,
-        equivalentAirFlow: 23428,
-        isDesignBasisFlow: true
-      }
-      
-      setResults(mockResults)
-      
-      // Update the case context with results
+  // Auto-update case results when calculations change
+  React.useEffect(() => {
+    if (previewValues.calculatedRelievingFlow && previewValues.calculatedRelievingFlow > 0) {
       updateCaseResult('external-fire', {
-        asmeVIIIDesignFlow: mockResults.asmeVIIIDesignRelievingFlow,
+        asmeVIIIDesignFlow: previewValues.asmeVIIIDesignFlow!,
         isCalculated: true
       })
-      
-      setLoading(false)
-    }, 1500)
-  }
+    }
+  }, [previewValues.calculatedRelievingFlow, previewValues.asmeVIIIDesignFlow, updateCaseResult])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -107,11 +162,11 @@ export default function ExternalFireCase() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">External Fire Case</h1>
           <p className="text-gray-600">
-            Calculate relief requirements for external fire exposure following NFPA 30 guidelines.
+            Calculate relief requirements for external fire exposure following the relevant code guidelines.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="space-y-8">
           {/* Vessel Properties - Shared across all cases */}
           <VesselProperties 
             vesselData={vesselData} 
@@ -143,27 +198,21 @@ export default function ExternalFireCase() {
                 </label>
                 <select
                   value={flowData.applicableFireCode}
-                  onChange={(e) => handleFlowDataChange('applicableFireCode', e.target.value)}
-                  className="w-full px-3 py-2 border border-orange-200 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-orange-50"
+                  onChange={(e) => {
+                    const newCode = e.target.value
+                    handleFlowDataChange('applicableFireCode', newCode)
+                    
+                    // Smart defaulting for API 521
+                    if (newCode === 'API 521' && flowData.hasAdequateDrainageFirefighting === undefined) {
+                      handleFlowDataChange('hasAdequateDrainageFirefighting', false) // Default to "No"
+                    }
+                  }}
+                  className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                 >
                   <option value="NFPA 30">NFPA 30</option>
                   <option value="API 521">API 521</option>
                 </select>
                 <p className="text-xs text-gray-500 mt-1">Affects fire exposed area calculation</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Approximate Relieving Temperature (°F)
-                </label>
-                <input
-                  type="number"
-                  value={flowData.approximateRelievingTemp || ''}
-                  onChange={(e) => handleFlowDataChange('approximateRelievingTemp', parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 border border-orange-200 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400 bg-orange-50"
-                  placeholder="e.g., 400"
-                  required
-                />
               </div>
 
               <div>
@@ -174,100 +223,173 @@ export default function ExternalFireCase() {
                   type="number"
                   step="0.1"
                   value={flowData.heatOfVaporization || ''}
-                  onChange={(e) => handleFlowDataChange('heatOfVaporization', parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 border border-orange-200 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400 bg-orange-50"
-                  placeholder="e.g., 224"
-                  required
+                  disabled
+                  className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md bg-blue-50 text-gray-700 font-medium"
+                  title="Auto-filled from selected working fluid"
                 />
+                <p className="text-xs text-gray-500 mt-1">Auto-filled from working fluid selection</p>
               </div>
+
+              {/* API 521 Specific Question - Third Column */}
+              {flowData.applicableFireCode === 'API 521' && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="block text-xs font-medium text-gray-700">
+                      Adequate drainage & firefighting equipment exist?
+                    </label>
+                    <div className="group relative">
+                      <svg 
+                        className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                      </svg>
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 max-w-sm">
+                        <div className="font-semibold mb-2">API 521 Heat Input Formulas:</div>
+                        <div className="mb-2">
+                          <div className="font-medium">When adequate drainage and firefighting exist:</div>
+                          <div>Q = 21,000 F (A<sub>wet</sub>)<sup>0.82</sup></div>
+                        </div>
+                        <div className="mb-2">
+                          <div className="font-medium">When adequate drainage and firefighting do not exist:</div>
+                          <div>Q = 34,500 F (A<sub>wet</sub>)<sup>0.82</sup></div>
+                        </div>
+                        <div className="text-xs mt-2 border-t border-gray-600 pt-2">
+                          <div>Q = Total heat absorption (BTU/hr)</div>
+                          <div>F = Environmental factor (default: 1)</div>
+                          <div>A<sub>wet</sub> = Total wetted surface area (sq ft)</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <select
+                    value={flowData.hasAdequateDrainageFirefighting === undefined ? '' : flowData.hasAdequateDrainageFirefighting.toString()}
+                    onChange={(e) => handleFlowDataChange('hasAdequateDrainageFirefighting', e.target.value === 'true')}
+                    className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                    required
+                  >
+                    <option value="">Select...</option>
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">Affects heat input formula</p>
+                </div>
+              )}
             </div>
+
 
             {/* Calculated values preview (read-only) */}
             <div className="mt-6 pt-6 border-t border-gray-200">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Calculated Values (Preview)</h3>
               <div className="grid md:grid-cols-3 gap-4">
-                <div className="bg-gray-50 p-3 rounded border">
-                  <div className="text-xs text-gray-500">Calculated Relieving Flow</div>
-                  <div className="font-medium text-gray-700">2,279 lb/hr</div>
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Calculated Relieving Flow
+                    </label>
+                    <div className="group relative">
+                      <svg 
+                        className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                      </svg>
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 max-w-xs">
+                        {previewValues.reason || (
+                          flowData.applicableFireCode === 'NFPA 30' ? (
+                            <div>
+                              <div className="font-semibold mb-1">NFPA 30 Heat Input Formula:</div>
+                              <div>Q = Heat Input (Btu/hr)</div>
+                              <div>W = Q ÷ Heat of Vaporization</div>
+                              <div className="mt-1 text-xs">Area-based formula varies by vessel size</div>
+                            </div>
+                          ) : (
+                            <div>
+                              <div className="font-semibold mb-1">API 521 Heat Input Formula:</div>
+                              <div>Q = Heat Input (Btu/hr)</div>
+                              <div>W = Q ÷ Heat of Vaporization</div>
+                              <div className="mt-1 text-xs">Formula depends on drainage/firefighting</div>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 p-3 rounded border">
+                    <div className="font-medium text-gray-700">
+                      {previewValues.calculatedRelievingFlow ? `${previewValues.calculatedRelievingFlow.toLocaleString()} lb/hr` : '—'}
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-blue-50 p-3 rounded border">
-                  <div className="text-xs text-gray-500">ASME VIII Design Flow</div>
-                  <div className="font-medium text-blue-700">2,533 lb/hr</div>
+                
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      ASME VIII Design Flow
+                    </label>
+                    <div className="group relative">
+                      <svg 
+                        className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                      </svg>
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                        Calculated Relieving Flow ÷ 0.9
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 p-3 rounded border">
+                    <div className="font-bold text-gray-700">
+                      {previewValues.asmeVIIIDesignFlow ? `${previewValues.asmeVIIIDesignFlow.toLocaleString()} lb/hr` : '—'}
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-green-50 p-3 rounded border">
-                  <div className="text-xs text-gray-500">Equivalent Air Flow</div>
-                  <div className="font-medium text-green-700">23,428 SCFH</div>
+                
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Equivalent Air Flow
+                    </label>
+                    <div className="group relative">
+                      <svg 
+                        className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                      </svg>
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                        70.5 × ASME VIII Flow × Heat of Vaporization ÷ Fluid Molecular Weight
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 p-3 rounded border">
+                    <div className="font-medium text-gray-700">
+                      {previewValues.equivalentAirFlow ? `${previewValues.equivalentAirFlow.toLocaleString()} SCFH` : '—'}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Submit Button */}
-          <div className="flex justify-center">
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-8 py-3 rounded-lg font-medium text-lg transition-colors duration-200 flex items-center"
-            >
-              {loading ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Calculating...
-                </>
-              ) : (
-                'Calculate Relief Requirements'
-              )}
-            </button>
-          </div>
-        </form>
+        </div>
 
-        {/* Results */}
-        {results && (
-          <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Calculation Results</h2>
-            
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="text-sm text-gray-600 mb-1">Calculated Relieving Flow</div>
-                <div className="text-2xl font-bold text-gray-900">{results.calculatedRelievingFlow.toLocaleString()}</div>
-                <div className="text-sm text-gray-500">lb/hr</div>
-              </div>
-
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <div className="text-sm text-gray-600 mb-1">ASME VIII Design Relieving Flow</div>
-                <div className="text-2xl font-bold text-blue-900">{results.asmeVIIIDesignRelievingFlow.toLocaleString()}</div>
-                <div className="text-sm text-gray-500">lb/hr</div>
-              </div>
-
-              <div className="bg-green-50 p-4 rounded-lg">
-                <div className="text-sm text-gray-600 mb-1">Equivalent Air Flow</div>
-                <div className="text-2xl font-bold text-green-900">{results.equivalentAirFlow.toLocaleString()}</div>
-                <div className="text-sm text-gray-500">SCFH</div>
-              </div>
-
-              <div className="bg-purple-50 p-4 rounded-lg">
-                <div className="text-sm text-gray-600 mb-1">Design Basis Flow</div>
-                <div className="text-2xl font-bold text-purple-900">
-                  {results.isDesignBasisFlow ? 'Yes' : 'No'}
-                </div>
-                <div className="text-sm text-gray-500">Status</div>
-              </div>
-            </div>
-
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <p className="text-sm text-gray-600 mb-4">
-                The model should input the ASME VIII Design Relieving Flow into the &apos;design flow&apos; field on FluidFlow 
-                (remember to ensure units in FluidFlow are correct).
-              </p>
-              <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200">
-                Generate PDF Report
-              </button>
-            </div>
-          </div>
-        )}
       </main>
     </div>
   )
