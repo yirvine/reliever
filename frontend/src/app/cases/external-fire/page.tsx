@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import VesselProperties from '../../components/VesselProperties'
 import { useVessel } from '../../context/VesselContext'
+import { useCase } from '../../context/CaseContext'
 
 interface FlowData {
   applicableFireCode: string
@@ -13,6 +14,7 @@ interface FlowData {
 
 export default function ExternalFireCase() {
   const { vesselData, updateVesselData, calculateFireExposedArea } = useVessel()
+  const { updateCaseResult } = useCase()
 
   const [flowData, setFlowData] = useState<FlowData>({
     applicableFireCode: 'NFPA 30',
@@ -38,12 +40,21 @@ export default function ExternalFireCase() {
     
     // For now, just simulate a calculation with mock data
     setTimeout(() => {
-      setResults({
+      const mockResults = {
         calculatedRelievingFlow: 2279,
         asmeVIIIDesignRelievingFlow: 2533,
         equivalentAirFlow: 23428,
         isDesignBasisFlow: true
+      }
+      
+      setResults(mockResults)
+      
+      // Update the case context with results
+      updateCaseResult('external-fire', {
+        asmeVIIIDesignFlow: mockResults.asmeVIIIDesignRelievingFlow,
+        isCalculated: true
       })
+      
       setLoading(false)
     }, 1500)
   }
