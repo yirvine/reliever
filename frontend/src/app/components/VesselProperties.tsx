@@ -10,9 +10,7 @@ interface VesselData {
   headType: string
   workingFluid: string
   vesselDesignMawp: number
-  maxAllowedVentingPressure: number
   asmeSetPressure: number
-  maxAllowableBackpressure: number
 }
 
 interface VesselPropertiesProps {
@@ -124,6 +122,21 @@ export default function VesselProperties({ vesselData, onChange, fireExposedArea
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
+            ASME Set Pressure (psig)
+          </label>
+          <input
+            type="number"
+            step="0.1"
+            value={vesselData.asmeSetPressure || ''}
+            onChange={(e) => onChange('asmeSetPressure', parseFloat(e.target.value) || 0)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
+            placeholder="e.g., 14.9"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             Vessel Design MAWP (psig)
           </label>
           <input
@@ -164,51 +177,6 @@ export default function VesselProperties({ vesselData, onChange, fireExposedArea
             />
           </div>
         )}
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Max. Allowed Venting Pressure (psig)
-          </label>
-          <input
-            type="number"
-            step="0.1"
-            value={vesselData.maxAllowedVentingPressure || ''}
-            onChange={(e) => onChange('maxAllowedVentingPressure', parseFloat(e.target.value) || 0)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
-            placeholder="e.g., 18.0"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            ASME Set Pressure (psig)
-          </label>
-          <input
-            type="number"
-            step="0.1"
-            value={vesselData.asmeSetPressure || ''}
-            onChange={(e) => onChange('asmeSetPressure', parseFloat(e.target.value) || 0)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
-            placeholder="e.g., 14.9"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Max. Allowable Backpressure (psig)
-          </label>
-          <input
-            type="number"
-            step="0.1"
-            value={vesselData.maxAllowableBackpressure || ''}
-            onChange={(e) => onChange('maxAllowableBackpressure', parseFloat(e.target.value) || 0)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
-            placeholder="e.g., 3.1"
-            required
-          />
-        </div>
       </div>
     </div>
   )

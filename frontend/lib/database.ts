@@ -42,32 +42,7 @@ const FLUID_PROPERTIES: FluidProperty[] = [
   { id: 20, fluid_name: 'Water', heat_of_vaporization: 970, molecular_weight: 18.01, liquid_density: 4111 }
 ]
 
-// Vessel head area lookup data (sample - can be extended)
-const VESSEL_HEAD_AREAS: VesselHeadArea[] = [
-  // Elliptical heads
-  { id: 1, diameter_inches: 30, head_type: 'Elliptical', area_sq_feet: 0.1524 },
-  { id: 2, diameter_inches: 36, head_type: 'Elliptical', area_sq_feet: 0.233 },
-  { id: 3, diameter_inches: 42, head_type: 'Elliptical', area_sq_feet: 0.33 },
-  { id: 4, diameter_inches: 48, head_type: 'Elliptical', area_sq_feet: 0.56 },
-  { id: 5, diameter_inches: 54, head_type: 'Elliptical', area_sq_feet: 0.87 },
-  { id: 6, diameter_inches: 60, head_type: 'Elliptical', area_sq_feet: 1.22 },
-  
-  // Hemispherical heads
-  { id: 7, diameter_inches: 30, head_type: 'Hemispherical', area_sq_feet: 0.13 },
-  { id: 8, diameter_inches: 36, head_type: 'Hemispherical', area_sq_feet: 0.20 },
-  { id: 9, diameter_inches: 42, head_type: 'Hemispherical', area_sq_feet: 0.28 },
-  { id: 10, diameter_inches: 48, head_type: 'Hemispherical', area_sq_feet: 0.48 },
-  { id: 11, diameter_inches: 54, head_type: 'Hemispherical', area_sq_feet: 0.75 },
-  { id: 12, diameter_inches: 60, head_type: 'Hemispherical', area_sq_feet: 1.05 },
-  
-  // Flat heads
-  { id: 13, diameter_inches: 30, head_type: 'Flat', area_sq_feet: 0.22 },
-  { id: 14, diameter_inches: 36, head_type: 'Flat', area_sq_feet: 0.34 },
-  { id: 15, diameter_inches: 42, head_type: 'Flat', area_sq_feet: 0.48 },
-  { id: 16, diameter_inches: 48, head_type: 'Flat', area_sq_feet: 0.815 },
-  { id: 17, diameter_inches: 54, head_type: 'Flat', area_sq_feet: 1.26 },
-  { id: 18, diameter_inches: 60, head_type: 'Flat', area_sq_feet: 1.77 }
-]
+// Note: Vessel head areas are now calculated using formulas and lookup tables below
 
 /**
  * Get all available fluid names for dropdown/autocomplete

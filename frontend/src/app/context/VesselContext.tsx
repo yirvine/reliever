@@ -9,9 +9,7 @@ export interface VesselData {
   headType: string
   workingFluid: string
   vesselDesignMawp: number
-  maxAllowedVentingPressure: number
   asmeSetPressure: number
-  maxAllowableBackpressure: number
 }
 
 interface VesselContextType {
@@ -27,9 +25,7 @@ const defaultVesselData: VesselData = {
   headType: 'Hemispherical',
   workingFluid: '',
   vesselDesignMawp: 0,
-  maxAllowedVentingPressure: 0,
-  asmeSetPressure: 0,
-  maxAllowableBackpressure: 0
+  asmeSetPressure: 0
 }
 
 const VesselContext = createContext<VesselContextType | undefined>(undefined)

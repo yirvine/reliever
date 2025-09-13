@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import VesselProperties from '../../components/VesselProperties'
+import CasePressureSettings from '../../components/CasePressureSettings'
 import { useVessel } from '../../context/VesselContext'
 import { useCase } from '../../context/CaseContext'
 
@@ -10,6 +11,12 @@ interface FlowData {
   applicableFireCode: string
   approximateRelievingTemp: number
   heatOfVaporization: number
+}
+
+interface CasePressureData {
+  maxAllowedVentingPressure: number
+  maxAllowableBackpressure: number
+  maxAllowedVentingPressurePercent: number
 }
 
 export default function ExternalFireCase() {
@@ -20,6 +27,12 @@ export default function ExternalFireCase() {
     applicableFireCode: 'NFPA 30',
     approximateRelievingTemp: 400,
     heatOfVaporization: 0
+  })
+
+  const [pressureData, setPressureData] = useState<CasePressureData>({
+    maxAllowedVentingPressure: 0,
+    maxAllowableBackpressure: 0,
+    maxAllowedVentingPressurePercent: 0
   })
 
   const [results, setResults] = useState<{
@@ -36,6 +49,10 @@ export default function ExternalFireCase() {
 
   const handleFluidPropertiesFound = (heatOfVaporization: number) => {
     setFlowData(prev => ({ ...prev, heatOfVaporization }))
+  }
+
+  const handlePressureDataChange = (field: keyof CasePressureData, value: number) => {
+    setPressureData(prev => ({ ...prev, [field]: value }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -101,6 +118,13 @@ export default function ExternalFireCase() {
             onChange={updateVesselData}
             fireExposedArea={calculateFireExposedArea(flowData.applicableFireCode)}
             onFluidPropertiesFound={handleFluidPropertiesFound}
+          />
+
+          {/* Case-Specific Pressure Settings */}
+          <CasePressureSettings
+            pressureData={pressureData}
+            onChange={handlePressureDataChange}
+            caseName="External Fire"
           />
 
           {/* Flow Calculations - Only user inputs (orange fields from Excel) */}
