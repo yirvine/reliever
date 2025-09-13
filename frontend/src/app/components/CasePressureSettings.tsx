@@ -30,9 +30,28 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
       
       <div className="grid md:grid-cols-3 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Max. Allowed Venting Pressure (%)
-          </label>
+          <div className="flex items-center gap-2 mb-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Max. Allowed Venting Pressure (%)
+            </label>
+            {isAutoCalculated && (
+              <div className="group relative">
+                <svg 
+                  className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 min-w-max select-text">
+                  Always 121% for External Fire case
+                </div>
+              </div>
+            )}
+          </div>
           <input
             type="number"
             step="0.1"
@@ -51,9 +70,28 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Max. Allowed Venting Pressure (psig)
-          </label>
+          <div className="flex items-center gap-2 mb-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Max. Allowed Venting Pressure (psig)
+            </label>
+            {isAutoCalculated && (
+              <div className="group relative">
+                <svg 
+                  className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 min-w-max select-text">
+                  121% of MAWP
+                </div>
+              </div>
+            )}
+          </div>
           <input
             type="number"
             step="0.1"
@@ -72,9 +110,28 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Max. Allowable Backpressure (psig)
-          </label>
+          <div className="flex items-center gap-2 mb-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Max. Allowable Backpressure (psig)
+            </label>
+            {isAutoCalculated && (
+              <div className="group relative">
+                <svg 
+                  className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 min-w-max select-text">
+                  Maximum allowable superimposed backpressure from downstream piping losses (MAWP - MAVP)
+                </div>
+              </div>
+            )}
+          </div>
           <input
             type="number"
             step="0.1"

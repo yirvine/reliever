@@ -22,7 +22,7 @@ interface CasePressureData {
 
 export default function ExternalFireCase() {
   const { vesselData, updateVesselData, calculateFireExposedArea } = useVessel()
-  const { updateCaseResult } = useCase()
+  const { updateCaseResult, selectedCases, toggleCase } = useCase()
 
   const [flowData, setFlowData] = useState<FlowData>({
     applicableFireCode: 'NFPA 30',
@@ -106,7 +106,7 @@ export default function ExternalFireCase() {
       const equivalentAirFlow = Math.round(calculatedRelievingFlow * 10.28)
 
       return { calculatedRelievingFlow, asmeVIIIDesignFlow, equivalentAirFlow, reason: null }
-    } catch (error) {
+    } catch {
       return { calculatedRelievingFlow: null, asmeVIIIDesignFlow: null, equivalentAirFlow: null, reason: 'Calculation error' }
     }
   }
@@ -125,15 +125,22 @@ export default function ExternalFireCase() {
     setPressureData(prev => ({ ...prev, [field]: value }))
   }
 
-  // Auto-update case results when calculations change
+  // Auto-update case results when calculations change (only if case is selected)
+  const isSelected = selectedCases['external-fire']
   React.useEffect(() => {
-    if (previewValues.calculatedRelievingFlow && previewValues.calculatedRelievingFlow > 0) {
+    if (isSelected && previewValues.calculatedRelievingFlow && previewValues.calculatedRelievingFlow > 0) {
       updateCaseResult('external-fire', {
         asmeVIIIDesignFlow: previewValues.asmeVIIIDesignFlow!,
         isCalculated: true
       })
+    } else if (!isSelected) {
+      // Clear results when case is deselected
+      updateCaseResult('external-fire', {
+        asmeVIIIDesignFlow: null,
+        isCalculated: false
+      })
     }
-  }, [previewValues.calculatedRelievingFlow, previewValues.asmeVIIIDesignFlow, updateCaseResult])
+  }, [isSelected, previewValues.calculatedRelievingFlow, previewValues.asmeVIIIDesignFlow, updateCaseResult])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -160,13 +167,33 @@ export default function ExternalFireCase() {
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">External Fire Case</h1>
-          <p className="text-gray-600">
-            Calculate relief requirements for external fire exposure following the relevant code guidelines.
-          </p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">External Fire Case</h1>
+              <p className="text-gray-600">
+                Calculate relief requirements for external fire exposure following the relevant code guidelines.
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs text-gray-500">Include</span>
+              <div className={`
+                relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent 
+                transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2
+                ${isSelected ? 'bg-green-600' : 'bg-gray-200'}
+              `}
+              onClick={() => toggleCase('external-fire')}
+              >
+                <span className={`
+                  pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 
+                  transition duration-200 ease-in-out
+                  ${isSelected ? 'translate-x-5' : 'translate-x-0'}
+                `} />
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-8">
+        <div className={`space-y-8 transition-opacity duration-200 ${isSelected ? 'opacity-100' : 'opacity-50'}`}>
           {/* Vessel Properties - Shared across all cases */}
           <VesselProperties 
             vesselData={vesselData} 
@@ -248,7 +275,7 @@ export default function ExternalFireCase() {
                         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                       </svg>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 max-w-sm">
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 min-w-max">
                         <div className="font-semibold mb-2">API 521 Heat Input Formulas:</div>
                         <div className="mb-2">
                           <div className="font-medium">When adequate drainage and firefighting exist:</div>
@@ -301,21 +328,58 @@ export default function ExternalFireCase() {
                         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                       </svg>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 max-w-xs">
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 w-96 select-text">
                         {previewValues.reason || (
                           flowData.applicableFireCode === 'NFPA 30' ? (
                             <div>
-                              <div className="font-semibold mb-1">NFPA 30 Heat Input Formula:</div>
-                              <div>Q = Heat Input (Btu/hr)</div>
-                              <div>W = Q ÷ Heat of Vaporization</div>
-                              <div className="mt-1 text-xs">Area-based formula varies by vessel size</div>
+                              <div className="font-semibold mb-2">NFPA 30 (2018) Heat Input Formulas:</div>
+                              <div className="mb-2">
+                                <div className="grid grid-cols-2 gap-6 mb-1">
+                                  <div className="font-medium">Area Range (sq ft)</div>
+                                  <div className="font-medium">Heat Input Formula Q</div>
+                                </div>
+                                <div className="border-t border-gray-600 pt-1">
+                                  <div className="grid grid-cols-2 gap-6 py-1">
+                                    <div>20 - 200</div>
+                                    <div>Q = 20,000A</div>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-6 py-1">
+                                    <div>200 - 1,000</div>
+                                    <div>Q = 199,300A<sup>0.566</sup></div>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-6 py-1">
+                                    <div>1,000 - 2,800</div>
+                                    <div>Q = 963,400A<sup>0.338</sup></div>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-6 py-1">
+                                    <div>&gt; 2,800</div>
+                                    <div>Q = 21,000A<sup>0.82</sup></div>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="text-xs border-t border-gray-600 pt-2">
+                                <div>Q = Heat Input (Btu/hr)</div>
+                                <div>A = Fire Exposed Area (sq ft)</div>
+                                <div>W = Q ÷ Heat of Vaporization</div>
+                              </div>
                             </div>
                           ) : (
                             <div>
-                              <div className="font-semibold mb-1">API 521 Heat Input Formula:</div>
-                              <div>Q = Heat Input (Btu/hr)</div>
-                              <div>W = Q ÷ Heat of Vaporization</div>
-                              <div className="mt-1 text-xs">Formula depends on drainage/firefighting</div>
+                              <div className="font-semibold mb-2">API 521 Heat Input Formulas:</div>
+                              <div className="mb-2">
+                                <div className="font-medium">When adequate drainage and firefighting exist:</div>
+                                <div>Q = 21,000 F (A<sub>wet</sub>)<sup>0.82</sup></div>
+                              </div>
+                              <div className="mb-2">
+                                <div className="font-medium">When adequate drainage and firefighting do not exist:</div>
+                                <div>Q = 34,500 F (A<sub>wet</sub>)<sup>0.82</sup></div>
+                              </div>
+                              <div className="text-xs border-t border-gray-600 pt-2">
+                                <div>Q = Total heat absorption (BTU/hr)</div>
+                                <div>F = Environmental factor (default: 1)</div>
+                                <div>A<sub>wet</sub> = Total wetted surface area (sq ft)</div>
+                                <div>W = Q ÷ Heat of Vaporization</div>
+                              </div>
                             </div>
                           )
                         )}
@@ -345,7 +409,7 @@ export default function ExternalFireCase() {
                         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                       </svg>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 min-w-max select-text">
                         Calculated Relieving Flow ÷ 0.9
                       </div>
                     </div>
@@ -373,7 +437,7 @@ export default function ExternalFireCase() {
                         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                       </svg>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 min-w-max select-text">
                         70.5 × ASME VIII Flow × Heat of Vaporization ÷ Fluid Molecular Weight
                       </div>
                     </div>

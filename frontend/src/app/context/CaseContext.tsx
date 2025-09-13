@@ -47,7 +47,22 @@ export function CaseProvider({ children }: { children: ReactNode }) {
   const [caseResults, setCaseResults] = useState(defaultCaseResults)
 
   const toggleCase = (caseId: string) => {
-    setSelectedCases(prev => ({ ...prev, [caseId]: !prev[caseId] }))
+    setSelectedCases(prev => {
+      const newSelected = !prev[caseId]
+      
+      // If deselecting, clear the case results
+      if (!newSelected) {
+        setCaseResults(prevResults => ({
+          ...prevResults,
+          [caseId]: { ...prevResults[caseId], asmeVIIIDesignFlow: null, isCalculated: false }
+        }))
+      }
+      
+      return {
+        ...prev,
+        [caseId]: newSelected
+      }
+    })
   }
 
   const updateCaseResult = useCallback((caseId: string, result: Partial<CaseResult>) => {
