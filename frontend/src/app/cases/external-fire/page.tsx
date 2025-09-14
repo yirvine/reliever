@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import VesselProperties from '../../components/VesselProperties'
 import CasePressureSettings from '../../components/CasePressureSettings'
+import PageTransition from '../../components/PageTransition'
 import { useVessel } from '../../context/VesselContext'
 import { useCase } from '../../context/CaseContext'
 import { calculateHeatInput } from '../../../../lib/database'
@@ -138,7 +139,8 @@ export default function ExternalFireCase() {
   }, [previewValues.calculatedRelievingFlow, previewValues.asmeVIIIDesignFlow, updateCaseResult])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <PageTransition>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -456,6 +458,7 @@ export default function ExternalFireCase() {
         </div>
 
       </main>
-    </div>
+      </div>
+    </PageTransition>
   )
 }
