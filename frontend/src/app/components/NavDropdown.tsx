@@ -22,7 +22,7 @@ export default function NavDropdown({ title, items }: NavDropdownProps) {
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
     >
-      <button className="text-gray-700 hover:text-blue-600 px-3 py-2 text-base font-medium transition-colors duration-200 font-spartan">
+      <button className="text-gray-700 hover:text-blue-600 px-3 py-2 text-lg font-medium transition-colors duration-200 font-spartan">
         {title}
       </button>
       

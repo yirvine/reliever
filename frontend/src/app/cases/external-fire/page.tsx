@@ -1,10 +1,9 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
 import VesselProperties from '../../components/VesselProperties'
 import CasePressureSettings from '../../components/CasePressureSettings'
+import Header from '../../components/Header'
 import PageTransition from '../../components/PageTransition'
 import { useVessel } from '../../context/VesselContext'
 import { useCase } from '../../context/CaseContext'
@@ -141,34 +140,9 @@ export default function ExternalFireCase() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <Link href="/" className="hover:opacity-80 transition-opacity">
-                <Image 
-                  src="/ReliefGuardBannerTransparent.png" 
-                  alt="ReliefGuard" 
-                  width={200} 
-                  height={50} 
-                  className="h-8 w-auto"
-                />
-              </Link>
-              <span className="ml-3 text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">MVP</span>
-              <span className="ml-4 text-lg text-gray-600">/ Case 1 - External Fire</span>
-            </div>
-            <Link 
-              href="/"
-              className="text-blue-600 hover:text-blue-700 font-medium"
-            >
-              ← Back to Home
-            </Link>
-          </div>
-        </div>
-      </header>
+        <Header showBreadcrumb={true} breadcrumbText="Case 1 - External Fire" />
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <div className="flex justify-between items-start">
             <div>

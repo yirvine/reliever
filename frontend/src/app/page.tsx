@@ -1,9 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import ToggleSwitch from './components/ToggleSwitch'
-import NavDropdown from './components/NavDropdown'
+import Header from './components/Header'
 import PageTransition from './components/PageTransition'
 import { useCase } from './context/CaseContext'
 
@@ -14,40 +13,7 @@ export default function Home() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-          <div className="flex items-center">
-            <Image 
-              src="/ReliefGuardBannerTransparent.png" 
-              alt="ReliefGuard" 
-              width={200} 
-              height={50} 
-              className="h-8 w-auto"
-            />
-            <span className="ml-3 text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">MVP</span>
-          </div>
-          <div className="flex items-center space-x-1">
-            <NavDropdown 
-              title="About" 
-              items={[
-                { label: 'What is ReliefGuard?', href: '#' },
-                { label: 'Help', href: '#' }
-              ]} 
-            />
-            <NavDropdown 
-              title="Data" 
-              items={[
-                { label: 'Calculations', href: '#' },
-                { label: 'Fluid Properties', href: '#' },
-                { label: 'Vessel Head Area Table', href: '#' }
-              ]} 
-            />
-          </div>
-          </div>
-        </div>
-      </header>
+        <Header />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
