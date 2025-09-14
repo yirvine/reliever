@@ -12,9 +12,10 @@ interface CasePressureSettingsProps {
   caseName: string
   isAutoCalculated?: boolean // For cases like External Fire where values are fixed
   vesselMawp?: number // For auto-calculation
+  fireExposedArea?: number // Auto-calculated field for External Fire
 }
 
-export default function CasePressureSettings({ pressureData, onChange, caseName, isAutoCalculated = false, vesselMawp = 0 }: CasePressureSettingsProps) {
+export default function CasePressureSettings({ pressureData, onChange, caseName, isAutoCalculated = false, vesselMawp = 0, fireExposedArea }: CasePressureSettingsProps) {
   // Auto-calculate values for External Fire case
   const autoPercent = 121 // Fixed 121% for External Fire
   const autoMavp = vesselMawp * (autoPercent / 100) // MAVP = 121% of MAWP
@@ -22,13 +23,13 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">
-        {caseName} - Pressure Settings
+        Case-Specific Settings
       </h2>
       <p className="text-sm text-gray-600 mb-4">
         Case-specific pressure limits and allowances
       </p>
       
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <label className="block text-sm font-medium text-gray-700">
@@ -46,7 +47,7 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
                   <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                   <line x1="12" y1="17" x2="12.01" y2="17"></line>
                 </svg>
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 min-w-max select-text">
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 min-w-max select-text pointer-events-none">
                   Always 121% for External Fire case
                 </div>
               </div>
@@ -86,7 +87,7 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
                   <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                   <line x1="12" y1="17" x2="12.01" y2="17"></line>
                 </svg>
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 min-w-max select-text">
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 min-w-max select-text pointer-events-none">
                   121% of MAWP
                 </div>
               </div>
@@ -126,7 +127,7 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
                   <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                   <line x1="12" y1="17" x2="12.01" y2="17"></line>
                 </svg>
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 min-w-max select-text">
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 min-w-max select-text pointer-events-none">
                   Maximum allowable superimposed backpressure from downstream piping losses (MAWP - MAVP)
                 </div>
               </div>
@@ -148,6 +149,22 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
             required
           />
         </div>
+
+        {/* Total Fire Exposed Area - only for External Fire */}
+        {fireExposedArea !== undefined && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Total Fire Exposed Area (sq. ft)
+            </label>
+            <input
+              type="text"
+              value={fireExposedArea.toFixed(2)}
+              disabled
+              className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md bg-blue-50 text-gray-700 font-medium"
+              title="Auto-calculated based on vessel dimensions and fire code"
+            />
+          </div>
+        )}
       </div>
     </div>
   )

@@ -24,7 +24,6 @@ export default function Home() {
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto font-spartan">
             <b>ReliefGuard</b> is a tool for sizing relief valves and rupture discs. <br />
-            All calculations are compliant with NFPA 30, API 521, and ASME VIII guidelines.
           </p>
         </div>
 
@@ -39,7 +38,7 @@ export default function Home() {
                 </svg>
               </div>
             </div>
-            <p className="text-gray-600">Fully compliant with NFPA 30, API 521, and ASME VIII standards.</p>
+            <p className="text-gray-600">All calculations are fully compliant with NFPA 30, API 521, and ASME VIII standards.</p>
           </div>
           
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">

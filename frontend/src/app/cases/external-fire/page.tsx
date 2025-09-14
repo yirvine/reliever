@@ -23,7 +23,7 @@ interface CasePressureData {
 
 export default function ExternalFireCase() {
   const { vesselData, updateVesselData, calculateFireExposedArea } = useVessel()
-  const { updateCaseResult, selectedCases, toggleCase } = useCase()
+  const { updateCaseResult, selectedCases, toggleCase, getDesignBasisFlow } = useCase()
   const isSelected = selectedCases['external-fire']
 
   const [flowData, setFlowData] = useState<FlowData>({
@@ -140,19 +140,19 @@ export default function ExternalFireCase() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-        <Header showBreadcrumb={true} breadcrumbText="Case 1 - External Fire" />
+        <Header />
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">External Fire Case</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Case 1 - External Fire</h1>
               <p className="text-gray-600">
                 Calculate relief requirements for external fire exposure following the relevant code guidelines.
               </p>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-xs text-gray-500">Include</span>
+              <span className="text-sm font-medium text-gray-700">Include Case</span>
               <div className={`
                 relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent 
                 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2
@@ -175,7 +175,6 @@ export default function ExternalFireCase() {
           <VesselProperties 
             vesselData={vesselData} 
             onChange={updateVesselData}
-            fireExposedArea={calculateFireExposedArea(flowData.applicableFireCode)}
             onFluidPropertiesFound={handleFluidPropertiesFound}
           />
 
@@ -186,6 +185,7 @@ export default function ExternalFireCase() {
             caseName="External Fire"
             isAutoCalculated={true}
             vesselMawp={vesselData.vesselDesignMawp}
+            fireExposedArea={calculateFireExposedArea(flowData.applicableFireCode)}
           />
 
           {/* Flow Calculations - Only user inputs (orange fields from Excel) */}
@@ -195,11 +195,28 @@ export default function ExternalFireCase() {
               User inputs only - other values are calculated automatically
             </p>
             
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Applicable Fire Code for Heat Input Calc.
-                </label>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Applicable Code for Heat Input Calc.
+                  </label>
+                  <div className="group relative">
+                    <svg 
+                      className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                      <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 min-w-max select-text">
+                      If the working fluid in the vessel is flammable, NFPA 30 should be used.
+                    </div>
+                  </div>
+                </div>
                 <select
                   value={flowData.applicableFireCode}
                   onChange={(e) => {
@@ -239,7 +256,7 @@ export default function ExternalFireCase() {
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <label className="block text-xs font-medium text-gray-700">
-                      Adequate drainage & firefighting equipment exist?
+                      Adequate drainage & firefighting equipment?
                     </label>
                     <div className="group relative">
                       <svg 
@@ -288,7 +305,7 @@ export default function ExternalFireCase() {
 
             {/* Calculated values preview (read-only) */}
             <div className="mt-6 pt-6 border-t border-gray-200">
-              <div className="grid md:grid-cols-3 gap-4">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <label className="text-sm font-medium text-gray-700">
@@ -305,7 +322,7 @@ export default function ExternalFireCase() {
                         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                       </svg>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 w-96 select-text">
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 w-96 select-text">
                         {previewValues.reason || (
                           flowData.applicableFireCode === 'NFPA 30' ? (
                             <div>
@@ -386,7 +403,7 @@ export default function ExternalFireCase() {
                         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                       </svg>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 min-w-max select-text">
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 min-w-max select-text">
                         Calculated Relieving Flow ÷ 0.9
                       </div>
                     </div>
@@ -414,7 +431,7 @@ export default function ExternalFireCase() {
                         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                       </svg>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 min-w-max select-text">
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 min-w-max select-text">
                         70.5 × ASME VIII Flow × Heat of Vaporization ÷ Fluid Molecular Weight
                       </div>
                     </div>
@@ -423,6 +440,39 @@ export default function ExternalFireCase() {
                     <div className="font-medium text-gray-700">
                       {previewValues.equivalentAirFlow ? `${previewValues.equivalentAirFlow.toLocaleString()} SCFH` : '—'}
                     </div>
+                  </div>
+                </div>
+
+                {/* 4th column - Design Basis Status */}
+                <div className="flex items-end">
+                  <div className="text-base text-gray-600 p-3">
+                    {(() => {
+                      const designBasisFlow = getDesignBasisFlow()
+                      const isCurrentDesignBasis = designBasisFlow && 
+                        designBasisFlow.caseName === 'External Fire' && 
+                        previewValues.asmeVIIIDesignFlow && 
+                        previewValues.asmeVIIIDesignFlow > 0
+                      
+                      if (isCurrentDesignBasis) {
+                        return (
+                          <div className="text-gray-900">
+                            This <strong>is</strong> the current Design Basis Flow
+                          </div>
+                        )
+                      } else if (previewValues.asmeVIIIDesignFlow && previewValues.asmeVIIIDesignFlow > 0) {
+                        return (
+                          <div className="text-gray-600">
+                            This <strong>is not</strong> the current Design Basis Flow
+                          </div>
+                        )
+                      } else {
+                        return (
+                          <div className="text-gray-400">
+                            Complete calculations to determine status
+                          </div>
+                        )
+                      }
+                    })()}
                   </div>
                 </div>
               </div>

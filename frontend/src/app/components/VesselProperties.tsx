@@ -16,11 +16,10 @@ interface VesselData {
 interface VesselPropertiesProps {
   vesselData: VesselData
   onChange: (field: keyof VesselData, value: string | number) => void
-  fireExposedArea?: number // Auto-calculated field
   onFluidPropertiesFound?: (heatOfVaporization: number) => void // Callback for fluid properties
 }
 
-export default function VesselProperties({ vesselData, onChange, fireExposedArea, onFluidPropertiesFound }: VesselPropertiesProps) {
+export default function VesselProperties({ vesselData, onChange, onFluidPropertiesFound }: VesselPropertiesProps) {
   const [fluidNames] = useState(() => getFluidNames())
   const [standardDiameters] = useState(() => getStandardDiameters())
 
@@ -37,7 +36,8 @@ export default function VesselProperties({ vesselData, onChange, fireExposedArea
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <h2 className="text-xl font-bold text-gray-900 mb-6">Vessel Properties</h2>
       
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* First row: vessel tag, straight side height, vessel diameter, working fluid */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Vessel Tag
@@ -88,21 +88,6 @@ export default function VesselProperties({ vesselData, onChange, fireExposedArea
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Head Type
-          </label>
-          <select
-            value={vesselData.headType}
-            onChange={(e) => onChange('headType', e.target.value)}
-            className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-          >
-            <option value="Hemispherical">Hemispherical</option>
-            <option value="Elliptical">Elliptical</option>
-            <option value="Flat">Flat</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
             Working Fluid
           </label>
           <select
@@ -117,6 +102,34 @@ export default function VesselProperties({ vesselData, onChange, fireExposedArea
                 {fluid}
               </option>
             ))}
+          </select>
+        </div>
+
+        {/* Second row: construction code, head type, set pressure, MAWP */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Vessel Construction Code
+          </label>
+          <input
+            type="text"
+            value="ASME VIII"
+            disabled
+            className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md bg-blue-50 text-gray-700 font-medium"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Head Type
+          </label>
+          <select
+            value={vesselData.headType}
+            onChange={(e) => onChange('headType', e.target.value)}
+            className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+          >
+            <option value="Hemispherical">Hemispherical</option>
+            <option value="Elliptical">Elliptical</option>
+            <option value="Flat">Flat</option>
           </select>
         </div>
 
@@ -149,34 +162,6 @@ export default function VesselProperties({ vesselData, onChange, fireExposedArea
             required
           />
         </div>
-
-        {/* Auto-calculated fields */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Vessel Construction Code
-          </label>
-          <input
-            type="text"
-            value="ASME VIII"
-            disabled
-            className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md bg-blue-50 text-gray-700 font-medium"
-          />
-        </div>
-
-        {fireExposedArea !== undefined && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Total Fire Exposed Area (sq. ft)
-            </label>
-            <input
-              type="text"
-              value={fireExposedArea.toFixed(2)}
-              disabled
-              className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md bg-blue-50 text-gray-700 font-medium"
-              title="Auto-calculated based on vessel dimensions and fire code"
-            />
-          </div>
-        )}
       </div>
     </div>
   )
