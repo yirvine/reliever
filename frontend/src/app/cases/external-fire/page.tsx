@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import VesselProperties from '../../components/VesselProperties'
 import CasePressureSettings from '../../components/CasePressureSettings'
 import { useVessel } from '../../context/VesselContext'
@@ -23,6 +24,7 @@ interface CasePressureData {
 export default function ExternalFireCase() {
   const { vesselData, updateVesselData, calculateFireExposedArea } = useVessel()
   const { updateCaseResult, selectedCases, toggleCase } = useCase()
+  const isSelected = selectedCases['external-fire']
 
   const [flowData, setFlowData] = useState<FlowData>({
     applicableFireCode: 'NFPA 30',
@@ -125,22 +127,15 @@ export default function ExternalFireCase() {
     setPressureData(prev => ({ ...prev, [field]: value }))
   }
 
-  // Auto-update case results when calculations change (only if case is selected)
-  const isSelected = selectedCases['external-fire']
+  // Auto-update case results when calculations change
   React.useEffect(() => {
-    if (isSelected && previewValues.calculatedRelievingFlow && previewValues.calculatedRelievingFlow > 0) {
+    if (previewValues.calculatedRelievingFlow && previewValues.calculatedRelievingFlow > 0) {
       updateCaseResult('external-fire', {
         asmeVIIIDesignFlow: previewValues.asmeVIIIDesignFlow!,
         isCalculated: true
       })
-    } else if (!isSelected) {
-      // Clear results when case is deselected
-      updateCaseResult('external-fire', {
-        asmeVIIIDesignFlow: null,
-        isCalculated: false
-      })
     }
-  }, [isSelected, previewValues.calculatedRelievingFlow, previewValues.asmeVIIIDesignFlow, updateCaseResult])
+  }, [previewValues.calculatedRelievingFlow, previewValues.asmeVIIIDesignFlow, updateCaseResult])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -149,10 +144,16 @@ export default function ExternalFireCase() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-gray-900 hover:text-blue-600">
-                Reliever
+              <Link href="/" className="hover:opacity-80 transition-opacity">
+                <Image 
+                  src="/ReliefGuardBannerTransparent.png" 
+                  alt="ReliefGuard" 
+                  width={200} 
+                  height={50} 
+                  className="h-8 w-auto"
+                />
               </Link>
-              <span className="ml-2 text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">MVP</span>
+              <span className="ml-3 text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">MVP</span>
               <span className="ml-4 text-lg text-gray-600">/ Case 1 - External Fire</span>
             </div>
             <Link 

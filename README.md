@@ -1,6 +1,6 @@
-# Reliever 🔧
+# ReliefGuard 🔧
 
-> **Modern web application for sizing pressure relief valves**
+> **Modern web application for sizing pressure relief valves and rupture discs**
 
 A clean, fast, web-based replacement for legacy VBA-driven Excel workbooks used in pressure relief valve (PRV) sizing calculations. Built for engineering professionals following NFPA 30, API 521, and ASME VIII guidelines.
 

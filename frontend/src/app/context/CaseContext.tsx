@@ -47,22 +47,10 @@ export function CaseProvider({ children }: { children: ReactNode }) {
   const [caseResults, setCaseResults] = useState(defaultCaseResults)
 
   const toggleCase = (caseId: string) => {
-    setSelectedCases(prev => {
-      const newSelected = !prev[caseId]
-      
-      // If deselecting, clear the case results
-      if (!newSelected) {
-        setCaseResults(prevResults => ({
-          ...prevResults,
-          [caseId]: { ...prevResults[caseId], asmeVIIIDesignFlow: null, isCalculated: false }
-        }))
-      }
-      
-      return {
-        ...prev,
-        [caseId]: newSelected
-      }
-    })
+    setSelectedCases(prev => ({
+      ...prev,
+      [caseId]: !prev[caseId]
+    }))
   }
 
   const updateCaseResult = useCallback((caseId: string, result: Partial<CaseResult>) => {
@@ -74,7 +62,7 @@ export function CaseProvider({ children }: { children: ReactNode }) {
 
   const getDesignBasisFlow = () => {
     const calculatedCases = Object.values(caseResults).filter(
-      result => result.isCalculated && result.asmeVIIIDesignFlow !== null
+      result => result.isCalculated && result.asmeVIIIDesignFlow !== null && selectedCases[result.caseId]
     )
     
     if (calculatedCases.length === 0) return null

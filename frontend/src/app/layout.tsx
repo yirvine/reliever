@@ -15,8 +15,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Reliever - Pressure Relief Valve Sizing",
-  description: "Modern web application for sizing pressure relief valves following NFPA 30, API 521, and ASME VIII guidelines",
+  title: "ReliefGuard - Pressure Relief & Rupture Disc Sizing",
+  description: "Modern web application for sizing pressure relief valves and rupture discs following NFPA 30, API 521, and ASME VIII guidelines",
+  icons: {
+    icon: '/ReliefGuardLogoTransparent.png',
+    shortcut: '/ReliefGuardLogoTransparent.png',
+    apple: '/ReliefGuardLogoTransparent.png',
+  },
 };
 
 export default function RootLayout({
