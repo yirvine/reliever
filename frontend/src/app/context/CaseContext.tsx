@@ -27,7 +27,7 @@ const defaultCases = {
   'additional-cases': false
 }
 
-const defaultCaseResults: { [key: string]: CaseResult } = {
+const defaultCaseResults: Record<CaseId, CaseResult> = {
   'external-fire': {
     caseId: 'external-fire',
     caseName: 'External Fire',
@@ -37,6 +37,12 @@ const defaultCaseResults: { [key: string]: CaseResult } = {
   'nitrogen-control': {
     caseId: 'nitrogen-control', 
     caseName: 'Nitrogen Control Failure',
+    asmeVIIIDesignFlow: null,
+    isCalculated: false
+  },
+  'additional-cases': {
+    caseId: 'additional-cases',
+    caseName: 'Additional Cases',
     asmeVIIIDesignFlow: null,
     isCalculated: false
   }
