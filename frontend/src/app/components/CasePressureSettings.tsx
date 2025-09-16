@@ -23,7 +23,7 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">
-        Case-Specific Settings
+        {caseName} - Case-Specific Settings
       </h2>
       <p className="text-sm text-gray-600 mb-4">
         Case-specific pressure limits and allowances

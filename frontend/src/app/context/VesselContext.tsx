@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, ReactNode } from 'react'
+import { calculateFireExposedArea as dbCalculateArea } from '../../../lib/database'
 
 export interface VesselData {
   vesselTag: string
@@ -43,9 +44,7 @@ export function VesselProvider({ children }: { children: ReactNode }) {
     
     if (!vesselDiameter || !straightSideHeight) return 0
     
-    // Import database function dynamically to avoid issues
     try {
-      const { calculateFireExposedArea: dbCalculateArea } = require('../../../lib/database')
       return dbCalculateArea(
         vesselDiameter,
         straightSideHeight,
