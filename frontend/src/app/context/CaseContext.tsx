@@ -2,18 +2,20 @@
 
 import { createContext, useContext, useState, ReactNode, useCallback } from 'react'
 
+export type CaseId = 'external-fire' | 'nitrogen-control' | 'additional-cases'
+
 export interface CaseResult {
-  caseId: string
+  caseId: CaseId
   caseName: string
   asmeVIIIDesignFlow: number | null
   isCalculated: boolean
 }
 
 interface CaseContextType {
-  selectedCases: { [key: string]: boolean }
-  caseResults: { [key: string]: CaseResult }
-  toggleCase: (caseId: string) => void
-  updateCaseResult: (caseId: string, result: Partial<CaseResult>) => void
+  selectedCases: Record<CaseId, boolean>
+  caseResults: Record<CaseId, CaseResult>
+  toggleCase: (caseId: CaseId) => void
+  updateCaseResult: (caseId: CaseId, result: Partial<CaseResult>) => void
   getDesignBasisFlow: () => { flow: number; caseName: string } | null
   getSelectedCaseCount: () => number
   hasCalculatedResults: () => boolean
@@ -46,14 +48,14 @@ export function CaseProvider({ children }: { children: ReactNode }) {
   const [selectedCases, setSelectedCases] = useState(defaultCases)
   const [caseResults, setCaseResults] = useState(defaultCaseResults)
 
-  const toggleCase = (caseId: string) => {
+  const toggleCase = (caseId: CaseId) => {
     setSelectedCases(prev => ({
       ...prev,
       [caseId]: !prev[caseId]
     }))
   }
 
-  const updateCaseResult = useCallback((caseId: string, result: Partial<CaseResult>) => {
+  const updateCaseResult = useCallback((caseId: CaseId, result: Partial<CaseResult>) => {
     setCaseResults(prev => ({
       ...prev,
       [caseId]: { ...prev[caseId], ...result }
