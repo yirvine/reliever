@@ -23,16 +23,22 @@ A clean, fast, web-based replacement for legacy VBA-driven Excel workbooks used 
   - Head type selection (Elliptical, Hemispherical, Flat)
   - Working fluid selection from database
   - MAWP and set pressure configuration
+  - Consistent 4-column layout for efficient data entry
 - **Fire Code Selection**
   - NFPA 30 (2018) with piecewise heat input formulas
   - API 521 (2000) with drainage/firefighting conditions
+  - Detailed tooltips explaining formula selection
 - **Real-time Calculations**
-  - Fire exposed area calculation
+  - Fire exposed area calculation (auto-updates)
   - Heat input (Q) based on selected code
   - Relieving flow, ASME VIII design flow, equivalent air flow
-- **Smart Validation**
+  - Automatic MAVP calculation (121% of MAWP)
+- **Smart Validation & UX**
   - Handles edge cases (e.g., NFPA 30 minimum area requirements)
   - Clear feedback with hover tooltips explaining limitations
+  - Selectable/copyable formula tooltips
+  - Case toggle with smooth animations
+  - Consistent styling for editable/uneditable fields
 
 ### ✅ **Engineering Database**
 - **Fluid Properties**: 20+ fluids with heat of vaporization, molecular weight, density
@@ -50,10 +56,20 @@ A clean, fast, web-based replacement for legacy VBA-driven Excel workbooks used 
 
 ### ✅ **Technical Architecture**
 - **Frontend**: Next.js 15+ with App Router, TypeScript, TailwindCSS v4
-- **State Management**: React Context API for vessel data and case results
-- **Database**: In-memory JavaScript objects (simulating SQLite for MVP)
-- **Calculations**: Pure JavaScript functions with industry-validated formulas
-- **Performance**: Optimized with React hooks, memoization, and efficient re-renders
+- **State Management**: 
+  - React Context API for vessel data and case results
+  - Local storage for data persistence across navigation
+  - Memoized callbacks to prevent unnecessary re-renders
+- **Database & Calculations**:
+  - In-memory JavaScript objects (simulating SQLite for MVP)
+  - Pure TypeScript functions with strict type safety
+  - Industry-validated formulas with detailed documentation
+  - Real-time calculation updates with error handling
+- **UI/UX**:
+  - League Spartan font for professional typography
+  - Consistent component library (inputs, dropdowns, tooltips)
+  - Smooth page transitions and animations
+  - Responsive design with 4-column grid system
 
 ## 🚀 **Future Roadmap**
 
@@ -173,7 +189,11 @@ reliever/
 - [x] Engineering validation and accuracy testing
 
 ### In Progress 🚧
-- [ ] Additional calculation cases
+- [ ] Case 2: Nitrogen Control Failure
+  - Basic page structure and navigation
+  - Shared vessel properties integration
+  - Nitrogen-specific calculations (coming soon)
+  - Case toggle and design basis flow integration
 - [ ] PDF report generation
 - [ ] Enhanced error handling and validation
 

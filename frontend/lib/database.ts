@@ -1,6 +1,23 @@
-// Database utility functions for reference data lookups
-// Simple interface for SQLite database queries
+/**
+ * database.ts
+ * 
+ * Engineering reference data and calculation functions for pressure relief valve sizing.
+ * Currently uses in-memory data structures, designed to be replaced with SQLite/API calls.
+ * 
+ * Key Features:
+ * - Fluid property lookups (heat of vaporization, molecular weight, density)
+ * - Vessel geometry calculations (head areas, fire exposed areas)
+ * - Heat input formulas from NFPA 30 and API 521
+ * - Standard vessel dimensions and lookup tables
+ * 
+ * Note: The nitrogen control failure case is under development and will require
+ * additional formulas and lookup tables for nitrogen-specific calculations.
+ */
 
+/**
+ * Properties of a working fluid used in relief calculations.
+ * Values from industry standard tables and handbooks.
+ */
 export interface FluidProperty {
   id: number
   fluid_name: string
@@ -42,17 +59,37 @@ const FLUID_PROPERTIES: FluidProperty[] = [
   { id: 20, fluid_name: 'Water', heat_of_vaporization: 970, molecular_weight: 18.01, liquid_density: 4111 }
 ]
 
-// Heat input calculation formulas
+/**
+ * Heat Input Formula Interface
+ * 
+ * Represents a formula used to calculate heat input (Q) based on wetted surface area.
+ * Different formulas apply to different area ranges and conditions.
+ * 
+ * General form: Q = C * A^n
+ * where:
+ * - Q = Heat input (BTU/hr)
+ * - C = Coefficient (varies by standard)
+ * - A = Wetted surface area (sq ft)
+ * - n = Exponent (varies by standard)
+ */
 export interface HeatInputFormula {
-  areaRangeMin: number // sq ft
-  areaRangeMax: number | null // sq ft, null for unlimited
-  formula: string // Formula as string for display
-  coefficient: number
-  exponent: number
-  description?: string
+  areaRangeMin: number     // Minimum area where formula applies (sq ft)
+  areaRangeMax: number | null  // Maximum area, null for unlimited (sq ft)
+  formula: string          // Human-readable formula for display
+  coefficient: number      // C in Q = C * A^n
+  exponent: number        // n in Q = C * A^n
+  description?: string    // Additional context about when to use this formula
 }
 
-// NFPA 30 (2018) Heat Input Formulas
+/**
+ * NFPA 30 (2018) Heat Input Formulas
+ * 
+ * Piecewise function based on wetted surface area:
+ * - 20-200 sq ft: Linear relationship
+ * - 200-1000 sq ft: Reduced growth rate
+ * - 1000-2800 sq ft: Further reduced growth
+ * - >2800 sq ft: Standard large vessel formula
+ */
 const HEAT_INPUT_FORMULAS_NFPA: HeatInputFormula[] = [
   { areaRangeMin: 20, areaRangeMax: 200, formula: '20,000A', coefficient: 20000, exponent: 1.0, description: 'Area 20-200 sq ft' },
   { areaRangeMin: 200, areaRangeMax: 1000, formula: '199,300A^0.566', coefficient: 199300, exponent: 0.566, description: 'Area 200-1000 sq ft' },
@@ -60,11 +97,29 @@ const HEAT_INPUT_FORMULAS_NFPA: HeatInputFormula[] = [
   { areaRangeMin: 2800, areaRangeMax: null, formula: '21,000A^0.82', coefficient: 21000, exponent: 0.82, description: 'Area >2800 sq ft' }
 ]
 
-// API 521 (2000) Heat Input Formulas
+/**
+ * API 521 (2000) Heat Input Formulas
+ * 
+ * API 521 formulas consider:
+ * - Fire size (small vs large)
+ * - Drainage and firefighting conditions
+ * - Environmental factor F (default 1.0)
+ * 
+ * Key differences from NFPA 30:
+ * - No piecewise function
+ * - Considers drainage conditions
+ * - Uses environmental factor F
+ */
 export interface API521Formula extends HeatInputFormula {
-  formulaType: 'small' | 'large' | 'no_drainage'
+  formulaType: 'small' | 'large' | 'no_drainage'  // Type of fire scenario
 }
 
+/**
+ * API 521 formula variations:
+ * - Small fires: Lower heat input for localized fires
+ * - Large fires with drainage: Standard heat input
+ * - Large fires without drainage: Higher heat input (1.64x)
+ */
 const HEAT_INPUT_FORMULAS_API: API521Formula[] = [
   { areaRangeMin: 0, areaRangeMax: null, formula: '21,000FA^-0.18', coefficient: 21000, exponent: -0.18, formulaType: 'small', description: 'Small fires (q)' },
   { areaRangeMin: 0, areaRangeMax: null, formula: '21,000FA^0.82', coefficient: 21000, exponent: 0.82, formulaType: 'large', description: 'Large fires (Q)' },

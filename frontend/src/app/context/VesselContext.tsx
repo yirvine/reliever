@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
 import { calculateFireExposedArea as dbCalculateArea } from '../../../lib/database'
 
 export interface VesselData {
@@ -33,6 +33,24 @@ const VesselContext = createContext<VesselContextType | undefined>(undefined)
 
 export function VesselProvider({ children }: { children: ReactNode }) {
   const [vesselData, setVesselData] = useState<VesselData>(defaultVesselData)
+
+  // Load saved vessel data from localStorage on mount
+  useEffect(() => {
+    const savedVesselData = localStorage.getItem('reliever-vessel-data')
+    if (savedVesselData) {
+      try {
+        const parsed = JSON.parse(savedVesselData)
+        setVesselData(prev => ({ ...prev, ...parsed }))
+      } catch (error) {
+        console.warn('Failed to parse saved vessel data:', error)
+      }
+    }
+  }, [])
+
+  // Save vessel data to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('reliever-vessel-data', JSON.stringify(vesselData))
+  }, [vesselData])
 
   const updateVesselData = (field: keyof VesselData, value: string | number) => {
     setVesselData(prev => ({ ...prev, [field]: value }))

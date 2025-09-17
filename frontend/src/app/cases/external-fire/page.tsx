@@ -186,6 +186,7 @@ export default function ExternalFireCase() {
             isAutoCalculated={true}
             vesselMawp={vesselData.vesselDesignMawp}
             fireExposedArea={calculateFireExposedArea(flowData.applicableFireCode)}
+            mawpPercent={121}
           />
 
           {/* Flow Calculations - Only user inputs (orange fields from Excel) */}
@@ -445,7 +446,7 @@ export default function ExternalFireCase() {
 
                 {/* 4th column - Design Basis Status */}
                 <div className="flex items-end">
-                  <div className="text-base text-gray-600 p-3">
+                  <div className="text-base text-gray-600 p-3 flex items-end">
                     {(() => {
                       const designBasisFlow = getDesignBasisFlow()
                       const isCurrentDesignBasis = designBasisFlow && 

@@ -17,9 +17,10 @@ interface VesselPropertiesProps {
   vesselData: VesselData
   onChange: (field: keyof VesselData, value: string | number) => void
   onFluidPropertiesFound?: (heatOfVaporization: number) => void // Callback for fluid properties
+  hideWorkingFluid?: boolean // Hide working fluid field for nitrogen case
 }
 
-export default function VesselProperties({ vesselData, onChange, onFluidPropertiesFound }: VesselPropertiesProps) {
+export default function VesselProperties({ vesselData, onChange, onFluidPropertiesFound, hideWorkingFluid = false }: VesselPropertiesProps) {
   const [fluidNames] = useState(() => getFluidNames())
   const [standardDiameters] = useState(() => getStandardDiameters())
 
@@ -86,24 +87,26 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Working Fluid
-          </label>
-          <select
-            value={vesselData.workingFluid}
-            onChange={(e) => handleFluidChange(e.target.value)}
-            className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-            required
-          >
-            <option value="">Select fluid...</option>
-            {fluidNames.map((fluid) => (
-              <option key={fluid} value={fluid}>
-                {fluid}
-              </option>
-            ))}
-          </select>
-        </div>
+        {!hideWorkingFluid && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Working Fluid
+            </label>
+            <select
+              value={vesselData.workingFluid}
+              onChange={(e) => handleFluidChange(e.target.value)}
+              className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+              required
+            >
+              <option value="">Select fluid...</option>
+              {fluidNames.map((fluid) => (
+                <option key={fluid} value={fluid}>
+                  {fluid}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Second row: construction code, head type, set pressure, MAWP */}
         <div>

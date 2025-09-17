@@ -13,12 +13,13 @@ interface CasePressureSettingsProps {
   isAutoCalculated?: boolean // For cases like External Fire where values are fixed
   vesselMawp?: number // For auto-calculation
   fireExposedArea?: number // Auto-calculated field for External Fire
+  mawpPercent?: number // MAWP percentage (121% for fire, 110% for non-fire)
 }
 
-export default function CasePressureSettings({ pressureData, onChange, caseName, isAutoCalculated = false, vesselMawp = 0, fireExposedArea }: CasePressureSettingsProps) {
-  // Auto-calculate values for External Fire case
-  const autoPercent = 121 // Fixed 121% for External Fire
-  const autoMavp = vesselMawp * (autoPercent / 100) // MAVP = 121% of MAWP
+export default function CasePressureSettings({ pressureData, onChange, caseName, isAutoCalculated = false, vesselMawp = 0, fireExposedArea, mawpPercent = 110 }: CasePressureSettingsProps) {
+  // Use provided percentage or default to 110% for non-fire cases
+  const autoPercent = mawpPercent
+  const autoMavp = vesselMawp * (autoPercent / 100) // MAVP = % of MAWP
   const autoBackpressure = Math.abs(vesselMawp - autoMavp) // |MAWP - MAVP|
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -48,7 +49,7 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
                   <line x1="12" y1="17" x2="12.01" y2="17"></line>
                 </svg>
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 min-w-max select-text pointer-events-none">
-                  Always 121% for External Fire case
+                  ASME VIII requires {autoPercent}% of MAWP for {caseName.toLowerCase()} cases
                 </div>
               </div>
             )}
@@ -88,7 +89,7 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
                   <line x1="12" y1="17" x2="12.01" y2="17"></line>
                 </svg>
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 min-w-max select-text pointer-events-none">
-                  121% of MAWP
+                  {autoPercent}% of MAWP
                 </div>
               </div>
             )}
@@ -105,7 +106,7 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
                 : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400'
             }`}
             placeholder="e.g., 18.0"
-            title={isAutoCalculated ? 'Auto-calculated: 121% of MAWP' : ''}
+            title={isAutoCalculated ? `Auto-calculated: ${autoPercent}% of MAWP` : ''}
             required
           />
         </div>
