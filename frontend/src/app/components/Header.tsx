@@ -22,6 +22,7 @@ export default function Header({ showBreadcrumb = false, breadcrumbText }: Heade
                 width={200} 
                 height={50} 
                 className="h-8 w-auto"
+                priority
               />
             </Link>
             <span className="ml-3 text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">MVP</span>
@@ -32,7 +33,7 @@ export default function Header({ showBreadcrumb = false, breadcrumbText }: Heade
           <div className="flex items-center space-x-1">
             <Link 
               href="/" 
-              className="px-3 py-2 text-xl font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200 font-spartan"
+              className="px-3 py-2 text-xl font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200 font-spartan navbar-text"
             >
               Home
             </Link>

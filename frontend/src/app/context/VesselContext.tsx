@@ -33,24 +33,27 @@ const VesselContext = createContext<VesselContextType | undefined>(undefined)
 
 export function VesselProvider({ children }: { children: ReactNode }) {
   const [vesselData, setVesselData] = useState<VesselData>(defaultVesselData)
+  const [isHydrated, setIsHydrated] = useState(false)
 
-  // Load saved vessel data from localStorage on mount
+  // Load from localStorage after hydration
   useEffect(() => {
-    const savedVesselData = localStorage.getItem('reliever-vessel-data')
-    if (savedVesselData) {
+    const saved = localStorage.getItem('reliever-vessel-data')
+    if (saved) {
       try {
-        const parsed = JSON.parse(savedVesselData)
-        setVesselData(prev => ({ ...prev, ...parsed }))
+        setVesselData({ ...defaultVesselData, ...JSON.parse(saved) })
       } catch (error) {
         console.warn('Failed to parse saved vessel data:', error)
       }
     }
+    setIsHydrated(true)
   }, [])
 
-  // Save vessel data to localStorage whenever it changes
+  // Save vessel data to localStorage whenever it changes (only after hydration)
   useEffect(() => {
-    localStorage.setItem('reliever-vessel-data', JSON.stringify(vesselData))
-  }, [vesselData])
+    if (isHydrated) {
+      localStorage.setItem('reliever-vessel-data', JSON.stringify(vesselData))
+    }
+  }, [vesselData, isHydrated])
 
   const updateVesselData = (field: keyof VesselData, value: string | number) => {
     setVesselData(prev => ({ ...prev, [field]: value }))

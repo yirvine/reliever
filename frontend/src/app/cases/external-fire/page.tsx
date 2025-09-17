@@ -155,14 +155,14 @@ export default function ExternalFireCase() {
               <span className="text-sm font-medium text-gray-700">Include Case</span>
               <div className={`
                 relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent 
-                transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2
+                transition-all duration-500 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2
                 ${isSelected ? 'bg-green-600' : 'bg-gray-200'}
               `}
               onClick={() => toggleCase('external-fire')}
               >
                 <span className={`
                   pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 
-                  transition duration-200 ease-in-out
+                  transition-all duration-500 ease-in-out
                   ${isSelected ? 'translate-x-5' : 'translate-x-0'}
                 `} />
               </div>

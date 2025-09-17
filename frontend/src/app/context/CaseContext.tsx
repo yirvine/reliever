@@ -75,41 +75,44 @@ const CaseContext = createContext<CaseContextType | undefined>(undefined)
 export function CaseProvider({ children }: { children: ReactNode }) {
   const [selectedCases, setSelectedCases] = useState(defaultCases)
   const [caseResults, setCaseResults] = useState(defaultCaseResults)
+  const [isHydrated, setIsHydrated] = useState(false)
 
-  // Load saved state from localStorage on mount
+  // Load from localStorage after hydration
   useEffect(() => {
-    // Load selected cases
     const savedSelectedCases = localStorage.getItem('reliever-selected-cases')
     if (savedSelectedCases) {
       try {
-        const parsed = JSON.parse(savedSelectedCases)
-        setSelectedCases(prev => ({ ...prev, ...parsed }))
+        setSelectedCases({ ...defaultCases, ...JSON.parse(savedSelectedCases) })
       } catch (error) {
         console.warn('Failed to parse saved selected cases:', error)
       }
     }
 
-    // Load case results
     const savedCaseResults = localStorage.getItem('reliever-case-results')
     if (savedCaseResults) {
       try {
-        const parsed = JSON.parse(savedCaseResults)
-        setCaseResults(prev => ({ ...prev, ...parsed }))
+        setCaseResults({ ...defaultCaseResults, ...JSON.parse(savedCaseResults) })
       } catch (error) {
         console.warn('Failed to parse saved case results:', error)
       }
     }
+
+    setIsHydrated(true)
   }, [])
 
-  // Save selected cases to localStorage whenever they change
+  // Save selected cases to localStorage whenever they change (only after hydration)
   useEffect(() => {
-    localStorage.setItem('reliever-selected-cases', JSON.stringify(selectedCases))
-  }, [selectedCases])
+    if (isHydrated) {
+      localStorage.setItem('reliever-selected-cases', JSON.stringify(selectedCases))
+    }
+  }, [selectedCases, isHydrated])
 
-  // Save case results to localStorage whenever they change
+  // Save case results to localStorage whenever they change (only after hydration)
   useEffect(() => {
-    localStorage.setItem('reliever-case-results', JSON.stringify(caseResults))
-  }, [caseResults])
+    if (isHydrated) {
+      localStorage.setItem('reliever-case-results', JSON.stringify(caseResults))
+    }
+  }, [caseResults, isHydrated])
 
   /**
    * Toggle a case's selected state.

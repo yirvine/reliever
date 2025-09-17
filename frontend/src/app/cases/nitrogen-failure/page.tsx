@@ -152,14 +152,14 @@ export default function NitrogenFailureCase() {
               <span className="text-sm font-medium text-gray-700">Include Case</span>
               <div className={`
                 relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent 
-                transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2
+                transition-all duration-500 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2
                 ${isSelected ? 'bg-green-600' : 'bg-gray-200'}
               `}
               onClick={() => toggleCase('nitrogen-control')}
               >
                 <span className={`
                   pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 
-                  transition duration-200 ease-in-out
+                  transition-all duration-500 ease-in-out
                   ${isSelected ? 'translate-x-5' : 'translate-x-0'}
                 `} />
               </div>
@@ -230,14 +230,14 @@ export default function NitrogenFailureCase() {
             
             {flowData.isManualFlowInput ? (
               // Manual Flow Input
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                     Mass Flow Rate
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
                     value={flowData.manualFlowRate || ''}
                     onChange={(e) => handleFlowDataChange('manualFlowRate', parseFloat(e.target.value) || 0)}
                     className={`w-full h-10 px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 ${
@@ -322,15 +322,15 @@ export default function NitrogenFailureCase() {
                   {getFieldError('inletPressure') && (
                     <p className="text-xs text-red-600 mt-1">{getFieldError('inletPressure')}</p>
                   )}
-                </div>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                     Outlet Pressure
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
                     value={flowData.outletPressure || ''}
                     onChange={(e) => handleFlowDataChange('outletPressure', parseFloat(e.target.value) || 0)}
                     className={`w-full h-10 px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 ${
@@ -437,15 +437,15 @@ export default function NitrogenFailureCase() {
                     className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                   />
                   <p className="text-xs text-gray-500 mt-1">~0.7 for globe valves</p>
-                </div>
+              </div>
 
                 {/* Objective constant - specific gravity */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                     Specific Gravity
-                  </label>
-                  <input
-                    type="number"
+                </label>
+                <input
+                  type="number"
                     value={NITROGEN_CONSTANTS.specificGravity}
                     disabled
                     className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md bg-blue-50 text-gray-700 font-medium"
@@ -475,7 +475,7 @@ export default function NitrogenFailureCase() {
                     {warning}
                   </div>
                 ))}
-              </div>
+            </div>
             )}
 
             {/* Calculated values preview (read-only) */}
@@ -589,7 +589,7 @@ export default function NitrogenFailureCase() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <label className="text-sm font-medium text-gray-700">
@@ -663,7 +663,7 @@ export default function NitrogenFailureCase() {
 
         </div>
 
-      </main>
+        </main>
       </div>
     </PageTransition>
   )
