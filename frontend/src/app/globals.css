@@ -48,6 +48,22 @@
   white-space: nowrap;
 }
 
+/* Prevent logo from changing size during load */
+.logo-container {
+  width: 192px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.logo-container img {
+  width: auto;
+  height: 32px;
+  max-width: 100%;
+  object-fit: contain;
+}
+
 /* Smooth slide-in/out animations for design basis flow card */
 .animate-in {
   animation: slideIn 0.3s ease-out;

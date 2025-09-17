@@ -16,14 +16,17 @@ export default function Header({ showBreadcrumb = false, breadcrumbText }: Heade
         <div className="flex justify-between items-center py-6">
           <div className="flex items-center">
             <Link href="/" className="hover:opacity-80 transition-opacity">
-              <Image 
-                src="/ReliefGuardBannerTransparent.png" 
-                alt="ReliefGuard" 
-                width={200} 
-                height={50} 
-                className="h-8 w-auto"
-                priority
-              />
+              <div className="logo-container">
+                <Image 
+                  src="/ReliefGuardBannerTransparent.png" 
+                  alt="ReliefGuard" 
+                  width={200} 
+                  height={50} 
+                  className="h-8 w-auto"
+                  priority
+                  sizes="192px"
+                />
+              </div>
             </Link>
             <span className="ml-3 text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">MVP</span>
             {showBreadcrumb && breadcrumbText && (
