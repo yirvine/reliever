@@ -1,0 +1,21 @@
+"use client"
+
+import { useSidebar } from './SidebarLayout'
+
+interface MainContentWrapperProps {
+  children: React.ReactNode
+}
+
+export default function MainContentWrapper({ children }: MainContentWrapperProps) {
+  const { isExpanded } = useSidebar()
+
+  return (
+    <main 
+      className={`min-h-screen transition-all duration-300 ease-in-out ${
+        isExpanded ? 'ml-52' : 'ml-12'
+      }`}
+    >
+      {children}
+    </main>
+  )
+}

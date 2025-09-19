@@ -1,18 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { VesselProvider } from "./context/VesselContext";
 import { CaseProvider } from "./context/CaseContext";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { SidebarProvider } from "./components/SidebarLayout";
+import Sidebar from "./components/Sidebar";
+import MainContentWrapper from "./components/MainContentWrapper";
 
 export const metadata: Metadata = {
   title: "ReliefGuard - Pressure Relief & Rupture Disc Sizing",
@@ -32,11 +24,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className="font-inter antialiased"
       >
         <CaseProvider>
           <VesselProvider>
-            {children}
+            <SidebarProvider>
+              <Sidebar />
+              <MainContentWrapper>
+                {children}
+              </MainContentWrapper>
+            </SidebarProvider>
           </VesselProvider>
         </CaseProvider>
       </body>

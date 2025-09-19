@@ -8,6 +8,7 @@ import PageTransition from '../../components/PageTransition'
 import { useVessel } from '../../context/VesselContext'
 import { useCase } from '../../context/CaseContext'
 import { calculateHeatInput } from '../../../../lib/database'
+import { useScrollPosition } from '../../hooks/useScrollPosition'
 
 interface FlowData {
   applicableFireCode: string
@@ -25,6 +26,8 @@ export default function ExternalFireCase() {
   const { vesselData, updateVesselData, calculateFireExposedArea } = useVessel()
   const { updateCaseResult, selectedCases, toggleCase, getDesignBasisFlow } = useCase()
   const isSelected = selectedCases['external-fire']
+  
+  useScrollPosition()
 
   const [flowData, setFlowData] = useState<FlowData>({
     applicableFireCode: 'NFPA 30',

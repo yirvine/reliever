@@ -36,7 +36,7 @@ export default function Header({ showBreadcrumb = false, breadcrumbText }: Heade
           <div className="flex items-center space-x-1">
             <Link 
               href="/" 
-              className="px-3 py-2 text-xl font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200 font-spartan navbar-text"
+              className="px-3 py-2 text-xl font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200 font-inter navbar-text"
             >
               Home
             </Link>

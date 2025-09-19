@@ -7,6 +7,7 @@ import Header from '../../components/Header'
 import PageTransition from '../../components/PageTransition'
 import { useVessel } from '../../context/VesselContext'
 import { useCase } from '../../context/CaseContext'
+import { useScrollPosition } from '../../hooks/useScrollPosition'
 import { 
   calculateNitrogenFlow, 
   validateInputs, 
@@ -30,6 +31,8 @@ export default function NitrogenFailureCase() {
   const { vesselData, updateVesselData } = useVessel()
   const { updateCaseResult, selectedCases, toggleCase, getDesignBasisFlow } = useCase()
   const isSelected = selectedCases['nitrogen-control']
+  
+  useScrollPosition()
 
   const [flowData, setFlowData] = useState<NitrogenFlowData>({
     isManualFlowInput: false,

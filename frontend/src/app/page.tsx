@@ -6,6 +6,7 @@ import ToggleSwitch from './components/ToggleSwitch'
 import Header from './components/Header'
 import PageTransition from './components/PageTransition'
 import { useCase } from './context/CaseContext'
+import { useScrollPosition } from './hooks/useScrollPosition'
 
 export default function Home() {
   const { selectedCases, toggleCase, getDesignBasisFlow, getSelectedCaseCount, hasCalculatedResults } = useCase()
@@ -14,6 +15,8 @@ export default function Home() {
   
   const [showCard, setShowCard] = useState(!!designBasisFlow)
   const [animatingOut, setAnimatingOut] = useState(false)
+  
+  useScrollPosition()
 
   useEffect(() => {
     if (designBasisFlow && !showCard) {
@@ -33,75 +36,37 @@ export default function Home() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
         <Header />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Hero Section */}
         <div className="mb-8 text-left">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4 font-spartan">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4 font-inter">
             Relief sizing made simple.
           </h2>
-          <p className="text-xl text-gray-600 max-w-8xl font-spartan">
+          <p className="text-lg text-gray-600 max-w-8xl font-inter">
             Calculate the required relieving rate for common scenarios in accordance with NFPA 30, API 521, and ASME VIII.
-            Use this rate in your simulation software (e.g. FluidFlow) to select the appropriate relief valve or rupture disc,
+            Use this rate in simulation software (e.g. FluidFlow) to size the appropriate relief valve or burst disc,
             then import the final device selection here for reporting.
           </p>
         </div>
 
 
 
-        {/* Features */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center mb-3">
-              <h3 className="text-lg font-semibold text-gray-900 mr-3 font-spartan">Code Compliant</h3>
-              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-              </div>
-            </div>
-            <p className="text-gray-600">All calculations are fully compliant with NFPA 30, API 521, and ASME VIII standards.</p>
-          </div>
-          
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center mb-3">
-              <h3 className="text-lg font-semibold text-gray-900 mr-3 font-spartan">Fast & Modern</h3>
-              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-            </div>
-            <p className="text-gray-600">Fast and responsive web interface, replacing slow Excel workbooks.</p>
-          </div>
-          
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center mb-3">
-              <h3 className="text-lg font-semibold text-gray-900 mr-3 font-spartan">Professional Reports</h3>
-              <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-            </div>
-            <p className="text-gray-600">Generate clean, professional PDF reports with calculations and results.</p>
-          </div>
-        </div>
 
         {/* Design Basis Flow Summary - Only when calculated */}
         {showCard && (
-          <div className={`bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6 ${
+          <div className={`bg-slate-50 border border-slate-200 rounded-lg p-6 mb-6 ${
             animatingOut ? 'animate-out' : 'animate-in'
           }`}>
             <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center mb-2">
-                  <h3 className="text-lg font-semibold text-blue-900 font-spartan mr-2">Current Design Basis Flow</h3>
+                  <h3 className="text-lg font-semibold text-slate-700 font-inter mr-2">Current Design Basis Flow</h3>
                   <div className="relative group">
-                    <svg className="w-4 h-4 text-blue-600 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-gray-600 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
@@ -109,15 +74,15 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-                <p className="text-blue-700">
-                  <span className="text-2xl font-bold font-spartan">{designBasisFlow?.flow.toLocaleString()}</span> lb/hr
+                <p className="text-gray-700">
+                  <span className="text-2xl font-bold font-inter">{designBasisFlow?.flow.toLocaleString()}</span> lb/hr
                   <span className="text-sm ml-2">from {designBasisFlow?.caseName}</span>
                 </p>
-                <p className="text-sm text-blue-600 mt-1">
+                <p className="text-sm text-gray-600 mt-1">
                   This is the maximum flow across all calculated cases and should be used for FluidFlow modeling.
                 </p>
               </div>
-              <div className="text-blue-500">
+              <div className="text-gray-500">
                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
@@ -129,7 +94,7 @@ export default function Home() {
         {/* Calculation Cases */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-bold text-gray-900 font-spartan">Available Calculation Cases</h3>
+            <h3 className="text-2xl font-bold text-gray-900 font-inter">Available Calculation Cases</h3>
             <div className="text-sm text-gray-500">
               {selectedCount} of 3 cases selected
             </div>
@@ -297,21 +262,13 @@ export default function Home() {
               }
             </p>
             
-            <div className="flex space-x-4">
-              {selectedCases['external-fire'] && (
-                <Link 
-                  href="/cases/external-fire"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
-                >
-                  Calculate External Fire
-                </Link>
-              )}
-              
-              {designBasisFlow && (
-                <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200">
-                  Proceed to FluidFlow Modeling
-                </button>
-              )}
+            <div className="flex justify-center">
+              <button className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 flex items-center space-x-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>Generate Report</span>
+              </button>
             </div>
           </div>
         )}
