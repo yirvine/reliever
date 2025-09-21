@@ -55,9 +55,8 @@ export default function Header({ showBreadcrumb = false, breadcrumbText }: Heade
             <NavDropdown 
               title="Data" 
               items={[
-                { label: 'Calculations', href: '#' },
-                { label: 'Fluid Properties', href: '#' },
-                { label: 'Vessel Head Area Table', href: '#' }
+                { label: 'Fluid Properties', href: '/data/fluid-properties' },
+                { label: 'Vessel Head Areas', href: '/data/vessel-head-areas' }
               ]} 
             />
           </div>
