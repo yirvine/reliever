@@ -1,10 +1,22 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Header from './components/Header'
 import PageTransition from './components/PageTransition'
 
 export default function Home() {
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    // Trigger fade-in animation after component mounts
+    const timer = setTimeout(() => {
+      setIsVisible(true)
+    }, 100)
+    
+    return () => clearTimeout(timer)
+  }, [])
+
   const scrollToHowItWorks = () => {
     const element = document.getElementById('how-it-works')
     if (element) {
@@ -19,9 +31,11 @@ export default function Home() {
 
         {/* Hero Section */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center">
+          <div className={`text-center transition-all duration-1000 ease-out ${
+            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}>
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 font-inter">
-              Relief Valve Sizing Made Easy
+              Relief sizing made simple.
             </h1>
             <p className="text-lg md:text-xl text-gray-600 max-w-4xl mx-auto mb-12 font-inter leading-relaxed">
               Calculate the required vessel relieving rate for common scenarios in accordance with NFPA 30, API 521, and ASME VIII standards to properly size your relief device.
@@ -53,7 +67,9 @@ export default function Home() {
         </main>
 
         {/* How It Works Section */}
-        <section id="how-it-works" className="bg-white py-20">
+        <section id="how-it-works" className={`bg-white py-20 transition-all duration-1000 ease-out delay-300 ${
+          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+        }`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 font-inter">
@@ -121,7 +137,9 @@ export default function Home() {
         </section>
 
         {/* Footer */}
-        <footer className="bg-gray-50 py-12">
+        <footer className={`bg-gray-50 py-12 transition-all duration-1000 ease-out delay-500 ${
+          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+        }`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <p className="text-gray-500 font-inter">
               Built for engineers, by engineers. Following NFPA 30, API 521, and ASME VIII standards.

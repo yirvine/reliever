@@ -12,10 +12,12 @@ A clean, fast, web-based replacement for legacy VBA-driven Excel workbooks used 
 ## 🎯 **Current Functionality (MVP)**
 
 ### ✅ **Landing Page & Navigation**
-- Professional overview with feature highlights
+- Professional hero section with soft fade-in animations
+- Clean "How It Works" section with 3-step process
 - Dynamic case selection with toggle switches
 - Real-time design basis flow calculation and display
 - Responsive design optimized for engineering workflows
+- Smooth scroll navigation between sections
 
 ### ✅ **Case 1: External Fire**
 - **Vessel Properties Input**
@@ -40,6 +42,39 @@ A clean, fast, web-based replacement for legacy VBA-driven Excel workbooks used 
   - Case toggle with smooth animations
   - Consistent styling for editable/uneditable fields
 
+### ✅ **Case 2: Nitrogen Control Failure**
+- **Dual Calculation Methods**
+  - Manual flow input (direct lb/hr entry)
+  - Pressure-based calculation using ISA gas flow formulas
+  - Real-time switching between calculation methods
+- **Advanced Input Parameters**
+  - Total Cv, inlet/outlet pressures
+  - Temperature, compressibility factor, pressure drop ratio
+  - Nitrogen-specific constants and properties
+- **API 520 Compliance**
+  - ISA gas flow formulas for choked/non-choked flow
+  - Flow regime detection and validation
+  - Comprehensive error handling and warnings
+- **Professional UX**
+  - Debounced calculations for performance
+  - Detailed tooltips with formula explanations
+  - Real-time validation and error display
+  - Case toggle integration with design basis flow
+
+### ✅ **Case 3: Liquid Overfill**
+- **Simple Manual Input**
+  - Direct flow rate entry in lb/hr
+  - Clear instructions for credible flow determination
+  - Pump capacity, pressure differential, or other credible means
+- **Streamlined Calculation**
+  - Relief flow = user input (no complex conversions)
+  - ASME VIII design flow = relief flow ÷ 0.9
+  - 110% MAWP allowance (same as nitrogen case)
+- **Consistent Integration**
+  - Same vessel properties and pressure settings
+  - Real-time design basis flow updates
+  - Case toggle with visual feedback
+
 ### ✅ **Engineering Database**
 - **Fluid Properties**: 20+ fluids with heat of vaporization, molecular weight, density
 - **Vessel Head Areas**: Comprehensive lookup tables for standard vessel sizes
@@ -53,6 +88,7 @@ A clean, fast, web-based replacement for legacy VBA-driven Excel workbooks used 
 - **Case Toggle System**: Include/exclude cases from both main page and case pages
 - **Real-time Updates**: Calculations update automatically as inputs change
 - **Responsive Design**: Works seamlessly on desktop and mobile
+- **Smooth Animations**: Fade-in effects and smooth transitions throughout
 
 ### ✅ **Technical Architecture**
 - **Frontend**: Next.js 15+ with App Router, TypeScript, TailwindCSS v4
@@ -74,10 +110,9 @@ A clean, fast, web-based replacement for legacy VBA-driven Excel workbooks used 
 ## 🚀 **Future Roadmap**
 
 ### 📋 **Phase 1: Additional Cases** *(Next 2-3 months)*
-- **Case 2**: Nitrogen Control Failure
-- **Case 3**: Blocked Outlet scenarios
-- **Case 4**: Gas Blowby calculations
-- **Case 5**: Tube Rupture analysis
+- **Case 4**: Blocked Outlet scenarios
+- **Case 5**: Gas Blowby calculations
+- **Case 6**: Tube Rupture analysis
 - Multi-case comparison and selection interface
 
 ### 📄 **Phase 2: Professional Reporting** *(3-4 months)*
@@ -137,6 +172,9 @@ reliever/
 ├── frontend/                 # Next.js application
 │   ├── src/app/             # App Router pages and components
 │   │   ├── cases/           # Individual calculation case pages
+│   │   │   ├── external-fire/    # Case 1: External Fire
+│   │   │   ├── nitrogen-failure/ # Case 2: Nitrogen Control Failure
+│   │   │   └── liquid-overfill/  # Case 3: Liquid Overfill
 │   │   ├── components/      # Reusable UI components
 │   │   └── context/         # React Context for state management
 │   └── lib/                 # Utilities and database functions
@@ -149,6 +187,7 @@ reliever/
 ### Supported Codes & Standards
 - **NFPA 30** (2018): Flammable and Combustible Liquids Code
 - **API 521** (2000): Pressure-relieving and Depressuring Systems
+- **API 520**: Sizing, Selection, and Installation of Pressure-Relieving Devices
 - **ASME VIII**: Boiler and Pressure Vessel Code
 
 ### Calculation Accuracy
@@ -159,6 +198,7 @@ reliever/
 ### Formula References
 - **NFPA 30 Heat Input**: Piecewise functions for different area ranges
 - **API 521 Heat Input**: Environmental factor considerations with drainage conditions
+- **API 520 Gas Flow**: ISA gas flow formulas for choked/non-choked conditions
 - **Fire Exposed Area**: Code-specific wetted surface calculations
 - **Relief Flow**: Heat input divided by fluid heat of vaporization
 - **ASME VIII Design**: Relief flow divided by 0.9 safety factor
@@ -170,6 +210,7 @@ reliever/
 - **Transparency**: All calculations visible with hover explanations
 - **Speed**: Faster than Excel with real-time updates
 - **Reliability**: Consistent results with clear validation
+- **Elegance**: Clean, professional interface with smooth animations
 
 ### Technical Approach
 - **MVP-First**: Focus on core functionality before feature creep
@@ -180,20 +221,21 @@ reliever/
 ## 📊 **Current Status**
 
 ### Completed ✅
-- [x] Landing page with case selection
-- [x] External Fire case with full calculations
+- [x] Landing page with case selection and smooth animations
+- [x] Case 1: External Fire with full calculations
+- [x] Case 2: Nitrogen Control Failure with dual calculation methods
+- [x] Case 3: Liquid Overfill with simple manual input
 - [x] Database integration for fluid properties
-- [x] Real-time calculation updates
+- [x] Real-time calculation updates across all cases
 - [x] Data persistence across navigation
 - [x] Responsive design and UX polish
 - [x] Engineering validation and accuracy testing
+- [x] Case toggle system with visual feedback
+- [x] Professional sidebar navigation
+- [x] Design basis flow calculation and display
 
 ### In Progress 🚧
-- [ ] Case 2: Nitrogen Control Failure
-  - Basic page structure and navigation
-  - Shared vessel properties integration
-  - Nitrogen-specific calculations (coming soon)
-  - Case toggle and design basis flow integration
+- [ ] Case 4: Blocked Outlet scenarios
 - [ ] PDF report generation
 - [ ] Enhanced error handling and validation
 
