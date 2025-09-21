@@ -28,7 +28,7 @@ export default function Sidebar() {
 
   return (
     <div 
-      className={`fixed left-0 top-[5.5rem] h-[calc(100vh-5.5rem)] bg-white border-r border-gray-200 shadow-sm transition-all duration-300 ease-in-out z-10 ${
+      className={`fixed left-0 top-[5.5rem] h-[calc(100vh-5.5rem)] app-sidebar-bg border-r app-sidebar-border shadow-sm transition-all duration-300 ease-in-out z-10 ${
         isExpanded ? 'w-52' : 'w-12'
       }`}
       onMouseEnter={() => setIsExpanded(true)}
@@ -37,23 +37,23 @@ export default function Sidebar() {
       <div className="flex flex-col h-full">
         {/* Navigation */}
         <nav className="flex-1 p-2 space-y-1 pt-4">
-          {/* Home */}
+          {/* Calculator */}
           <Link 
-            href="/" 
+            href="/calc" 
             className={`flex items-center px-2 py-1.5 rounded transition-all duration-150 group ${
-              pathname === '/' 
-                ? 'bg-slate-50 text-slate-700' 
-                : 'hover:bg-gray-50 text-gray-700 hover:text-gray-900'
+              pathname === '/calc' 
+                ? 'app-sidebar-active app-text-secondary' 
+                : 'app-sidebar-hover app-text-secondary hover:app-text-primary'
             } justify-start`}
           >
             {isExpanded && (
               <span className="text-sm font-medium font-inter whitespace-nowrap overflow-hidden">
-                Home
+                Calculator
               </span>
             )}
           </Link>
 
-          <div className="my-1 border-t border-gray-100"></div>
+          <div className="my-1 border-t app-border-light"></div>
 
           {/* Cases */}
           {cases.map((caseItem) => {
@@ -65,8 +65,8 @@ export default function Sidebar() {
                   href={caseItem.href}
                   className={`flex items-center px-2 py-1.5 rounded transition-all duration-150 justify-start ${
                     isActive 
-                      ? 'bg-slate-50 text-slate-700' 
-                      : 'hover:bg-gray-50 text-gray-700 hover:text-gray-900'
+                      ? 'app-sidebar-active app-text-secondary' 
+                      : 'app-sidebar-hover app-text-secondary hover:app-text-primary'
                   }`}
                 >
                   {isExpanded && (
@@ -82,8 +82,8 @@ export default function Sidebar() {
 
         {/* Footer */}
         {isExpanded && (
-          <div className="p-2 border-t border-gray-100">
-            <div className="text-sm text-gray-400 font-inter whitespace-nowrap">
+          <div className="p-2 border-t app-border-light">
+            <div className="text-sm app-text-muted font-inter whitespace-nowrap">
               v1.0.0 MVP
             </div>
           </div>
