@@ -23,7 +23,7 @@ export default function Home() {
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 font-inter">
               Relief Valve Sizing Made Easy
             </h1>
-            <p className="text-xl md:text-2xl text-gray-600 max-w-4xl mx-auto mb-12 font-inter leading-relaxed">
+            <p className="text-lg md:text-xl text-gray-600 max-w-4xl mx-auto mb-12 font-inter leading-relaxed">
               Calculate the required vessel relieving rate for common scenarios in accordance with NFPA 30, API 521, and ASME VIII standards to properly size your relief device.
             </p>
             
@@ -71,10 +71,10 @@ export default function Home() {
                   <span className="text-2xl font-bold text-slate-700 font-inter">1</span>
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-4 font-inter">
-                  Select Cases
+                  Select Relevant Cases
                 </h3>
                 <p className="text-gray-600 font-inter">
-                  Choose from external fire, nitrogen control failure, and other common relief scenarios based on your system requirements.
+                  Choose from common vessel relieving scenarios such as external fire, control valve failure, blocked discharge, and more, based on both your system design and environmental conditions.
                 </p>
               </div>
 
@@ -84,10 +84,10 @@ export default function Home() {
                   <span className="text-2xl font-bold text-slate-700 font-inter">2</span>
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-4 font-inter">
-                  Enter Parameters
+                  Calculate Design Flow
                 </h3>
                 <p className="text-gray-600 font-inter">
-                  Input your vessel properties, operating conditions, and fluid characteristics. All calculations follow industry standards.
+                  Enter vessel properties, operating conditions, and fluid data. ReliefGuard applies NFPA 30, API 521, and ASME VIII methodology to calculate the required relieving flow rate.
                 </p>
               </div>
 
@@ -97,10 +97,10 @@ export default function Home() {
                   <span className="text-2xl font-bold text-slate-700 font-inter">3</span>
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-4 font-inter">
-                  Get Results
+                  Document & Size
                 </h3>
                 <p className="text-gray-600 font-inter">
-                  Receive your design basis flow rate for relief valve sizing, ready for use in simulation software like FluidFlow.
+                  Use the calculated flow to size a relief valve or rupture disc in FluidFlow (or similar software), then return to ReliefGuard to record the selected device and generate a final, standards-compliant report.
                 </p>
               </div>
             </div>

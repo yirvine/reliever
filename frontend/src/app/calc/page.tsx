@@ -96,7 +96,7 @@ export default function Calculator() {
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-bold text-gray-900 font-inter">Available Calculation Cases</h3>
             <div className="text-sm text-gray-500">
-              {selectedCount} of 3 cases selected
+              {selectedCount} of 4 cases selected
             </div>
           </div>
           
@@ -211,6 +211,61 @@ export default function Calculator() {
               )}
             </div>
 
+            {/* Liquid Overfill Case */}
+            <div className={`
+              p-6 border rounded-lg transition-all duration-200 relative
+              ${selectedCases['liquid-overfill'] 
+                ? 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md' 
+                : 'border-gray-200 bg-gray-50'
+              }
+            `}>
+              <div className="absolute top-4 right-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-gray-500">Include</span>
+                  <ToggleSwitch
+                    enabled={selectedCases['liquid-overfill']}
+                    onChange={() => toggleCase('liquid-overfill')}
+                    size="sm"
+                  />
+                </div>
+              </div>
+              
+              {selectedCases['liquid-overfill'] ? (
+                <Link href="/cases/liquid-overfill" className="block">
+                  <div className="flex items-center justify-between pr-16">
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                        Case 3 - Liquid Overfill
+                      </h4>
+                      <p className="text-gray-600">
+                        Calculate relief requirements for liquid overfill scenarios where vessel receives liquid faster than it can be removed.
+                      </p>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-2">
+                        Available
+                      </span>
+                    </div>
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </Link>
+              ) : (
+                <div className="flex items-center justify-between pr-16">
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-500 mb-2">
+                      Case 3 - Liquid Overfill
+                    </h4>
+                    <p className="text-gray-500">
+                      Calculate relief requirements for liquid overfill scenarios where vessel receives liquid faster than it can be removed.
+                    </p>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 mt-2">
+                      Not Selected
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Additional Cases */}
             <div className={`
               p-6 border rounded-lg transition-all duration-200 relative
@@ -233,10 +288,10 @@ export default function Calculator() {
               <div className="flex items-center justify-between pr-16">
                 <div>
                   <h4 className={`text-lg font-semibold mb-2 ${selectedCases['additional-cases'] ? 'text-gray-900' : 'text-gray-500'}`}>
-                    Additional Cases
+                    Case 4 - Additional Cases
                   </h4>
                   <p className={selectedCases['additional-cases'] ? 'text-gray-600' : 'text-gray-500'}>
-                    Split Exchanger Tube, Liquid Overfill, Heating/Cooling Control Failure, and more.
+                    Split Exchanger Tube, Blocked Discharge, Heating/Cooling Control Failure, and more.
                   </p>
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-2 ${
                     selectedCases['additional-cases'] 

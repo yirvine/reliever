@@ -20,16 +20,21 @@ export default function Sidebar() {
       href: '/cases/nitrogen-failure',
     },
     {
+      id: 'liquid-overfill' as const,
+      name: '3 - Liquid Overfill',
+      href: '/cases/liquid-overfill',
+    },
+    {
       id: 'additional-cases' as const,
-      name: '3 - Additional Cases',
+      name: '4 - Additional Cases',
       href: '#',
     }
   ]
 
   return (
     <div 
-      className={`fixed left-0 top-[5.5rem] h-[calc(100vh-5.5rem)] app-sidebar-bg border-r app-sidebar-border shadow-sm transition-all duration-300 ease-in-out z-10 ${
-        isExpanded ? 'w-52' : 'w-12'
+      className={`fixed left-0 top-[5.5rem] h-[calc(100vh-5.5rem)] bg-gray-50 border-r border-gray-200 shadow-sm transition-all duration-300 ease-in-out z-10 ${
+        isExpanded ? 'w-60' : 'w-12'
       }`}
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => setIsExpanded(false)}
@@ -42,18 +47,18 @@ export default function Sidebar() {
             href="/calc" 
             className={`flex items-center px-2 py-1.5 rounded transition-all duration-150 group ${
               pathname === '/calc' 
-                ? 'app-sidebar-active app-text-secondary' 
-                : 'app-sidebar-hover app-text-secondary hover:app-text-primary'
+                ? 'bg-gray-200 text-gray-900' 
+                : 'hover:bg-gray-100 text-gray-700 hover:text-gray-900'
             } justify-start`}
           >
             {isExpanded && (
               <span className="text-sm font-medium font-inter whitespace-nowrap overflow-hidden">
-                Calculator
+                Home
               </span>
             )}
           </Link>
 
-          <div className="my-1 border-t app-border-light"></div>
+          <div className="my-1 border-t border-gray-200"></div>
 
           {/* Cases */}
           {cases.map((caseItem) => {
@@ -65,8 +70,8 @@ export default function Sidebar() {
                   href={caseItem.href}
                   className={`flex items-center px-2 py-1.5 rounded transition-all duration-150 justify-start ${
                     isActive 
-                      ? 'app-sidebar-active app-text-secondary' 
-                      : 'app-sidebar-hover app-text-secondary hover:app-text-primary'
+                      ? 'bg-gray-200 text-gray-900' 
+                      : 'hover:bg-gray-100 text-gray-700 hover:text-gray-900'
                   }`}
                 >
                   {isExpanded && (
@@ -82,8 +87,8 @@ export default function Sidebar() {
 
         {/* Footer */}
         {isExpanded && (
-          <div className="p-2 border-t app-border-light">
-            <div className="text-sm app-text-muted font-inter whitespace-nowrap">
+          <div className="p-2 border-t border-gray-200">
+            <div className="text-sm text-gray-500 font-inter whitespace-nowrap">
               v1.0.0 MVP
             </div>
           </div>

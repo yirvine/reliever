@@ -16,7 +16,7 @@
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react'
 
 // Valid case IDs in the system. Update this when adding new cases.
-export type CaseId = 'external-fire' | 'nitrogen-control' | 'additional-cases'
+export type CaseId = 'external-fire' | 'nitrogen-control' | 'liquid-overfill' | 'additional-cases'
 
 /**
  * Represents the calculation result for a specific case.
@@ -46,6 +46,7 @@ interface CaseContextType {
 const defaultCases = {
   'external-fire': false,
   'nitrogen-control': false,
+  'liquid-overfill': false,
   'additional-cases': false
 }
 
@@ -57,8 +58,14 @@ const defaultCaseResults: Record<CaseId, CaseResult> = {
     isCalculated: false
   },
   'nitrogen-control': {
-    caseId: 'nitrogen-control', 
+    caseId: 'nitrogen-control',
     caseName: 'Nitrogen Control Failure',
+    asmeVIIIDesignFlow: null,
+    isCalculated: false
+  },
+  'liquid-overfill': {
+    caseId: 'liquid-overfill',
+    caseName: 'Liquid Overfill',
     asmeVIIIDesignFlow: null,
     isCalculated: false
   },
