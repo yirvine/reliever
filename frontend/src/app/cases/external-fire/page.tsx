@@ -107,11 +107,12 @@ export default function ExternalFireCase() {
 
       const { heatInput } = heatInputResult
       const calculatedRelievingFlow = Math.round(heatInput / flowData.heatOfVaporization)
-      const asmeVIIIDesignFlow = Math.round(calculatedRelievingFlow * 1.11)
+      const asmeVIIIDesignFlow = Math.round(calculatedRelievingFlow / 0.9)
       const equivalentAirFlow = Math.round(calculatedRelievingFlow * 10.28)
 
       return { calculatedRelievingFlow, asmeVIIIDesignFlow, equivalentAirFlow, reason: null }
-    } catch {
+    } catch (error) {
+      console.error('Calculation error:', error)
       return { calculatedRelievingFlow: null, asmeVIIIDesignFlow: null, equivalentAirFlow: null, reason: 'Calculation error' }
     }
   }
@@ -257,51 +258,55 @@ export default function ExternalFireCase() {
 
               {/* API 521 Specific Question - Third Column */}
               {flowData.applicableFireCode === 'API 521' && (
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <label className="block text-xs font-medium text-gray-700">
-                      Adequate drainage & firefighting equipment?
-                    </label>
-                    <div className="group relative">
-                      <svg 
-                        className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                      </svg>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 min-w-max">
-                        <div className="font-semibold mb-2">API 521 Heat Input Formulas:</div>
-                        <div className="mb-2">
-                          <div className="font-medium">When adequate drainage and firefighting exist:</div>
-                          <div>Q = 21,000 F (A<sub>wet</sub>)<sup>0.82</sup></div>
-                        </div>
-                        <div className="mb-2">
-                          <div className="font-medium">When adequate drainage and firefighting do not exist:</div>
-                          <div>Q = 34,500 F (A<sub>wet</sub>)<sup>0.82</sup></div>
-                        </div>
-                        <div className="text-xs mt-2 border-t border-gray-600 pt-2">
-                          <div>Q = Total heat absorption (BTU/hr)</div>
-                          <div>F = Environmental factor (default: 1)</div>
-                          <div>A<sub>wet</sub> = Total wetted surface area (sq ft)</div>
+                <div className="lg:col-span-2">
+                  <div className="mb-2">
+                    <div className="flex items-center gap-1">
+                      <label className="text-sm font-medium text-gray-700">
+                        Adequate drainage & firefighting equipment?
+                      </label>
+                      <div className="group relative">
+                        <svg 
+                          className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 min-w-max">
+                          <div className="font-semibold mb-2">API 521 Heat Input Formulas:</div>
+                          <div className="mb-2">
+                            <div className="font-medium">When adequate drainage and firefighting exist:</div>
+                            <div>Q = 21,000 F (A<sub>wet</sub>)<sup>0.82</sup></div>
+                          </div>
+                          <div className="mb-2">
+                            <div className="font-medium">When adequate drainage and firefighting do not exist:</div>
+                            <div>Q = 34,500 F (A<sub>wet</sub>)<sup>0.82</sup></div>
+                          </div>
+                          <div className="text-xs mt-2 border-t border-gray-600 pt-2">
+                            <div>Q = Total heat absorption (BTU/hr)</div>
+                            <div>F = Environmental factor (default: 1)</div>
+                            <div>A<sub>wet</sub> = Total wetted surface area (sq ft)</div>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <select
-                    value={flowData.hasAdequateDrainageFirefighting === undefined ? '' : flowData.hasAdequateDrainageFirefighting.toString()}
-                    onChange={(e) => handleFlowDataChange('hasAdequateDrainageFirefighting', e.target.value === 'true')}
-                    className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                    required
-                  >
-                    <option value="">Select...</option>
-                    <option value="true">Yes</option>
-                    <option value="false">No</option>
-                  </select>
-                  <p className="text-xs text-gray-500 mt-1">Affects heat input formula</p>
+                  <div className="flex gap-4">
+                    <select
+                      value={flowData.hasAdequateDrainageFirefighting === undefined ? '' : flowData.hasAdequateDrainageFirefighting.toString()}
+                      onChange={(e) => handleFlowDataChange('hasAdequateDrainageFirefighting', e.target.value === 'true')}
+                      className="w-69 h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                      required
+                    >
+                      <option value="">Select...</option>
+                      <option value="true">Yes</option>
+                      <option value="false">No</option>
+                    </select>
+                    {/* <p className="text-xs text-gray-500 mt-2">Affects heat input formula</p> */}
+                  </div>
                 </div>
               )}
             </div>
@@ -448,35 +453,34 @@ export default function ExternalFireCase() {
                 </div>
 
                 {/* 4th column - Design Basis Status */}
-                <div className="flex items-end">
-                  <div className="text-base text-gray-600 p-3 flex items-end">
-                    {(() => {
-                      const designBasisFlow = getDesignBasisFlow()
-                      const isCurrentDesignBasis = designBasisFlow && 
-                        designBasisFlow.caseName === 'External Fire' && 
-                        previewValues.asmeVIIIDesignFlow && 
-                        previewValues.asmeVIIIDesignFlow > 0
-                      
-                      if (isCurrentDesignBasis) {
-                        return (
-                          <div className="text-gray-900">
-                            This <strong>is</strong> the current Design Basis Flow
-                          </div>
-                        )
-                      } else if (previewValues.asmeVIIIDesignFlow && previewValues.asmeVIIIDesignFlow > 0) {
-                        return (
-                          <div className="text-gray-600">
-                            This <strong>is not</strong> the current Design Basis Flow
-                          </div>
-                        )
-                      } else {
-                        return (
-                          <div className="text-gray-400">
-                            Complete calculations to determine status
-                          </div>
-                        )
-                      }
-                    })()}
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Design Basis Flow?
+                    </label>
+                  </div>
+                  <div className={`p-3 rounded border ${
+                    previewValues.asmeVIIIDesignFlow && previewValues.asmeVIIIDesignFlow > 0 ? 'bg-blue-50' : 'bg-gray-50'
+                  }`}>
+                    <div className={`font-medium ${
+                      previewValues.asmeVIIIDesignFlow && previewValues.asmeVIIIDesignFlow > 0 ? 'text-gray-700' : 'text-gray-400'
+                    }`}>
+                      {(() => {
+                        const designBasisFlow = getDesignBasisFlow()
+                        const isCurrentDesignBasis = designBasisFlow && 
+                          designBasisFlow.caseName === 'External Fire' && 
+                          previewValues.asmeVIIIDesignFlow && 
+                          previewValues.asmeVIIIDesignFlow > 0
+                        
+                        if (isCurrentDesignBasis) {
+                          return 'Yes'
+                        } else if (previewValues.asmeVIIIDesignFlow && previewValues.asmeVIIIDesignFlow > 0) {
+                          return 'No'
+                        } else {
+                          return 'Not enough info'
+                        }
+                      })()} 
+                    </div>
                   </div>
                 </div>
               </div>
