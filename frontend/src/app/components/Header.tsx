@@ -45,13 +45,12 @@ export default function Header({ showBreadcrumb = false, breadcrumbText }: Heade
             >
               Home
             </Link>
-            <NavDropdown 
-              title="About" 
-              items={[
-                { label: 'What is ReliefGuard?', href: '#' },
-                { label: 'Help', href: '#' }
-              ]} 
-            />
+            <Link 
+              href="/#how-it-works" 
+              className="px-3 py-2 text-xl font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200 font-inter navbar-text"
+            >
+              About
+            </Link>
             <NavDropdown 
               title="Data" 
               items={[

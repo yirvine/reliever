@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import Header from './components/Header'
 import PageTransition from './components/PageTransition'
 
@@ -24,21 +25,40 @@ export default function Home() {
     }
   }
 
+  const scrollToAbout = () => {
+    const element = document.getElementById('about-reliefguard')
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
+      <div className="min-h-screen bg-white relative">
+        {/* Subtle background image spanning hero and how-it-works sections */}
+        <div className={`absolute inset-0 pointer-events-none z-0 transition-all duration-1000 ease-out ${
+          isVisible ? 'opacity-20' : 'opacity-0'
+        }`}>
+          <Image 
+            src="/pressure_vessel_bw.jpeg" 
+            alt="" 
+            fill
+            className="object-cover object-center"
+            priority
+          />
+        </div>
         <Header />
 
         {/* Hero Section */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className={`text-center transition-all duration-1000 ease-out ${
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative">
+          <div className={`text-center transition-all duration-1000 ease-out relative z-10 ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}>
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 font-inter">
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 font-inter drop-shadow-sm">
               Relief sizing made simple.
             </h1>
-            <p className="text-lg md:text-xl text-gray-600 max-w-4xl mx-auto mb-12 font-inter leading-relaxed">
-              Calculate the required vessel relieving rate for common scenarios in accordance with NFPA 30, API 521, and ASME VIII standards to properly size your relief device.
+            <p className="text-lg md:text-xl text-gray-800 max-w-4xl mx-auto mb-12 font-inter leading-relaxed drop-shadow-xs">
+              Calculate the required relieving rate for pressure vessels in common scenarios in accordance with NFPA 30, API 521, and ASME VIII standards to properly size your relief device.
             </p>
             
             {/* Action Buttons */}
@@ -67,7 +87,7 @@ export default function Home() {
         </main>
 
         {/* How It Works Section */}
-        <section id="how-it-works" className={`bg-white py-20 transition-all duration-1000 ease-out delay-300 ${
+        <section id="how-it-works" className={`bg-white/80 py-20 pt-32 transition-all duration-1000 ease-out delay-300 relative z-10 ${
           isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
         }`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -121,17 +141,58 @@ export default function Home() {
               </div>
             </div>
 
-            {/* CTA at bottom of How It Works */}
-            <div className="text-center mt-16">
-              <Link 
-                href="/calc"
-                className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 inline-flex items-center space-x-2"
-              >
-                <span>Start Calculating</span>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
+            {/* CTA buttons at bottom of How It Works */}
+            <div className="text-center mt-16 space-y-4">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <Link 
+                  href="/calc"
+                  className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 inline-flex items-center space-x-2"
+                >
+                  <span>Start Calculating</span>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+                
+                <button 
+                  onClick={scrollToAbout}
+                  className="bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 px-8 py-4 rounded-xl font-semibold shadow-sm hover:shadow-md transition-all duration-300 inline-flex items-center space-x-2"
+                >
+                  <span>More about ReliefGuard</span>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* About ReliefGuard Section */}
+        <section id="about-reliefguard" className={`bg-gray-50 py-20 pt-32 transition-all duration-1000 ease-out delay-400 ${
+          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+        }`}>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-4xl">
+              <div className="mb-12">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 font-inter">
+                  More about ReliefGuard
+                </h2>
+              </div>
+              
+              <div className="prose prose-lg max-w-none text-gray-600 font-inter leading-relaxed">
+                <p className="text-lg mb-6">
+                  ReliefGuard is a web application that streamlines the process of determining required relieving rates for pressure vessels and documenting relief scenarios in a consistent, standards-compliant way. It was designed to replace legacy spreadsheet workflows, reduce manual error, and provide a more reliable foundation for pressure relief system design.
+                </p>
+                
+                <p className="text-lg mb-6">
+                  Pressure relief sizing often involves repetitive calculations across multiple scenarios, including external fire, control valve failure, blocked discharge, thermal expansion, and liquid overfill. ReliefGuard allows engineers to select one or more relevant scenarios, input vessel geometry, design conditions, and fluid data, and instantly obtain the required relieving flow rate according to recognized codes and standards such as NFPA 30, API 521, and ASME Section VIII.
+                </p>
+                
+                <p className="text-lg">
+                  By consolidating calculations into a modern, browser-based interface with automatic saving and consistent formatting, ReliefGuard reduces engineering effort, improves traceability, and ensures that results are always aligned with the latest industry standards.
+                </p>
+              </div>
             </div>
           </div>
         </section>
