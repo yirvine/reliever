@@ -1,4 +1,4 @@
-# ReliefGuard 🔧
+# ReliefGuard
 
 > **Modern web application for sizing pressure relief valves and rupture discs**
 
@@ -9,7 +9,7 @@ A clean, fast, web-based replacement for legacy VBA-driven Excel workbooks used 
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.0-06B6D4)
 
-## 🎯 **Current Functionality (MVP)**
+## **Current Functionality (MVP)**
 
 ### ✅ **Landing Page & Navigation**
 - Professional hero section with soft fade-in animations
@@ -107,43 +107,43 @@ A clean, fast, web-based replacement for legacy VBA-driven Excel workbooks used 
   - Smooth page transitions and animations
   - Responsive design with 4-column grid system
 
-## 🚀 **Future Roadmap**
+## **Future Roadmap**
 
-### 📋 **Phase 1: Additional Cases** *(Next 2-3 months)*
+### **Phase 1: Additional Cases** *(Next 2-3 months)*
 - **Case 4**: Blocked Outlet scenarios
 - **Case 5**: Gas Blowby calculations
 - **Case 6**: Tube Rupture analysis
 - Multi-case comparison and selection interface
 
-### 📄 **Phase 2: Professional Reporting** *(3-4 months)*
+### **Phase 2: Professional Reporting** *(3-4 months)*
 - PDF report generation with company branding
 - Calculation summary with input/output tables
 - Code compliance documentation
 - Export functionality (Excel, CSV formats)
 - Print-optimized layouts
 
-### 🗄️ **Phase 3: Data Management** *(4-6 months)*
+### **Phase 3: Data Management** *(4-6 months)*
 - SQLite/PostgreSQL integration for production
 - User project management and saving
 - Calculation history and audit trails
 - Custom fluid database management
 - Import/export of vessel configurations
 
-### 🔐 **Phase 4: Enterprise Features** *(6+ months)*
+### **Phase 4: Enterprise Features** *(6+ months)*
 - User authentication and role management
 - Multi-company/project organization
 - API for integration with other engineering tools
 - Advanced validation and approval workflows
 - Compliance reporting and documentation
 
-### 🏢 **Phase 5: Commercialization** *(Future)*
+### **Phase 5: Commercialization** *(Future)*
 - SaaS deployment with subscription tiers
 - Enterprise licensing for engineering firms
 - Integration with FluidFlow, HTRI, and other process software
 - Mobile app for field calculations
 - Advanced analytics and reporting dashboards
 
-## 🛠️ **Development Setup**
+## **Development Setup**
 
 ### Prerequisites
 - Node.js 18+ 
@@ -182,7 +182,7 @@ reliever/
 └── README.md               # This file
 ```
 
-## 🧮 **Engineering Standards**
+## **Engineering Standards**
 
 ### Supported Codes & Standards
 - **NFPA 30** (2018): Flammable and Combustible Liquids Code
@@ -203,7 +203,7 @@ reliever/
 - **Relief Flow**: Heat input divided by fluid heat of vaporization
 - **ASME VIII Design**: Relief flow divided by 0.9 safety factor
 
-## 🎨 **Design Philosophy**
+## **Design Philosophy**
 
 ### User Experience
 - **Engineer-First**: Designed by engineers, for engineers
@@ -218,7 +218,7 @@ reliever/
 - **Maintainable**: Clean code with TypeScript safety
 - **Scalable**: Architecture ready for enterprise deployment
 
-## 📊 **Current Status**
+## **Current Status**
 
 ### Completed ✅
 - [x] Landing page with case selection and smooth animations
@@ -234,27 +234,27 @@ reliever/
 - [x] Professional sidebar navigation
 - [x] Design basis flow calculation and display
 
-### In Progress 🚧
+### In Progress
 - [ ] Case 4: Blocked Outlet scenarios
 - [ ] PDF report generation
 - [ ] Enhanced error handling and validation
 
-### Planned 📅
+### Planned
 - [ ] Production database integration
 - [ ] User authentication system
 - [ ] Multi-project management
 - [ ] Enterprise deployment
 
-## 🤝 **Contributing**
+## **Contributing**
 
 This project is currently in private development. Future contributions will be welcome once the MVP is complete and the codebase is ready for external collaboration.
 
-## 📄 **License**
+## **License**
 
 Proprietary - All rights reserved. This software is intended for commercial use and licensing to engineering firms.
 
 ---
 
-**Built with ❤️ for the engineering community**
+**Built with care for the engineering community**
 
 *Replacing clunky Excel workbooks, one calculation at a time.*
