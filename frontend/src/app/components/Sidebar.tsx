@@ -33,7 +33,7 @@ export default function Sidebar() {
 
   return (
     <div 
-      className={`fixed left-0 top-[5.5rem] h-[calc(100vh-5.5rem)] bg-gray-50 border-r border-gray-200 shadow-sm transition-all duration-300 ease-in-out z-10 ${
+      className={`fixed left-0 top-[5.5rem] h-[calc(100vh-5.5rem)] bg-gray-50 border-r border-gray-200 shadow-sm transition-all duration-300 ease-in-out z-10 sidebar-desktop-show ${
         isExpanded ? 'w-60' : 'w-12'
       }`}
       onMouseEnter={() => setIsExpanded(true)}

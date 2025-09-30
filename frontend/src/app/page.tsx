@@ -50,9 +50,9 @@ export default function Home() {
         <Header />
 
         {/* Hero Section */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 lg:pt-16 pb-16 relative">
           <div className={`text-center transition-all duration-1000 ease-out relative z-10 ${
-            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
           }`}>
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 font-inter drop-shadow-sm">
               Relief sizing made simple.
@@ -87,27 +87,27 @@ export default function Home() {
         </main>
 
         {/* How It Works Section */}
-        <section id="how-it-works" className={`bg-white/80 py-20 pt-32 transition-all duration-1000 ease-out delay-300 relative z-10 ${
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+        <section id="how-it-works" className={`bg-white/80 py-12 sm:py-16 lg:py-20 pt-20 sm:pt-24 lg:pt-32 transition-all duration-1000 ease-out delay-300 relative z-10 ${
+          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 font-inter">
+            <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 font-inter">
                 How It Works
               </h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto font-inter">
-                Three simple steps to calculate your relief valve requirements
+              <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto font-inter">
+                {/* Three simple steps to calculate your relief valve requirements */}
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
+            <div className="grid md:grid-cols-3 gap-6 sm:gap-8 lg:gap-12">
               {/* Step 1 */}
               <div className="text-center">
-                <div className="bg-slate-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
+                <div className="bg-slate-100 rounded-full w-16 h-16 items-center justify-center mx-auto mb-6 hidden sm:flex">
                   <span className="text-2xl font-bold text-slate-700 font-inter">1</span>
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-4 font-inter">
-                  Select Relevant Cases
+                  <span className="sm:hidden">1. </span>Select Relevant Cases
                 </h3>
                 <p className="text-gray-600 font-inter">
                   Choose from common vessel relieving scenarios such as external fire, control valve failure, blocked discharge, and more, based on both your system design and environmental conditions.
@@ -116,11 +116,11 @@ export default function Home() {
 
               {/* Step 2 */}
               <div className="text-center">
-                <div className="bg-slate-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
+                <div className="bg-slate-100 rounded-full w-16 h-16 items-center justify-center mx-auto mb-6 hidden sm:flex">
                   <span className="text-2xl font-bold text-slate-700 font-inter">2</span>
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-4 font-inter">
-                  Calculate Design Flow
+                  <span className="sm:hidden">2. </span>Calculate Design Flow
                 </h3>
                 <p className="text-gray-600 font-inter">
                   Enter vessel properties, operating conditions, and fluid data. ReliefGuard applies NFPA 30, API 521, and ASME VIII methodology to calculate the required relieving flow rate.
@@ -129,11 +129,11 @@ export default function Home() {
 
               {/* Step 3 */}
               <div className="text-center">
-                <div className="bg-slate-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
+                <div className="bg-slate-100 rounded-full w-16 h-16 items-center justify-center mx-auto mb-6 hidden sm:flex">
                   <span className="text-2xl font-bold text-slate-700 font-inter">3</span>
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-4 font-inter">
-                  Document & Size
+                  <span className="sm:hidden">3. </span>Document & Size
                 </h3>
                 <p className="text-gray-600 font-inter">
                   Use the calculated flow to size a relief valve or rupture disc in FluidFlow (or similar software), then return to ReliefGuard to record the selected device and generate a final, standards-compliant report.
@@ -142,13 +142,13 @@ export default function Home() {
             </div>
 
             {/* CTA buttons at bottom of How It Works */}
-            <div className="text-center mt-16 space-y-4">
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="text-center mt-16">
+              <div className="flex flex-row gap-4 justify-center items-center">
                 <Link 
                   href="/calc"
-                  className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 inline-flex items-center space-x-2"
+                  className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 inline-flex items-center space-x-2"
                 >
-                  <span>Start Calculating</span>
+                  <span>Get Started</span>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
@@ -156,9 +156,9 @@ export default function Home() {
                 
                 <button 
                   onClick={scrollToAbout}
-                  className="bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 px-8 py-4 rounded-xl font-semibold shadow-sm hover:shadow-md transition-all duration-300 inline-flex items-center space-x-2"
+                  className="bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 px-6 py-3 rounded-xl font-semibold shadow-sm hover:shadow-md transition-all duration-300 inline-flex items-center space-x-2"
                 >
-                  <span>More about ReliefGuard</span>
+                  <span>Learn More</span>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
@@ -170,7 +170,7 @@ export default function Home() {
 
         {/* About ReliefGuard Section */}
         <section id="about-reliefguard" className={`bg-gray-50 py-20 pt-32 transition-all duration-1000 ease-out delay-400 ${
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl">
@@ -199,7 +199,7 @@ export default function Home() {
 
         {/* Footer */}
         <footer className={`bg-gray-50 py-12 transition-all duration-1000 ease-out delay-500 ${
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <p className="text-gray-500 font-inter">

@@ -6,7 +6,7 @@
   src: url('/fonts/League_Spartan/static/LeagueSpartan-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
-  font-display: block; /* Prevent font swap to avoid reflow */
+  font-display: swap; /* Prevent font swap to avoid reflow */
 }
 
 @font-face {
@@ -14,7 +14,7 @@
   src: url('/fonts/League_Spartan/static/LeagueSpartan-SemiBold.ttf') format('truetype');
   font-weight: 600;
   font-style: normal;
-  font-display: block; /* Prevent font swap to avoid reflow */
+  font-display: swap;
 }
 
 @font-face {
@@ -22,7 +22,7 @@
   src: url('/fonts/League_Spartan/static/LeagueSpartan-Bold.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
-  font-display: block; /* Prevent font swap to avoid reflow */
+  font-display: swap;
 }
 
 :root {
@@ -42,7 +42,7 @@
   src: url('/fonts/Inter/static/Inter_18pt-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
-  font-display: block;
+  font-display: swap;
 }
 
 @font-face {
@@ -50,7 +50,7 @@
   src: url('/fonts/Inter/static/Inter_18pt-Medium.ttf') format('truetype');
   font-weight: 500;
   font-style: normal;
-  font-display: block;
+  font-display: swap;
 }
 
 @font-face {
@@ -58,7 +58,7 @@
   src: url('/fonts/Inter/static/Inter_18pt-SemiBold.ttf') format('truetype');
   font-weight: 600;
   font-style: normal;
-  font-display: block;
+  font-display: swap;
 }
 
 @font-face {
@@ -66,12 +66,12 @@
   src: url('/fonts/Inter/static/Inter_18pt-Bold.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
-  font-display: block;
+  font-display: swap;
 }
 
 /* Font utility classes */
 .font-spartan {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'League Spartan', system-ui, -apple-system, sans-serif;
 }
 
 .font-inter {
@@ -173,5 +173,26 @@
 body {
   background: #f8fafc; /* Use a consistent light gray background */
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Hide sidebar on mobile - AGGRESSIVE */
+@media (max-width: 1023px) {
+  .sidebar-desktop-show {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    overflow: hidden !important;
+  }
+}
+
+/* Show sidebar on desktop */
+@media (min-width: 1024px) {
+  .sidebar-desktop-show {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
 }
