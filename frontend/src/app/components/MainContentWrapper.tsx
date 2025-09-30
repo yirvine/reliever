@@ -11,7 +11,7 @@ export default function MainContentWrapper({ children }: MainContentWrapperProps
 
   return (
     <main 
-      className={`min-h-screen pt-[5.5rem] lg:transition-all lg:duration-300 lg:ease-in-out ${
+      className={`min-h-screen pt-[5.5rem] ml-0 lg:transition-all lg:duration-300 lg:ease-in-out ${
         isExpanded ? 'lg:ml-60' : 'lg:ml-12'
       }`}
     >

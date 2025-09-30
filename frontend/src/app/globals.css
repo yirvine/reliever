@@ -170,6 +170,10 @@
   }
 }
 
+html, body {
+  overflow-x: hidden; /* Prevent horizontal overflow on mobile */
+}
+
 body {
   background: #f8fafc; /* Use a consistent light gray background */
   color: var(--foreground);
@@ -196,3 +200,11 @@ body {
     opacity: 1 !important;
   }
 }
+
+/* Force main content to use full width on mobile */
+@media (max-width: 1023px) {
+  main {
+    margin-left: 0 !important;
+  }
+}
+

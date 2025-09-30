@@ -10,6 +10,11 @@ export function useScrollPosition() {
   const previousPathnameRef = useRef<string | undefined>(undefined)
 
   useEffect(() => {
+    // Skip scroll position restoration on mobile entirely
+    if (window.innerWidth < 1024) {
+      return
+    }
+
     // Save scroll position for previous pathname
     if (previousPathnameRef.current && previousPathnameRef.current !== pathname) {
       scrollPositions.set(previousPathnameRef.current, window.scrollY)
@@ -20,7 +25,9 @@ export function useScrollPosition() {
     
     // Use requestAnimationFrame to ensure DOM is fully rendered
     requestAnimationFrame(() => {
-      window.scrollTo(0, savedPosition)
+      if (savedPosition > 0) {
+        window.scrollTo(0, savedPosition)
+      }
     })
 
     // Update previous pathname

@@ -149,7 +149,7 @@ export default function ExternalFireCase() {
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <div className="flex justify-between items-start">
-            <div>
+            <div className="flex-1 min-w-0">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Case 1 - External Fire</h1>
               <p className="text-gray-600">
                 Calculate relief requirements for external fire exposure following the relevant code guidelines.
@@ -275,7 +275,7 @@ export default function ExternalFireCase() {
                           <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                           <line x1="12" y1="17" x2="12.01" y2="17"></line>
                         </svg>
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 min-w-max">
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 min-w-max break-words">
                           <div className="font-semibold mb-2">API 521 Heat Input Formulas:</div>
                           <div className="mb-2">
                             <div className="font-medium">When adequate drainage and firefighting exist:</div>
@@ -298,7 +298,7 @@ export default function ExternalFireCase() {
                     <select
                       value={flowData.hasAdequateDrainageFirefighting === undefined ? '' : flowData.hasAdequateDrainageFirefighting.toString()}
                       onChange={(e) => handleFlowDataChange('hasAdequateDrainageFirefighting', e.target.value === 'true')}
-                      className="w-69 h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                      className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                       required
                     >
                       <option value="">Select...</option>
@@ -331,7 +331,7 @@ export default function ExternalFireCase() {
                         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                       </svg>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 w-96 select-text">
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 max-w-[90vw] sm:max-w-md lg:w-96 select-text break-words">
                         {previewValues.reason || (
                           flowData.applicableFireCode === 'NFPA 30' ? (
                             <div>

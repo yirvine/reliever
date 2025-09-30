@@ -145,7 +145,7 @@ export default function NitrogenFailureCase() {
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <div className="flex justify-between items-start">
-            <div>
+            <div className="flex-1 min-w-0">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Case 2 - Nitrogen Control Failure</h1>
               <p className="text-gray-600">
                 Calculate relief requirements for nitrogen control failure scenarios.

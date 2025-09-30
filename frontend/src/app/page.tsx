@@ -8,14 +8,22 @@ import PageTransition from './components/PageTransition'
 
 export default function Home() {
   const [isVisible, setIsVisible] = useState(false)
+  const [isFromHashLink, setIsFromHashLink] = useState(false)
 
   useEffect(() => {
-    // Trigger fade-in animation after component mounts
-    const timer = setTimeout(() => {
-      setIsVisible(true)
-    }, 100)
+    const hash = window.location.hash
     
-    return () => clearTimeout(timer)
+    if (hash === '#how-it-works' || hash === '#about-reliefguard') {
+      // Coming from hash link - show everything immediately
+      setIsVisible(true)
+      setIsFromHashLink(true)
+    } else {
+      // Normal page load - do the fade-in animation
+      const timer = setTimeout(() => {
+        setIsVisible(true)
+      }, 100)
+      return () => clearTimeout(timer)
+    }
   }, [])
 
   const scrollToHowItWorks = () => {
@@ -43,8 +51,9 @@ export default function Home() {
             src="/pressure_vessel_bw.jpeg" 
             alt="" 
             fill
-            className="object-cover object-center"
+            className="object-cover object-center opacity-100"
             priority
+            unoptimized
           />
         </div>
         <Header />
@@ -88,11 +97,11 @@ export default function Home() {
 
         {/* How It Works Section */}
         <section id="how-it-works" className={`bg-white/80 py-12 sm:py-16 lg:py-20 pt-20 sm:pt-24 lg:pt-32 transition-all duration-1000 ease-out delay-300 relative z-10 ${
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+          isVisible ? 'opacity-100' : 'opacity-0'
         }`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-8 sm:mb-12 lg:mb-16">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 font-inter">
+              <h2 className="text-3xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 font-inter">
                 How It Works
               </h2>
               <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto font-inter">
@@ -169,37 +178,46 @@ export default function Home() {
         </section>
 
         {/* About ReliefGuard Section */}
-        <section id="about-reliefguard" className={`bg-gray-50 py-20 pt-32 transition-all duration-1000 ease-out delay-400 ${
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+        <section id="about-reliefguard" className={`bg-gray-50/80 py-12 sm:py-16 lg:py-20 pt-20 sm:pt-24 lg:pt-32 transition-all duration-1000 ease-out ${isFromHashLink ? '' : 'delay-400'} ${
+          isVisible ? 'opacity-100' : 'opacity-0'
         }`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl">
               <div className="mb-12">
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 font-inter">
+                <h2 className="text-3xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 font-inter">
                   More about ReliefGuard
                 </h2>
               </div>
               
-              <div className="prose prose-lg max-w-none text-gray-600 font-inter leading-relaxed">
+              <div className="prose prose-lg max-w-none text-gray-900 font-inter leading-relaxed">
                 <p className="text-lg mb-6">
-                  ReliefGuard is a web application that streamlines the process of determining required relieving rates for pressure vessels and documenting relief scenarios in a consistent, standards-compliant way. It was designed to replace legacy spreadsheet workflows, reduce manual error, and provide a more reliable foundation for pressure relief system design.
+                  <strong>ReliefGuard</strong> is a web application that streamlines the process of determining required 
+                  <strong> relieving rates for pressure vessels</strong> and documenting <strong>relief scenarios</strong> in a consistent, 
+                  standards-compliant way. It replaces legacy <strong>spreadsheet workflows</strong>, reduces manual error, and provides a reliable 
+                  foundation for <strong>pressure relief system design</strong>.
                 </p>
                 
                 <p className="text-lg mb-6">
-                  Pressure relief sizing often involves repetitive calculations across multiple scenarios, including external fire, control valve failure, blocked discharge, thermal expansion, and liquid overfill. ReliefGuard allows engineers to select one or more relevant scenarios, input vessel geometry, design conditions, and fluid data, and instantly obtain the required relieving flow rate according to recognized codes and standards such as NFPA 30, API 521, and ASME Section VIII.
+                  ReliefGuard supports calculations for scenarios such as <strong>external fire</strong>, <strong>control valve failure</strong>, 
+                  <strong> blocked discharge</strong>, <strong>thermal expansion</strong>, and <strong>liquid overfill</strong>. Engineers can input 
+                  vessel geometry, design conditions, and fluid data, and instantly obtain the required <strong>relieving flow rate</strong> in accordance 
+                  with <strong>NFPA 30</strong>, <strong>API 521</strong>, and <strong>ASME Section VIII</strong>.
                 </p>
                 
                 <p className="text-lg">
-                  By consolidating calculations into a modern, browser-based interface with automatic saving and consistent formatting, ReliefGuard reduces engineering effort, improves traceability, and ensures that results are always aligned with the latest industry standards.
+                  By consolidating calculations into a modern, browser-based interface with <strong>automatic saving</strong> and 
+                  <strong> consistent formatting</strong>, ReliefGuard reduces <strong>engineering effort</strong>, improves <strong>traceability</strong>, 
+                  and ensures results remain aligned with the latest <strong>industry standards</strong>.
                 </p>
               </div>
+
             </div>
           </div>
         </section>
 
         {/* Footer */}
-        <footer className={`bg-gray-50 py-12 transition-all duration-1000 ease-out delay-500 ${
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+        <footer className={`bg-gray-50/80 py-12 transition-all duration-1000 ease-out delay-500 ${
+          isVisible ? 'opacity-100' : 'opacity-0'
         }`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <p className="text-gray-500 font-inter">

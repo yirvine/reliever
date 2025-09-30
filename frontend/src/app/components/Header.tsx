@@ -27,9 +27,9 @@ export default function Header({ showBreadcrumb = false, breadcrumbText }: Heade
                   alt="ReliefGuard" 
                   width={200} 
                   height={50} 
-                  className="h-6 sm:h-8 lg:h-10 w-auto"
+                  className="h-5 sm:h-8 lg:h-10 w-auto"
                   priority
-                  sizes="(max-width: 640px) 120px, (max-width: 1024px) 160px, 200px"
+                  sizes="(max-width: 640px) 100px, (max-width: 1024px) 160px, 200px"
                 />
               </div>
             </Link>
@@ -41,14 +41,14 @@ export default function Header({ showBreadcrumb = false, breadcrumbText }: Heade
           <div className="flex items-center space-x-0 sm:space-x-1">
             <Link 
               href="/calc" 
-              className="px-1 sm:px-3 py-2 text-sm sm:text-lg lg:text-xl font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200 font-inter navbar-text min-w-[3rem] sm:min-w-0"
+              className="px-1 sm:px-3 py-2 text-xs sm:text-lg lg:text-xl font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200 font-inter navbar-text min-w-[2.5rem] sm:min-w-0"
             >
               <span className="hidden sm:inline">Home</span>
-              <span className="sm:hidden">Calc</span>
+              <span className="sm:hidden">Home</span>
             </Link>
             <Link 
               href="/#how-it-works" 
-              className="px-1 sm:px-3 py-2 text-sm sm:text-lg lg:text-xl font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200 font-inter navbar-text"
+              className="px-1 sm:px-3 py-2 text-xs sm:text-lg lg:text-xl font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200 font-inter navbar-text"
             >
               About
             </Link>
