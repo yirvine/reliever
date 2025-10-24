@@ -59,15 +59,37 @@ export default function Home() {
         <Header />
 
         {/* Valve Animation */}
-        <div className="flex justify-center py-2">
-          <svg width="100mm" height="100mm" viewBox="0 0 200 200" stroke="#000" strokeWidth="2" fill="none" className="w-40 h-40">
+        <div className={`flex justify-center pt-2 pb-1 transition-all duration-1000 ease-out ${
+          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+        }`}>
+          <svg width="100mm" height="100mm" viewBox="60 95 100 105" stroke="#1e293b" strokeWidth="2" fill="none" className="w-40 h-40 mt-4">
             {/* Base */}
-            <line x1="70" y1="180" x2="150" y2="180" />
-            <rect x="85" y="110" width="30" height="50" />
-            <rect x="95" y="160" width="10" height="20" />
-            <rect x="115" y="125" width="35" height="10" />
+            <line x1="75" y1="183" x2="135" y2="183" />
+            <rect x="85" y="120" width="30" height="50" />
+            <rect x="90" y="170" width="20" height="13" />
+            <rect x="115" y="135" width="20" height="10" />
 
-            {/* Cap */}
+            {/* Stem - extends vertically from valve body to cap */}
+            <g id="valveStem">
+              <line x1="94" y1="120" x2="94" y2="105">
+                <animate attributeName="y2"
+                  values="105;100;100;105"
+                  keyTimes="0;0.25;0.5;0.75;1"
+                  dur="6s" repeatCount="indefinite"
+                  calcMode="spline"
+                  keySplines=".25,.1,.25,1;0,0,1,1;.25,.1,.25,1;0,0,1,1"/>
+              </line>
+              <line x1="106" y1="120" x2="106" y2="105">
+                <animate attributeName="y2"
+                  values="105;100;100;105"
+                  keyTimes="0;0.25;0.5;0.75;1"
+                  dur="6s" repeatCount="indefinite"
+                  calcMode="spline"
+                  keySplines=".25,.1,.25,1;0,0,1,1;.25,.1,.25,1;0,0,1,1"/>
+              </line>
+            </g>
+
+            {/* Cap - moves with stem */}
             <g id="valveCap" transform="translate(0,0)">
               <animateTransform attributeName="transform" type="translate"
                 values="0 0;0 -5;0 -5;0 0;0 0"
@@ -75,33 +97,32 @@ export default function Home() {
                 dur="6s" repeatCount="indefinite"
                 calcMode="spline"
                 keySplines=".25,.1,.25,1;0,0,1,1;.25,.1,.25,1;0,0,1,1"/>
-              <rect x="85" y="95" width="30" height="10"/>
-              <rect x="95" y="105" width="10" height="5"/>
+              <rect x="85" y="105" width="30" height="10" fill="white"/>
             </g>
 
             {/* Steam lines: equal extend/retract timing */}
             <g>
-              <line x1="155" y1="126" x2="155" y2="126">
+              <line x1="140" y1="136" x2="140" y2="136">
                 <animate attributeName="x2"
-                  values="155;175;155;155"
+                  values="140;160;140;140"
                   keyTimes="0;0.375;0.75;1"
                   dur="6s"
                   calcMode="spline"
                   keySplines=".42,0,.58,1;.42,0,.58,1;.42,0,.58,1"
                   repeatCount="indefinite"/>
               </line>
-              <line x1="155" y1="130" x2="155" y2="130">
+              <line x1="140" y1="140" x2="140" y2="140">
                 <animate attributeName="x2"
-                  values="155;175;155;155"
+                  values="140;160;140;140"
                   keyTimes="0;0.375;0.75;1"
                   dur="6s"
                   calcMode="spline"
                   keySplines=".42,0,.58,1;.42,0,.58,1;.42,0,.58,1"
                   repeatCount="indefinite"/>
               </line>
-              <line x1="155" y1="134" x2="155" y2="134">
+              <line x1="140" y1="144" x2="140" y2="144">
                 <animate attributeName="x2"
-                  values="155;175;155;155"
+                  values="140;160;140;140"
                   keyTimes="0;0.375;0.75;1"
                   dur="6s"
                   calcMode="spline"

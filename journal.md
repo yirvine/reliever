@@ -25,3 +25,6 @@
 - All navigation changes maintain existing functionality while improving user flow
 - Valve animation uses SVG with CSS animations for smooth performance
 - Progress saving messaging reassures users their work is preserved when navigating
+
+## Future Ideas
+- **Auto-save toggle**: Add user preference to enable/disable automatic progress saving, allowing users to choose between auto-save convenience or manual save control
