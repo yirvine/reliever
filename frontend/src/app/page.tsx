@@ -63,11 +63,20 @@ export default function Home() {
           isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}>
           <svg width="100mm" height="100mm" viewBox="60 95 100 105" stroke="#1e293b" strokeWidth="2" fill="none" className="w-40 h-40 mt-4">
-            {/* Base */}
-            <line x1="75" y1="183" x2="135" y2="183" />
-            <rect x="85" y="120" width="30" height="50" />
-            <rect x="90" y="170" width="20" height="13" />
-            <rect x="115" y="135" width="20" height="10" />
+            {/* Soft drop shadow filter */}
+            <defs>
+              <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="2" stdDeviation="1" floodOpacity="0.15"/>
+              </filter>
+            </defs>
+            
+            {/* Valve group with shadow */}
+            <g filter="url(#softShadow)">
+              {/* Base */}
+              <line x1="75" y1="183" x2="135" y2="183" />
+              <rect x="85" y="120" width="30" height="50" />
+              <rect x="90" y="170" width="20" height="13" />
+              <rect x="115" y="135" width="20" height="10" />
 
             {/* Stem - extends vertically from valve body to cap */}
             <g id="valveStem">
@@ -99,34 +108,35 @@ export default function Home() {
                 keySplines=".25,.1,.25,1;0,0,1,1;.25,.1,.25,1;0,0,1,1"/>
               <rect x="85" y="105" width="30" height="10" fill="white"/>
             </g>
+            </g>
 
-            {/* Steam lines: equal extend/retract timing */}
+            {/* Steam lines: faster extend/retract with hold */}
             <g>
               <line x1="140" y1="136" x2="140" y2="136">
                 <animate attributeName="x2"
-                  values="140;160;140;140"
-                  keyTimes="0;0.375;0.75;1"
+                  values="140;160;160;140;140"
+                  keyTimes="0;0.292;0.458;0.75;1"
                   dur="6s"
                   calcMode="spline"
-                  keySplines=".42,0,.58,1;.42,0,.58,1;.42,0,.58,1"
+                  keySplines=".42,0,.58,1;0,0,1,1;.42,0,.58,1;0,0,1,1"
                   repeatCount="indefinite"/>
               </line>
               <line x1="140" y1="140" x2="140" y2="140">
                 <animate attributeName="x2"
-                  values="140;160;140;140"
-                  keyTimes="0;0.375;0.75;1"
+                  values="140;160;160;140;140"
+                  keyTimes="0;0.292;0.458;0.75;1"
                   dur="6s"
                   calcMode="spline"
-                  keySplines=".42,0,.58,1;.42,0,.58,1;.42,0,.58,1"
+                  keySplines=".42,0,.58,1;0,0,1,1;.42,0,.58,1;0,0,1,1"
                   repeatCount="indefinite"/>
               </line>
               <line x1="140" y1="144" x2="140" y2="144">
                 <animate attributeName="x2"
-                  values="140;160;140;140"
-                  keyTimes="0;0.375;0.75;1"
+                  values="140;160;160;140;140"
+                  keyTimes="0;0.292;0.458;0.75;1"
                   dur="6s"
                   calcMode="spline"
-                  keySplines=".42,0,.58,1;.42,0,.58,1;.42,0,.58,1"
+                  keySplines=".42,0,.58,1;0,0,1,1;.42,0,.58,1;0,0,1,1"
                   repeatCount="indefinite"/>
               </line>
             </g>
@@ -134,7 +144,7 @@ export default function Home() {
         </div>
 
         {/* Hero Section */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-3 lg:pt-4 pb-16 relative">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-0 pb-16 relative">
           <div className={`text-center transition-all duration-1000 ease-out relative z-10 ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
           }`}>
