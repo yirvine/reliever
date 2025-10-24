@@ -20,7 +20,7 @@ export default function Header({ showBreadcrumb = false, breadcrumbText }: Heade
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
         <div className="flex justify-between items-center py-3 sm:py-6">
           <div className="flex items-center min-w-0 flex-1">
-            <Link href="/calc" className="hover:opacity-80 transition-opacity">
+            <Link href="/" className="hover:opacity-80 transition-opacity">
               <div className="logo-container">
                 <Image 
                   src="/ReliefGuardBannerTransparent.png" 
@@ -40,18 +40,25 @@ export default function Header({ showBreadcrumb = false, breadcrumbText }: Heade
           </div>
           <div className="flex items-center space-x-0 sm:space-x-1">
             <Link 
-              href="/calc" 
+              href="/" 
               className="px-1 sm:px-3 py-2 text-xs sm:text-lg lg:text-xl font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200 font-inter navbar-text min-w-[2.5rem] sm:min-w-0"
             >
               <span className="hidden sm:inline">Home</span>
               <span className="sm:hidden">Home</span>
             </Link>
             <Link 
+              href="/cases" 
+              className="px-1 sm:px-3 py-2 text-xs sm:text-lg lg:text-xl font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200 font-inter navbar-text"
+            >
+              Cases
+            </Link>
+            {/* Temporarily hidden About button - keeping logic for future use */}
+            {/* <Link 
               href="/#how-it-works" 
               className="px-1 sm:px-3 py-2 text-xs sm:text-lg lg:text-xl font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200 font-inter navbar-text"
             >
               About
-            </Link>
+            </Link> */}
             <NavDropdown 
               title="Data" 
               items={[

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import Link from 'next/link'
 import VesselProperties from '../../components/VesselProperties'
 import CasePressureSettings from '../../components/CasePressureSettings'
 import Header from '../../components/Header'
@@ -110,10 +111,23 @@ export default function LiquidOverfillCase() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
-        <Header showBreadcrumb={true} breadcrumbText="Case 3 - Liquid Overfill" />
+        <Header />
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">
+            {/* Back to Cases Navigation */}
+            <div className="mb-4">
+              <Link 
+                href="/cases" 
+                className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors duration-200"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to Cases (progress is saved)
+              </Link>
+            </div>
+            
             <div className="flex justify-between items-start">
               <div className="flex-1 min-w-0">
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">Case 3 - Liquid Overfill</h1>

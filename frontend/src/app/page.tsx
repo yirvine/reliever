@@ -58,8 +58,62 @@ export default function Home() {
         </div>
         <Header />
 
+        {/* Valve Animation */}
+        <div className="flex justify-center py-2">
+          <svg width="100mm" height="100mm" viewBox="0 0 200 200" stroke="#000" strokeWidth="2" fill="none" className="w-40 h-40">
+            {/* Base */}
+            <line x1="70" y1="180" x2="150" y2="180" />
+            <rect x="85" y="110" width="30" height="50" />
+            <rect x="95" y="160" width="10" height="20" />
+            <rect x="115" y="125" width="35" height="10" />
+
+            {/* Cap */}
+            <g id="valveCap" transform="translate(0,0)">
+              <animateTransform attributeName="transform" type="translate"
+                values="0 0;0 -5;0 -5;0 0;0 0"
+                keyTimes="0;0.25;0.5;0.75;1"
+                dur="6s" repeatCount="indefinite"
+                calcMode="spline"
+                keySplines=".25,.1,.25,1;0,0,1,1;.25,.1,.25,1;0,0,1,1"/>
+              <rect x="85" y="95" width="30" height="10"/>
+              <rect x="95" y="105" width="10" height="5"/>
+            </g>
+
+            {/* Steam lines: equal extend/retract timing */}
+            <g>
+              <line x1="155" y1="126" x2="155" y2="126">
+                <animate attributeName="x2"
+                  values="155;175;155;155"
+                  keyTimes="0;0.375;0.75;1"
+                  dur="6s"
+                  calcMode="spline"
+                  keySplines=".42,0,.58,1;.42,0,.58,1;.42,0,.58,1"
+                  repeatCount="indefinite"/>
+              </line>
+              <line x1="155" y1="130" x2="155" y2="130">
+                <animate attributeName="x2"
+                  values="155;175;155;155"
+                  keyTimes="0;0.375;0.75;1"
+                  dur="6s"
+                  calcMode="spline"
+                  keySplines=".42,0,.58,1;.42,0,.58,1;.42,0,.58,1"
+                  repeatCount="indefinite"/>
+              </line>
+              <line x1="155" y1="134" x2="155" y2="134">
+                <animate attributeName="x2"
+                  values="155;175;155;155"
+                  keyTimes="0;0.375;0.75;1"
+                  dur="6s"
+                  calcMode="spline"
+                  keySplines=".42,0,.58,1;.42,0,.58,1;.42,0,.58,1"
+                  repeatCount="indefinite"/>
+              </line>
+            </g>
+          </svg>
+        </div>
+
         {/* Hero Section */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 lg:pt-16 pb-16 relative">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-3 lg:pt-4 pb-16 relative">
           <div className={`text-center transition-all duration-1000 ease-out relative z-10 ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
           }`}>
@@ -71,9 +125,9 @@ export default function Home() {
             </p>
             
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-20">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
               <Link 
-                href="/calc"
+                href="/cases"
                 className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 flex items-center space-x-2 text-lg"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -154,7 +208,7 @@ export default function Home() {
             <div className="text-center mt-16">
               <div className="flex flex-row gap-4 justify-center items-center">
                 <Link 
-                  href="/calc"
+                  href="/cases"
                   className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 inline-flex items-center space-x-2"
                 >
                   <span>Get Started</span>

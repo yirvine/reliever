@@ -42,11 +42,11 @@ export default function Sidebar() {
       <div className="flex flex-col h-full">
         {/* Navigation */}
         <nav className="flex-1 p-2 space-y-1 pt-4">
-          {/* Calculator */}
+          {/* Home */}
           <Link 
-            href="/calc" 
+            href="/" 
             className={`flex items-center px-2 py-1.5 rounded transition-all duration-150 group ${
-              pathname === '/calc' 
+              pathname === '/' 
                 ? 'bg-gray-200 text-gray-900' 
                 : 'hover:bg-gray-100 text-gray-700 hover:text-gray-900'
             } justify-start`}
