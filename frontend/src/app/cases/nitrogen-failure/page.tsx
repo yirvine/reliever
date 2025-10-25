@@ -158,13 +158,11 @@ export default function NitrogenFailureCase() {
             </Link>
           </div>
           
-          <div className="flex justify-between items-start">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Case 2 - Nitrogen Control Failure</h1>
-              <p className="text-gray-600">
-                Calculate relief requirements for nitrogen control failure scenarios.
-              </p>
-            </div>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Case 2 - Nitrogen Control Failure</h1>
+            <p className="text-gray-600 mb-4">
+              Calculate relief requirements for nitrogen control failure scenarios.
+            </p>
             <div className="flex items-center space-x-2">
               <span className="text-sm font-medium text-gray-700">Include Case</span>
               <div className={`
@@ -201,6 +199,7 @@ export default function NitrogenFailureCase() {
             vesselData={vesselData} 
             onChange={updateVesselData}
             hideWorkingFluid={true}
+            disabled={!isSelected}
           />
 
           {/* Case-Specific Pressure Settings */}
@@ -211,6 +210,7 @@ export default function NitrogenFailureCase() {
             isAutoCalculated={true}
             vesselMawp={vesselData.vesselDesignMawp}
             mawpPercent={110}
+            disabled={!isSelected}
           />
 
           {/* Flow Calculation Method Choice */}
@@ -255,12 +255,17 @@ export default function NitrogenFailureCase() {
                 <input
                   type="number"
                   step="0.1"
-                    value={flowData.manualFlowRate || ''}
-                    onChange={(e) => handleFlowDataChange('manualFlowRate', parseFloat(e.target.value) || 0)}
-                    className={`w-full h-10 px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 ${
-                      getFieldError('manualFlowRate') ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  />
+                  value={flowData.manualFlowRate || ''}
+                  onChange={(e) => handleFlowDataChange('manualFlowRate', parseFloat(e.target.value) || 0)}
+                  className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
+                    !isSelected 
+                      ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                      : getFieldError('manualFlowRate') 
+                        ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                        : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                  }`}
+                  disabled={!isSelected}
+                />
                   <p className="text-xs text-gray-500 mt-1">lb/hr</p>
                   {getFieldError('manualFlowRate') && (
                     <p className="text-xs text-red-600 mt-1">{getFieldError('manualFlowRate')}</p>
@@ -296,9 +301,14 @@ export default function NitrogenFailureCase() {
                     step="0.1"
                     value={flowData.totalCv || ''}
                     onChange={(e) => handleFlowDataChange('totalCv', parseFloat(e.target.value) || 0)}
-                    className={`w-full h-10 px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 ${
-                      getFieldError('totalCv') ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
+                      !isSelected 
+                        ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                        : getFieldError('totalCv') 
+                          ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                          : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                     }`}
+                    disabled={!isSelected}
                   />
                   {getFieldError('totalCv') && (
                     <p className="text-xs text-red-600 mt-1">{getFieldError('totalCv')}</p>
@@ -331,9 +341,14 @@ export default function NitrogenFailureCase() {
                     step="0.1"
                     value={flowData.inletPressure || ''}
                     onChange={(e) => handleFlowDataChange('inletPressure', parseFloat(e.target.value) || 0)}
-                    className={`w-full h-10 px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 ${
-                      getFieldError('inletPressure') ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
+                      !isSelected 
+                        ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                        : getFieldError('inletPressure') 
+                          ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                          : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                     }`}
+                    disabled={!isSelected}
                   />
                   <p className="text-xs text-gray-500 mt-1">psig</p>
                   {getFieldError('inletPressure') && (
@@ -348,12 +363,17 @@ export default function NitrogenFailureCase() {
                 <input
                   type="number"
                   step="0.1"
-                    value={flowData.outletPressure || ''}
-                    onChange={(e) => handleFlowDataChange('outletPressure', parseFloat(e.target.value) || 0)}
-                    className={`w-full h-10 px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 ${
-                      getFieldError('outletPressure') ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  />
+                  value={flowData.outletPressure || ''}
+                  onChange={(e) => handleFlowDataChange('outletPressure', parseFloat(e.target.value) || 0)}
+                  className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
+                    !isSelected 
+                      ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                      : getFieldError('outletPressure') 
+                        ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                        : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                  }`}
+                  disabled={!isSelected}
+                />
                   <p className="text-xs text-gray-500 mt-1">psig</p>
                   {getFieldError('outletPressure') && (
                     <p className="text-xs text-red-600 mt-1">{getFieldError('outletPressure')}</p>
@@ -387,7 +407,12 @@ export default function NitrogenFailureCase() {
                     step="0.1"
                     value={flowData.temperatureF || ''}
                     onChange={(e) => handleFlowDataChange('temperatureF', parseFloat(e.target.value) || 0)}
-                    className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                    className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
+                      !isSelected 
+                        ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                        : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                    }`}
+                    disabled={!isSelected}
                   />
                   <p className="text-xs text-gray-500 mt-1">°F</p>
                 </div>
@@ -419,7 +444,12 @@ export default function NitrogenFailureCase() {
                     step="0.01"
                     value={flowData.compressibilityZ || ''}
                     onChange={(e) => handleFlowDataChange('compressibilityZ', parseFloat(e.target.value) || 0)}
-                    className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                    className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
+                      !isSelected 
+                        ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                        : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                    }`}
+                    disabled={!isSelected}
                   />
                   <p className="text-xs text-gray-500 mt-1">~1.0 for nitrogen</p>
                 </div>
@@ -451,7 +481,12 @@ export default function NitrogenFailureCase() {
                     step="0.01"
                     value={flowData.xt || ''}
                     onChange={(e) => handleFlowDataChange('xt', parseFloat(e.target.value) || 0)}
-                    className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                    className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
+                      !isSelected 
+                        ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                        : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                    }`}
+                    disabled={!isSelected}
                   />
                   <p className="text-xs text-gray-500 mt-1">~0.7 for globe valves</p>
               </div>
@@ -469,6 +504,29 @@ export default function NitrogenFailureCase() {
                     title="Nitrogen specific gravity (objective value)"
                   />
                   <p className="text-xs text-gray-500 mt-1">Relative to air</p>
+                </div>
+
+                {/* Flow Regime Display */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Flow Regime
+                  </label>
+                  <div className={`w-full h-10 px-3 py-2 border rounded-md flex items-center ${
+                    previewValues.flowRegime && hasValidInputs 
+                      ? 'border-blue-200 bg-blue-50 text-blue-900' 
+                      : 'border-gray-200 bg-gray-50 text-gray-400'
+                  }`}>
+                    {previewValues.flowRegime && hasValidInputs ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <span className="text-sm font-medium">
+                          {previewValues.flowRegime}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-sm">Not calculated</span>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -497,18 +555,6 @@ export default function NitrogenFailureCase() {
 
             {/* Calculated values preview (read-only) */}
             <div className="mt-6 pt-6 border-t border-gray-200">
-              {/* Flow Regime Display */}
-              {previewValues.flowRegime && hasValidInputs && (
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span className="text-sm font-medium text-blue-900">
-                      Flow Regime: {previewValues.flowRegime}
-                    </span>
-                  </div>
-                </div>
-              )}
-              
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -643,35 +689,34 @@ export default function NitrogenFailureCase() {
                 </div>
 
                 {/* 4th column - Design Basis Status */}
-                <div className="flex items-end">
-                  <div className="text-base text-gray-600 p-3 flex items-end">
-                    {(() => {
-                      const designBasisFlow = getDesignBasisFlow()
-                      const isCurrentDesignBasis = designBasisFlow && 
-                        designBasisFlow.caseName === 'Nitrogen Control Failure' && 
-                        previewValues.calculatedRelievingFlow && 
-                        previewValues.calculatedRelievingFlow > 0
-                      
-                      if (isCurrentDesignBasis) {
-                        return (
-                          <div className="text-gray-900">
-                            This <strong>is</strong> the current Design Basis Flow
-                          </div>
-                        )
-                      } else if (previewValues.calculatedRelievingFlow && previewValues.calculatedRelievingFlow > 0) {
-                        return (
-                          <div className="text-gray-600">
-                            This <strong>is not</strong> the current Design Basis Flow
-                          </div>
-                        )
-                      } else {
-                        return (
-                          <div className="text-gray-400">
-                            Complete calculations to determine status
-                          </div>
-                        )
-                      }
-                    })()}
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Design Basis Flow?
+                    </label>
+                  </div>
+                  <div className={`p-3 rounded border ${
+                    previewValues.calculatedRelievingFlow && previewValues.calculatedRelievingFlow > 0 ? 'bg-blue-50' : 'bg-gray-50'
+                  }`}>
+                    <div className={`font-medium ${
+                      previewValues.calculatedRelievingFlow && previewValues.calculatedRelievingFlow > 0 ? 'text-gray-700' : 'text-gray-400'
+                    }`}>
+                      {(() => {
+                        const designBasisFlow = getDesignBasisFlow()
+                        const isCurrentDesignBasis = designBasisFlow && 
+                          designBasisFlow.caseName === 'Nitrogen Control Failure' && 
+                          previewValues.calculatedRelievingFlow && 
+                          previewValues.calculatedRelievingFlow > 0
+                        
+                        if (isCurrentDesignBasis) {
+                          return 'Yes'
+                        } else if (previewValues.calculatedRelievingFlow && previewValues.calculatedRelievingFlow > 0) {
+                          return 'No'
+                        } else {
+                          return 'Not enough info'
+                        }
+                      })()} 
+                    </div>
                   </div>
                 </div>
               </div>

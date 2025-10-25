@@ -62,11 +62,13 @@ export default function Home() {
         <div className={`flex justify-center pt-2 pb-1 transition-all duration-1000 ease-out ${
           isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}>
-          <svg width="100mm" height="100mm" viewBox="60 95 100 105" stroke="#1e293b" strokeWidth="2" fill="none" className="w-40 h-40 mt-4">
-            {/* Soft drop shadow filter */}
+          <svg width="100mm" height="100mm" viewBox="60 95 100 105" stroke="#475569" strokeWidth="2" fill="none" className="w-40 h-40 mt-4">
+            {/* Soft drop shadow filter with animated pulse */}
             <defs>
               <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
-                <feDropShadow dx="0" dy="2" stdDeviation="1" floodOpacity="0.15"/>
+                <feDropShadow dx="0" dy="2" stdDeviation="1" floodOpacity="0.1">
+                  <animate attributeName="flood-opacity" values="0.1;0.25;0.1" dur="6s" repeatCount="indefinite"/>
+                </feDropShadow>
               </filter>
             </defs>
             

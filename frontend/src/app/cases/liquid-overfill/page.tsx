@@ -128,14 +128,12 @@ export default function LiquidOverfillCase() {
               </Link>
             </div>
             
-            <div className="flex justify-between items-start">
-              <div className="flex-1 min-w-0">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Case 3 - Liquid Overfill</h1>
-                <p className="text-gray-600">
-                  Calculate relief requirements for liquid overfill scenarios where the vessel receives liquid 
-                  at a rate faster than it can be removed.
-                </p>
-              </div>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Case 3 - Liquid Overfill</h1>
+              <p className="text-gray-600 mb-4">
+                Calculate relief requirements for liquid overfill scenarios where the vessel receives liquid 
+                at a rate faster than it can be removed.
+              </p>
               <div className="flex items-center space-x-2">
                 <span className="text-sm font-medium text-gray-700">Include Case</span>
                 <div className={`
@@ -160,6 +158,7 @@ export default function LiquidOverfillCase() {
             <VesselProperties
               vesselData={vesselData}
               onChange={updateVesselData}
+              disabled={!isSelected}
             />
 
           {/* Liquid Overfill Parameters */}
@@ -181,7 +180,12 @@ export default function LiquidOverfillCase() {
                 step="0.1"
                 value={flowData.manualFlowRate || ''}
                 onChange={(e) => updateFlowData('manualFlowRate', parseFloat(e.target.value) || 0)}
-                className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
+                className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 placeholder-gray-400 ${
+                  !isSelected 
+                    ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                }`}
+                disabled={!isSelected}
                 placeholder="e.g., 1000"
                 required
               />
@@ -197,6 +201,7 @@ export default function LiquidOverfillCase() {
             onChange={updateCasePressureData}
             caseName="Liquid Overfill"
             vesselMawp={vesselData.vesselDesignMawp}
+            disabled={!isSelected}
           />
 
           {/* Flow Summary - Same style as other cases */}
@@ -265,35 +270,34 @@ export default function LiquidOverfillCase() {
               <div></div>
 
               {/* 4th column - Design Basis Status */}
-              <div className="flex items-end">
-                <div className="text-base text-gray-600 p-3 flex items-end">
-                  {(() => {
-                    const designBasisFlow = getDesignBasisFlow()
-                    const isCurrentDesignBasis = designBasisFlow && 
-                      designBasisFlow.caseName === 'Liquid Overfill' && 
-                      previewValues.calculatedRelievingFlow && 
-                      previewValues.calculatedRelievingFlow > 0
-                    
-                    if (isCurrentDesignBasis) {
-                      return (
-                        <div className="text-gray-900">
-                          This <strong>is</strong> the current Design Basis Flow
-                        </div>
-                      )
-                    } else if (previewValues.calculatedRelievingFlow && previewValues.calculatedRelievingFlow > 0) {
-                      return (
-                        <div className="text-gray-600">
-                          This <strong>is not</strong> the current Design Basis Flow
-                        </div>
-                      )
-                    } else {
-                      return (
-                        <div className="text-gray-400">
-                          Enter inputs to calculate flow
-                        </div>
-                      )
-                    }
-                  })()}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Design Basis Flow?
+                  </label>
+                </div>
+                <div className={`p-3 rounded border ${
+                  previewValues.calculatedRelievingFlow && previewValues.calculatedRelievingFlow > 0 ? 'bg-blue-50' : 'bg-gray-50'
+                }`}>
+                  <div className={`font-medium ${
+                    previewValues.calculatedRelievingFlow && previewValues.calculatedRelievingFlow > 0 ? 'text-gray-700' : 'text-gray-400'
+                  }`}>
+                    {(() => {
+                      const designBasisFlow = getDesignBasisFlow()
+                      const isCurrentDesignBasis = designBasisFlow && 
+                        designBasisFlow.caseName === 'Liquid Overfill' && 
+                        previewValues.calculatedRelievingFlow && 
+                        previewValues.calculatedRelievingFlow > 0
+                      
+                      if (isCurrentDesignBasis) {
+                        return 'Yes'
+                      } else if (previewValues.calculatedRelievingFlow && previewValues.calculatedRelievingFlow > 0) {
+                        return 'No'
+                      } else {
+                        return 'Not enough info'
+                      }
+                    })()} 
+                  </div>
                 </div>
               </div>
             </div>

@@ -14,9 +14,10 @@ interface CasePressureSettingsProps {
   vesselMawp?: number // For auto-calculation
   fireExposedArea?: number // Auto-calculated field for External Fire
   mawpPercent?: number // MAWP percentage (121% for fire, 110% for non-fire)
+  disabled?: boolean // Disable all form fields
 }
 
-export default function CasePressureSettings({ pressureData, onChange, caseName, isAutoCalculated = false, vesselMawp = 0, fireExposedArea, mawpPercent = 110 }: CasePressureSettingsProps) {
+export default function CasePressureSettings({ pressureData, onChange, caseName, isAutoCalculated = false, vesselMawp = 0, fireExposedArea, mawpPercent = 110, disabled = false }: CasePressureSettingsProps) {
   // Use provided percentage or default to 110% for non-fire cases
   const autoPercent = mawpPercent
   const autoMavp = vesselMawp * (autoPercent / 100) // MAVP = % of MAWP
@@ -59,11 +60,13 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
             step="0.1"
             value={isAutoCalculated ? autoPercent : (pressureData.maxAllowedVentingPressurePercent || '')}
             onChange={(e) => onChange('maxAllowedVentingPressurePercent', parseFloat(e.target.value) || 0)}
-            disabled={isAutoCalculated}
+            disabled={isAutoCalculated || disabled}
             className={`w-full h-10 px-3 py-2 border rounded-md ${
               isAutoCalculated 
                 ? 'border-gray-200 bg-blue-50 text-gray-700 font-medium' 
-                : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400'
+                : disabled
+                  ? 'border-gray-200 bg-gray-50 text-gray-500'
+                  : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400'
             }`}
             placeholder="e.g., 121"
             required
@@ -99,11 +102,13 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
             step="0.1"
             value={isAutoCalculated ? autoMavp.toFixed(1) : (pressureData.maxAllowedVentingPressure || '')}
             onChange={(e) => onChange('maxAllowedVentingPressure', parseFloat(e.target.value) || 0)}
-            disabled={isAutoCalculated}
+            disabled={isAutoCalculated || disabled}
             className={`w-full h-10 px-3 py-2 border rounded-md ${
               isAutoCalculated 
                 ? 'border-gray-200 bg-blue-50 text-gray-700 font-medium' 
-                : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400'
+                : disabled
+                  ? 'border-gray-200 bg-gray-50 text-gray-500'
+                  : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400'
             }`}
             placeholder="e.g., 18.0"
             title={isAutoCalculated ? `Auto-calculated: ${autoPercent}% of MAWP` : ''}
@@ -139,11 +144,13 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
             step="0.1"
             value={isAutoCalculated ? autoBackpressure.toFixed(1) : (pressureData.maxAllowableBackpressure || '')}
             onChange={(e) => onChange('maxAllowableBackpressure', parseFloat(e.target.value) || 0)}
-            disabled={isAutoCalculated}
+            disabled={isAutoCalculated || disabled}
             className={`w-full h-10 px-3 py-2 border rounded-md ${
               isAutoCalculated 
                 ? 'border-gray-200 bg-blue-50 text-gray-700 font-medium' 
-                : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400'
+                : disabled
+                  ? 'border-gray-200 bg-gray-50 text-gray-500'
+                  : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400'
             }`}
             placeholder="e.g., 3.1"
             title={isAutoCalculated ? 'Auto-calculated: |MAWP - MAVP|' : ''}

@@ -162,13 +162,11 @@ export default function ExternalFireCase() {
             </Link>
           </div>
           
-          <div className="flex justify-between items-start">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Case 1 - External Fire</h1>
-              <p className="text-gray-600">
-                Calculate relief requirements for external fire exposure following the relevant code guidelines.
-              </p>
-            </div>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Case 1 - External Fire</h1>
+            <p className="text-gray-600 mb-4">
+              Calculate relief requirements for external fire exposure following the relevant code guidelines.
+            </p>
             <div className="flex items-center space-x-2">
               <span className="text-sm font-medium text-gray-700">Include Case</span>
               <div className={`
@@ -194,6 +192,7 @@ export default function ExternalFireCase() {
             vesselData={vesselData} 
             onChange={updateVesselData}
             onFluidPropertiesFound={handleFluidPropertiesFound}
+            disabled={!isSelected}
           />
 
           {/* Case-Specific Pressure Settings */}
@@ -205,6 +204,7 @@ export default function ExternalFireCase() {
             vesselMawp={vesselData.vesselDesignMawp}
             fireExposedArea={calculateFireExposedArea(flowData.applicableFireCode)}
             mawpPercent={121}
+            disabled={!isSelected}
           />
 
           {/* Flow Calculations - Only user inputs (orange fields from Excel) */}
@@ -247,7 +247,12 @@ export default function ExternalFireCase() {
                       handleFlowDataChange('hasAdequateDrainageFirefighting', false) // Default to "No"
                     }
                   }}
-                  className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  disabled={!isSelected}
+                  className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
+                    !isSelected 
+                      ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                      : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                  }`}
                 >
                   <option value="NFPA 30">NFPA 30</option>
                   <option value="API 521">API 521</option>
@@ -312,7 +317,12 @@ export default function ExternalFireCase() {
                     <select
                       value={flowData.hasAdequateDrainageFirefighting === undefined ? '' : flowData.hasAdequateDrainageFirefighting.toString()}
                       onChange={(e) => handleFlowDataChange('hasAdequateDrainageFirefighting', e.target.value === 'true')}
-                      className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                      disabled={!isSelected}
+                      className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
+                        !isSelected 
+                          ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                          : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                      }`}
                       required
                     >
                       <option value="">Select...</option>

@@ -18,9 +18,10 @@ interface VesselPropertiesProps {
   onChange: (field: keyof VesselData, value: string | number) => void
   onFluidPropertiesFound?: (heatOfVaporization: number) => void // Callback for fluid properties
   hideWorkingFluid?: boolean // Hide working fluid field for nitrogen case
+  disabled?: boolean // Disable all form fields
 }
 
-export default function VesselProperties({ vesselData, onChange, onFluidPropertiesFound, hideWorkingFluid = false }: VesselPropertiesProps) {
+export default function VesselProperties({ vesselData, onChange, onFluidPropertiesFound, hideWorkingFluid = false, disabled = false }: VesselPropertiesProps) {
   const [fluidNames] = useState(() => getFluidNames())
   const [standardDiameters] = useState(() => getStandardDiameters())
 
@@ -47,7 +48,12 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
             type="text"
             value={vesselData.vesselTag}
             onChange={(e) => onChange('vesselTag', e.target.value)}
-            className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
+            disabled={disabled}
+            className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 placeholder-gray-400 ${
+              disabled 
+                ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+            }`}
             placeholder="e.g., 123"
             required
           />
@@ -62,7 +68,12 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
             step="0.1"
             value={vesselData.straightSideHeight || ''}
             onChange={(e) => onChange('straightSideHeight', parseFloat(e.target.value) || 0)}
-            className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
+            disabled={disabled}
+            className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 placeholder-gray-400 ${
+              disabled 
+                ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+            }`}
             placeholder="e.g., 24.0"
             required
           />
@@ -75,7 +86,12 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
           <select
             value={vesselData.vesselDiameter || ''}
             onChange={(e) => onChange('vesselDiameter', parseFloat(e.target.value) || 0)}
-            className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+            disabled={disabled}
+            className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
+              disabled 
+                ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+            }`}
             required
           >
             <option value="">Select diameter...</option>
@@ -95,7 +111,12 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
             <select
               value={vesselData.workingFluid}
               onChange={(e) => handleFluidChange(e.target.value)}
-              className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+              disabled={disabled}
+              className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
+                disabled 
+                  ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                  : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+              }`}
               required
             >
               <option value="">Select fluid...</option>
@@ -128,7 +149,12 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
           <select
             value={vesselData.headType}
             onChange={(e) => onChange('headType', e.target.value)}
-            className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+            disabled={disabled}
+            className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
+              disabled 
+                ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+            }`}
           >
             <option value="Hemispherical">Hemispherical</option>
             <option value="Elliptical">Elliptical</option>
@@ -145,7 +171,12 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
             step="0.1"
             value={vesselData.asmeSetPressure || ''}
             onChange={(e) => onChange('asmeSetPressure', parseFloat(e.target.value) || 0)}
-            className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
+            disabled={disabled}
+            className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 placeholder-gray-400 ${
+              disabled 
+                ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+            }`}
             placeholder="e.g., 14.9"
             required
           />
@@ -160,7 +191,12 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
             step="0.1"
             value={vesselData.vesselDesignMawp || ''}
             onChange={(e) => onChange('vesselDesignMawp', parseFloat(e.target.value) || 0)}
-            className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
+            disabled={disabled}
+            className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 placeholder-gray-400 ${
+              disabled 
+                ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+            }`}
             placeholder="e.g., 14.9"
             required
           />
