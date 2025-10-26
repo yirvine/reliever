@@ -59,3 +59,5 @@ ENV/
 # Temporary files
 *.tmp
 *.temp
+
+other/  

@@ -60,10 +60,11 @@ export default function Header({ showBreadcrumb = false, breadcrumbText }: Heade
               About
             </Link> */}
             <NavDropdown 
-              title="Data" 
+              title="Reference Data" 
+              href="/reference"
               items={[
-                { label: 'Fluid Properties', href: '/data/fluid-properties' },
-                { label: 'Vessel Head Areas', href: '/data/vessel-head-areas' }
+                { label: 'Fluid Properties', href: '/reference/fluids' },
+                { label: 'Vessel Head Areas', href: '/reference/vessel-head-areas' }
               ]} 
             />
           </div>
