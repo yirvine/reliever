@@ -6,6 +6,7 @@ import VesselProperties from '../../components/VesselProperties'
 import CasePressureSettings from '../../components/CasePressureSettings'
 import Header from '../../components/Header'
 import PageTransition from '../../components/PageTransition'
+import Tooltip from '../../components/Tooltip'
 import { useVessel } from '../../context/VesselContext'
 import { useCase } from '../../context/CaseContext'
 import { calculateHeatInput } from '../../../../lib/database'
@@ -15,6 +16,7 @@ interface FlowData {
   applicableFireCode: string
   heatOfVaporization: number
   hasAdequateDrainageFirefighting?: boolean // For API 521 only
+  nfpaReductionFactor?: number // For NFPA 30 protection (1.0 = none, 0.5, 0.4, 0.3)
 }
 
 interface CasePressureData {
@@ -33,7 +35,8 @@ export default function ExternalFireCase() {
   const [flowData, setFlowData] = useState<FlowData>({
     applicableFireCode: 'NFPA 30',
     heatOfVaporization: 0,
-    hasAdequateDrainageFirefighting: undefined
+    hasAdequateDrainageFirefighting: undefined,
+    nfpaReductionFactor: 1.0 // Default: no reduction
   })
 
   // Load from localStorage after component mounts (client-side only)
@@ -106,7 +109,13 @@ export default function ExternalFireCase() {
         return { calculatedRelievingFlow: null, asmeVIIIDesignFlow: null, equivalentAirFlow: null, reason: 'Heat input calculation failed' }
       }
 
-      const { heatInput } = heatInputResult
+      let { heatInput } = heatInputResult
+      
+      // Apply NFPA 30 reduction factor if applicable
+      if (flowData.applicableFireCode === 'NFPA 30' && flowData.nfpaReductionFactor && flowData.nfpaReductionFactor < 1.0) {
+        heatInput = heatInput * flowData.nfpaReductionFactor
+      }
+      
       const calculatedRelievingFlow = Math.round(heatInput / flowData.heatOfVaporization)
       const asmeVIIIDesignFlow = Math.round(calculatedRelievingFlow / 0.9)
       const equivalentAirFlow = Math.round(calculatedRelievingFlow * 10.28)
@@ -207,11 +216,11 @@ export default function ExternalFireCase() {
             disabled={!isSelected}
           />
 
-          {/* Flow Calculations - Only user inputs (orange fields from Excel) */}
+          {/* Flow Calculations */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Flow Calculations</h2>
             <p className="text-sm text-gray-600 mb-4">
-              User inputs only - other values are calculated automatically
+              Configure calculation parameters - flow values are calculated automatically
             </p>
             
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -220,21 +229,22 @@ export default function ExternalFireCase() {
                   <label className="block text-sm font-medium text-gray-700">
                     Applicable Code for Heat Input Calc.
                   </label>
-                  <div className="group relative">
-                    <svg 
-                      className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                      <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                    </svg>
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 min-w-max select-text">
-                      If the working fluid in the vessel is flammable, NFPA 30 should be used.
-                    </div>
-                  </div>
+                  <Tooltip 
+                    className="w-80"
+                    content={
+                      <>
+                        <div className="mb-2">
+                          <strong className="text-blue-300">NFPA 30 (Chapter 22.7):</strong> Commonly used for flammable/combustible liquids. Originally developed for storage tanks but widely applied to process vessels.
+                        </div>
+                        <div className="mb-2">
+                          <strong className="text-green-300">API 521:</strong> Comprehensive process industry standard for all equipment types. Includes fire exposure formulas with environmental factors.
+                        </div>
+                        <div className="text-xs italic border-t border-gray-600 pt-2 mt-2">
+                          <strong>Tip:</strong> NFPA 30 is standard for flammable liquids. API 521 is used for non-flammable fluids or when specified by company standards.
+                        </div>
+                      </>
+                    }
+                  />
                 </div>
                 <select
                   value={flowData.applicableFireCode}
@@ -257,7 +267,7 @@ export default function ExternalFireCase() {
                   <option value="NFPA 30">NFPA 30</option>
                   <option value="API 521">API 521</option>
                 </select>
-                <p className="text-xs text-gray-500 mt-1">Affects fire exposed area calculation</p>
+                <p className="text-xs text-gray-500 mt-1">Affects heat input calculation method</p>
               </div>
 
               <div>
@@ -275,45 +285,77 @@ export default function ExternalFireCase() {
                 <p className="text-xs text-gray-500 mt-1">Auto-filled from working fluid selection</p>
               </div>
 
-              {/* API 521 Specific Question - Third Column */}
-              {flowData.applicableFireCode === 'API 521' && (
-                <div className="lg:col-span-2">
-                  <div className="mb-2">
-                    <div className="flex items-center gap-1">
-                      <label className="text-sm font-medium text-gray-700">
-                        Adequate drainage & firefighting equipment?
-                      </label>
-                      <div className="group relative">
-                        <svg 
-                          className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <circle cx="12" cy="12" r="10"></circle>
-                          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                          <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                        </svg>
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 min-w-max break-words">
-                          <div className="font-semibold mb-2">API 521 Heat Input Formulas:</div>
-                          <div className="mb-2">
-                            <div className="font-medium">When adequate drainage and firefighting exist:</div>
-                            <div>Q = 21,000 F (A<sub>wet</sub>)<sup>0.82</sup></div>
-                          </div>
-                          <div className="mb-2">
-                            <div className="font-medium">When adequate drainage and firefighting do not exist:</div>
-                            <div>Q = 34,500 F (A<sub>wet</sub>)<sup>0.82</sup></div>
-                          </div>
-                          <div className="text-xs mt-2 border-t border-gray-600 pt-2">
-                            <div>Q = Total heat absorption (BTU/hr)</div>
-                            <div>F = Environmental factor (default: 1)</div>
-                            <div>A<sub>wet</sub> = Total wetted surface area (sq ft)</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+              {/* Fire Protection / Mitigation - Dynamic based on selected code */}
+              <div className="lg:col-span-2">
+                <div className="mb-2">
+                  <div className="flex items-center gap-1">
+                    <label className="text-sm font-medium text-gray-700">
+                      Fire Protection / Mitigation
+                    </label>
+                    <Tooltip 
+                      className="w-80 break-words"
+                      content={
+                        flowData.applicableFireCode === 'NFPA 30' ? (
+                          <>
+                            <div className="font-semibold mb-2">NFPA 30 Section 22.7.3.5 - Reduction Factors:</div>
+                            <div className="space-y-1 text-xs">
+                              <div><strong>1.0 (100%):</strong> No fire protection measures</div>
+                              <div><strong>0.5 (50%):</strong> Drainage provided (area {">"} 200 sq ft)</div>
+                              <div><strong>0.4 (40%):</strong> Water spray system + drainage</div>
+                              <div><strong>0.3 (30%):</strong> Automatic water spray OR insulation</div>
+                            </div>
+                            <div className="text-xs mt-2 border-t border-gray-600 pt-2 italic">
+                              Reduction factors decrease the required emergency venting capacity based on fire protection measures.
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="font-semibold mb-2">API 521 Heat Input Formulas:</div>
+                            <div className="mb-2">
+                              <div className="font-medium">With adequate drainage & firefighting:</div>
+                              <div>Q = 21,000 F (A<sub>wet</sub>)<sup>0.82</sup></div>
+                            </div>
+                            <div className="mb-2">
+                              <div className="font-medium">Without adequate drainage & firefighting:</div>
+                              <div>Q = 34,500 F (A<sub>wet</sub>)<sup>0.82</sup></div>
+                            </div>
+                            <div className="text-xs mt-2 border-t border-gray-600 pt-2">
+                              <div>Q = Total heat absorption (BTU/hr)</div>
+                              <div>F = Environmental factor (default: 1)</div>
+                              <div>A<sub>wet</sub> = Total wetted surface area (sq ft)</div>
+                            </div>
+                          </>
+                        )
+                      }
+                    />
                   </div>
-                  <div className="flex gap-4">
+                </div>
+                
+                {/* NFPA 30: Reduction Factor Dropdown */}
+                {flowData.applicableFireCode === 'NFPA 30' && (
+                  <>
+                    <select
+                      value={flowData.nfpaReductionFactor || 1.0}
+                      onChange={(e) => handleFlowDataChange('nfpaReductionFactor', parseFloat(e.target.value))}
+                      disabled={!isSelected}
+                      className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
+                        !isSelected 
+                          ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                          : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                      }`}
+                    >
+                      <option value="1.0">No protection (Factor: 1.0)</option>
+                      <option value="0.5">Drainage provided (Factor: 0.5)</option>
+                      <option value="0.4">Water spray + drainage (Factor: 0.4)</option>
+                      <option value="0.3">Auto water spray or insulation (Factor: 0.3)</option>
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">Reduction factor per NFPA 30 Section 22.7.3.5</p>
+                  </>
+                )}
+
+                {/* API 521: Yes/No Drainage & Firefighting */}
+                {flowData.applicableFireCode === 'API 521' && (
+                  <>
                     <select
                       value={flowData.hasAdequateDrainageFirefighting === undefined ? '' : flowData.hasAdequateDrainageFirefighting.toString()}
                       onChange={(e) => handleFlowDataChange('hasAdequateDrainageFirefighting', e.target.value === 'true')}
@@ -326,15 +368,37 @@ export default function ExternalFireCase() {
                       required
                     >
                       <option value="">Select...</option>
-                      <option value="true">Yes</option>
-                      <option value="false">No</option>
+                      <option value="true">Yes - Adequate drainage & firefighting</option>
+                      <option value="false">No - Inadequate or no protection</option>
                     </select>
-                    {/* <p className="text-xs text-gray-500 mt-2">Affects heat input formula</p> */}
-                  </div>
-                </div>
-              )}
+                    <p className="text-xs text-gray-500 mt-1">Affects heat input coefficient (21,000 vs 34,500)</p>
+                  </>
+                )}
+              </div>
             </div>
 
+            {/* NFPA 30 Applicability Warning */}
+            {flowData.applicableFireCode === 'NFPA 30' && (
+              <div className="mt-6">
+                <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-blue-800">
+                        <strong>NFPA 30 Applicability:</strong> These heat input calculations are from NFPA 30 Chapter 22.7, originally developed for storage tanks but commonly applied to all equipment containing flammable/combustible liquids (Class I, II, or IIIA with flash point {"<"} 200°F).
+                      </p>
+                      <p className="text-xs text-blue-700 mt-1">
+                        Use NFPA 30 for flammable liquids. API 521 is used for non-flammable fluids or when specified by company/industry standards.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Calculated values preview (read-only) */}
             <div className="mt-6 pt-6 border-t border-gray-200">
@@ -344,22 +408,13 @@ export default function ExternalFireCase() {
                     <label className="text-sm font-medium text-gray-700">
                       Calculated Relieving Flow
                     </label>
-                    <div className="group relative">
-                      <svg 
-                        className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                      </svg>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 max-w-[90vw] sm:max-w-md lg:w-96 select-text break-words">
-                        {previewValues.reason || (
+                    <Tooltip
+                      className="max-w-[90vw] sm:max-w-md lg:w-96 break-words"
+                      content={
+                        previewValues.reason || (
                           flowData.applicableFireCode === 'NFPA 30' ? (
                             <div>
-                              <div className="font-semibold mb-2">NFPA 30 (2018) Heat Input Formulas:</div>
+                              <div className="font-semibold mb-2">NFPA 30 Chapter 22.7 - Heat Input Formulas:</div>
                               <div className="mb-2">
                                 <div className="grid grid-cols-2 gap-6 mb-1">
                                   <div className="font-medium">Area Range (sq ft)</div>
@@ -386,8 +441,13 @@ export default function ExternalFireCase() {
                               </div>
                               <div className="text-xs border-t border-gray-600 pt-2">
                                 <div>Q = Heat Input (Btu/hr)</div>
-                                <div>A = Fire Exposed Area (sq ft)</div>
-                                <div>W = Q ÷ Heat of Vaporization</div>
+                                <div>A = Wetted Surface Area (sq ft)</div>
+                                <div>W = Q ÷ Heat of Vaporization (lb/hr)</div>
+                                {flowData.nfpaReductionFactor && flowData.nfpaReductionFactor < 1.0 && (
+                                  <div className="mt-1 text-yellow-300">
+                                    Reduction factor {flowData.nfpaReductionFactor} applied per Section 22.7.3.5
+                                  </div>
+                                )}
                               </div>
                             </div>
                           ) : (
@@ -409,9 +469,9 @@ export default function ExternalFireCase() {
                               </div>
                             </div>
                           )
-                        )}
-                      </div>
-                    </div>
+                        )
+                      }
+                    />
                   </div>
                   <div className="bg-blue-50 p-3 rounded border">
                     <div className="font-medium text-gray-700">
@@ -425,21 +485,10 @@ export default function ExternalFireCase() {
                     <label className="text-sm font-medium text-gray-700">
                       ASME VIII Design Flow
                     </label>
-                    <div className="group relative">
-                      <svg 
-                        className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                      </svg>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 min-w-max select-text">
-                        Calculated Relieving Flow ÷ 0.9
-                      </div>
-                    </div>
+                    <Tooltip
+                      className="min-w-max"
+                      content="Calculated Relieving Flow ÷ 0.9"
+                    />
                   </div>
                   <div className="bg-blue-50 p-3 rounded border">
                     <div className="font-bold text-gray-700">
@@ -453,21 +502,10 @@ export default function ExternalFireCase() {
                     <label className="text-sm font-medium text-gray-700">
                       Equivalent Air Flow
                     </label>
-                    <div className="group relative">
-                      <svg 
-                        className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                      </svg>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 min-w-max select-text">
-                        70.5 × ASME VIII Flow × Heat of Vaporization ÷ Fluid Molecular Weight
-                      </div>
-                    </div>
+                    <Tooltip
+                      className="min-w-max"
+                      content="70.5 × ASME VIII Flow × Heat of Vaporization ÷ Fluid Molecular Weight"
+                    />
                   </div>
                   <div className="bg-blue-50 p-3 rounded border">
                     <div className="font-medium text-gray-700">

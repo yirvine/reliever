@@ -128,7 +128,7 @@ export default function Calculator() {
                         Case 1 - External Fire
                       </h4>
                       <p className="text-gray-600">
-                        Calculate relief requirements for external fire exposure following relevant code guidelines.
+                        Calculate relief requirements for external fire exposure.
                       </p>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-2">
                         Available
@@ -146,7 +146,7 @@ export default function Calculator() {
                       Case 1 - External Fire
                     </h4>
                     <p className="text-gray-500">
-                      Calculate relief requirements for external fire exposure following relevant code guidelines.
+                      Calculate relief requirements for external fire exposure.
                     </p>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 mt-2">
                       Not Selected

@@ -6,6 +6,7 @@ import VesselProperties from '../../components/VesselProperties'
 import CasePressureSettings from '../../components/CasePressureSettings'
 import Header from '../../components/Header'
 import PageTransition from '../../components/PageTransition'
+import Tooltip from '../../components/Tooltip'
 import { useVessel } from '../../context/VesselContext'
 import { useCase } from '../../context/CaseContext'
 import { useScrollPosition } from '../../hooks/useScrollPosition'
@@ -280,21 +281,10 @@ export default function NitrogenFailureCase() {
                     <label className="block text-sm font-medium text-gray-700">
                       Total Cv
                     </label>
-                    <div className="group relative">
-                      <svg 
-                        className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                      </svg>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 min-w-max select-text">
-                        Flow coefficient from valve datasheet
-                      </div>
-                    </div>
+                    <Tooltip 
+                      className="min-w-max"
+                      content="Flow coefficient from valve datasheet"
+                    />
                   </div>
                   <input
                     type="number"
@@ -320,21 +310,10 @@ export default function NitrogenFailureCase() {
                     <label className="block text-sm font-medium text-gray-700">
                       Inlet Pressure
                     </label>
-                    <div className="group relative">
-                      <svg 
-                        className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                      </svg>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 min-w-max select-text">
-                        Upstream pressure at relieving conditions
-                      </div>
-                    </div>
+                    <Tooltip 
+                      className="min-w-max"
+                      content="Maximum conceivable pressure directly upstream of failing control valve"
+                    />
                   </div>
                   <input
                     type="number"
@@ -357,9 +336,15 @@ export default function NitrogenFailureCase() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
                     Outlet Pressure
-                </label>
+                  </label>
+                  <Tooltip 
+                    className="min-w-max"
+                    content="Lowest conceivable operating pressure of the tank"
+                  />
+                </div>
                 <input
                   type="number"
                   step="0.1"
@@ -386,21 +371,10 @@ export default function NitrogenFailureCase() {
                     <label className="block text-sm font-medium text-gray-700">
                       Temperature
                     </label>
-                    <div className="group relative">
-                      <svg 
-                        className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                      </svg>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 min-w-max select-text">
-                        Flowing gas temperature at valve
-                      </div>
-                    </div>
+                    <Tooltip 
+                      className="min-w-max"
+                      content="Flowing gas temperature at valve"
+                    />
                   </div>
                   <input
                     type="number"
@@ -423,21 +397,10 @@ export default function NitrogenFailureCase() {
                     <label className="block text-sm font-medium text-gray-700">
                       Compressibility Factor (Z)
                     </label>
-                    <div className="group relative">
-                      <svg 
-                        className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                      </svg>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 min-w-max select-text">
-                        Gas compressibility factor (1.0 for ideal)
-                      </div>
-                    </div>
+                    <Tooltip 
+                      className="min-w-max"
+                      content="Gas compressibility factor (1.0 for ideal)"
+                    />
                   </div>
                   <input
                     type="number"
@@ -460,21 +423,10 @@ export default function NitrogenFailureCase() {
                     <label className="block text-sm font-medium text-gray-700">
                       Pressure Drop Ratio Factor (x_t)
                     </label>
-                    <div className="group relative">
-                      <svg 
-                        className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                      </svg>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 min-w-max select-text">
-                        Critical pressure drop ratio from valve datasheet
-                      </div>
-                    </div>
+                    <Tooltip 
+                      className="min-w-max"
+                      content="Critical pressure drop ratio from valve datasheet"
+                    />
                   </div>
                   <input
                     type="number"
@@ -561,27 +513,20 @@ export default function NitrogenFailureCase() {
                     <label className="text-sm font-medium text-gray-700">
                       Calculated Nitrogen Inflow
                     </label>
-                    <div className="group relative">
-                      <svg 
-                        className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                      </svg>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 w-96 select-text">
-                        {flowData.isManualFlowInput ? (
-                          <div>
-                            <div className="font-semibold mb-2">Manual Input Path:</div>
-                            <div>Direct user input converted to SCFH using:</div>
-                            <div>SCFH = (lb/hr ÷ MW) × 379</div>
-                            <div className="text-xs mt-2 border-t border-gray-600 pt-2">
-                              MW = Molecular Weight (N₂ = 28.0134)
+                    <Tooltip 
+                      className="w-96"
+                      content={
+                        flowData.isManualFlowInput ? (
+                          <>
+                            <div>
+                              <div className="font-semibold mb-2">Manual Input Path:</div>
+                              <div>Direct user input converted to SCFH using:</div>
+                              <div>SCFH = (lb/hr ÷ MW) × 379</div>
+                              <div className="text-xs mt-2 border-t border-gray-600 pt-2">
+                                MW = Molecular Weight (N₂ = 28.0134)
+                              </div>
                             </div>
-                          </div>
+                          </>
                         ) : (
                           <div>
                             <div className="font-semibold mb-2">ISA Gas Flow Formulas (API 520):</div>
@@ -600,9 +545,9 @@ export default function NitrogenFailureCase() {
                               <div>x = Pressure drop ratio, Y = Expansion factor</div>
                             </div>
                           </div>
-                        )}
-                      </div>
-                    </div>
+                        )
+                      }
+                    />
                   </div>
                   <div className={`p-3 rounded border ${
                     hasValidInputs ? 'bg-blue-50' : 'bg-gray-50'
@@ -623,21 +568,10 @@ export default function NitrogenFailureCase() {
                     <label className="text-sm font-medium text-gray-700">
                       Mass Flow Rate
                     </label>
-                    <div className="group relative">
-                      <svg 
-                        className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                      </svg>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 min-w-max select-text">
-                        SCFH × (MW / 379) = lb/hr
-                      </div>
-                    </div>
+                    <Tooltip 
+                      className="min-w-max"
+                      content="SCFH × (MW / 379) = lb/hr"
+                    />
                   </div>
                   <div className={`p-3 rounded border ${
                     hasValidInputs ? 'bg-blue-50' : 'bg-gray-50'
@@ -658,21 +592,10 @@ export default function NitrogenFailureCase() {
                     <label className="text-sm font-medium text-gray-700">
                       API 520 Valve Inflow
                     </label>
-                    <div className="group relative">
-                      <svg 
-                        className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                      </svg>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 min-w-max select-text">
-                        Same as calculated inflow - no flow multiplication needed
-                      </div>
-                    </div>
+                    <Tooltip 
+                      className="min-w-max"
+                      content="Same as calculated inflow - no flow multiplication needed"
+                    />
                   </div>
                   <div className={`p-3 rounded border ${
                     hasValidInputs ? 'bg-blue-50' : 'bg-gray-50'

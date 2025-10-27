@@ -1,5 +1,7 @@
 'use client'
 
+import Tooltip from './Tooltip'
+
 interface CasePressureData {
   maxAllowedVentingPressure: number
   maxAllowableBackpressure: number
@@ -38,21 +40,10 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
               Max. Allowed Venting Pressure (%)
             </label>
             {isAutoCalculated && (
-              <div className="group relative">
-                <svg 
-                  className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                </svg>
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 min-w-max select-text pointer-events-none">
-                  ASME VIII requires {autoPercent}% of MAWP for {caseName.toLowerCase()} cases
-                </div>
-              </div>
+              <Tooltip 
+                className="min-w-max"
+                content={`ASME VIII requires ${autoPercent}% of MAWP for ${caseName.toLowerCase()} cases`}
+              />
             )}
           </div>
           <input
@@ -80,21 +71,10 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
               Max. Allowed Venting Pressure (psig)
             </label>
             {isAutoCalculated && (
-              <div className="group relative">
-                <svg 
-                  className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                </svg>
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 min-w-max select-text pointer-events-none">
-                  {autoPercent}% of MAWP
-                </div>
-              </div>
+              <Tooltip 
+                className="min-w-max"
+                content={`${autoPercent}% of MAWP`}
+              />
             )}
           </div>
           <input
@@ -122,21 +102,10 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
               Max. Allowable Backpressure (psig)
             </label>
             {isAutoCalculated && (
-              <div className="group relative">
-                <svg 
-                  className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                </svg>
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 min-w-max select-text pointer-events-none">
-                  Maximum allowable superimposed backpressure from downstream piping losses (MAWP - MAVP)
-                </div>
-              </div>
+              <Tooltip 
+                className="min-w-max"
+                content="Maximum allowable superimposed backpressure from downstream piping losses (MAWP - MAVP)"
+              />
             )}
           </div>
           <input
