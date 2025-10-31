@@ -53,3 +53,63 @@
 - Tooltip component uses `mb-0` to eliminate gap between icon and text box, preventing hover state loss
 - All tooltips use consistent sticky behavior with pointer-events management
 - NFPA 30 changes maintain backward compatibility with existing data
+
+---
+
+## 2025-10-31 - PDF Report Generation & Data Persistence Fixes
+
+### PDF Report Generation (Major Feature)
+- **Implemented professional PDF report generation** using `@react-pdf/renderer`
+- **Single-page layout**: Dark navy accents (#1e3a8a), light gray backgrounds for sections
+- **Design Basis Flow section**: Prominently displays governing case and required flow in lb/hr + SCFH conversion (using standard air density 0.0752 lb/ft³)
+- **Case-by-case breakdown**: Shows input parameters and calculation results for all enabled cases
+- **Download trigger**: "Generate Report" button on `/cases` page, auto-downloads as `reliefguard_report.pdf`
+
+### Critical Data Architecture Fix
+- **Problem discovered**: PDF was showing wrong numbers - calculated values weren't being saved to localStorage, only input parameters
+- **Root cause**: `calculatePreview()` computed values displayed on page, but those values were never persisted
+- **Solution implemented**: 
+  - Modified `calculatePreview()` to return ALL values (flows, wetted area, heat input, environmental factor)
+  - useEffect now saves complete data object: `{...flowData (inputs), ...previewValues (calculated results)}`
+  - **Key principle**: PDF shows exactly what user sees on page - no recalculation, no stale data
+- **Applied to**: External Fire, Nitrogen Control Failure cases
+
+### Data Persistence Enhancements
+- **Pressure data now saved**: External Fire and Nitrogen cases now persist pressure settings (max venting pressure, backpressure) to localStorage
+- **Consistent pattern across all cases**: Load on mount, save on change via useEffect hooks
+- **localStorage keys standardized**: `{case-id}-flow-data`, `{case-id}-pressure-data`
+
+### Route & UX Updates
+- **Routes renamed**: `/reference` → `/datasets` (more accurate terminology)
+- **Dropdown width fix**: Fire Protection/Mitigation dropdown now `max-w-sm` instead of full width
+- **Mobile optimization**: Case page headers stack properly on mobile, reduced spacing
+- **Background opacity**: Homepage hero section reduced to 10% for better text readability
+- **Vessel properties reordering**: Orientation moved to 2nd field (after vessel tag), straight side height and head type hide for spheres
+- **Branding updates**: Removed "MVP" badge, added "Prototype build ©2025 ReliefGuard" footer
+
+### Nitrogen Case Field Alignment
+- **Fixed field name mismatch**: PDF generator was looking for non-existent fields (`nitrogenSupplyPressure`, etc.)
+- **Corrected to actual fields**: `totalCv`, `inletPressure`, `outletPressure`, `temperatureF`, `compressibilityZ`, `xt`
+- **Note for future**: These fields may change when nitrogen case is reviewed/refactored
+
+### Technical Notes
+- **Critical lesson learned**: Never recalculate values for persistence - always save what's displayed
+- **Return structure consistency**: All code paths in `calculatePreview()` must return same field structure (null vs undefined matters!)
+- **Data flow pattern**: UI calculations → previewValues → localStorage → PDF generator (single source of truth)
+- **Type safety**: Explicit `typeof` checks before formatting numbers in PDF generator prevents N/A from appearing
+
+### Files Modified
+- `frontend/src/app/cases/external-fire/page.tsx` - calculation saving, dropdown width
+- `frontend/src/app/cases/nitrogen-failure/page.tsx` - pressure data persistence
+- `frontend/src/app/hooks/useReportGenerator.ts` - data extraction, nitrogen fields
+- `frontend/src/app/components/ReportPDF.tsx` - PDF document layout and styling
+- `frontend/src/app/api/generate-report/route.ts` - PDF generation endpoint
+- `frontend/src/app/cases/page.tsx` - report button integration
+- `frontend/src/app/components/VesselProperties.tsx` - field reordering, conditional rendering
+- Route changes across datasets pages and navigation components
+
+### Architecture Decisions
+- **Why @react-pdf/renderer**: Industry standard, server-side rendering, type-safe
+- **Why single page PDF**: Keeps reports concise, forces focus on essential data
+- **Why localStorage for reports**: Client-side data, no backend needed, instant generation
+- **Why explicit input listing**: Prevents old calculated results from contaminating new data (lesson learned the hard way)

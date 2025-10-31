@@ -58,6 +58,16 @@ export default function NitrogenFailureCase() {
         // If parsing fails, keep defaults
       }
     }
+    
+    const savedPressure = localStorage.getItem('nitrogen-control-pressure-data')
+    if (savedPressure) {
+      try {
+        const parsedPressure = JSON.parse(savedPressure)
+        setPressureData(parsedPressure)
+      } catch {
+        // If parsing fails, keep defaults
+      }
+    }
   }, [])
 
   const [pressureData, setPressureData] = useState<CasePressureData>({
@@ -68,6 +78,11 @@ export default function NitrogenFailureCase() {
     manufacturingRangeOverpressure: 0,
     burstToleranceOverpressure: 0
   })
+
+  // Save pressure data to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('nitrogen-control-pressure-data', JSON.stringify(pressureData))
+  }, [pressureData])
 
   // Debounced flow data change handler
   const [debouncedFlowData, setDebouncedFlowData] = useState(flowData)
@@ -131,13 +146,24 @@ export default function NitrogenFailureCase() {
     if (previewValues.calculatedRelievingFlow && previewValues.calculatedRelievingFlow > 0) {
       // Convert SCFH to lb/hr for case result storage
       const massFlowRate = (previewValues.calculatedRelievingFlow / UNIT_CONSTANTS.scfhConversion) * NITROGEN_CONSTANTS.molecularWeight
+      const asmeVIIIDesignFlow = Math.round(massFlowRate)
       
       updateCaseResult('nitrogen-control', {
-        asmeVIIIDesignFlow: Math.round(massFlowRate),
+        asmeVIIIDesignFlow,
         isCalculated: true
       })
+      
+      // Save calculated results to localStorage for PDF generation
+      const calculatedResults = {
+        ...flowData,
+        calculatedRelievingFlow: previewValues.calculatedRelievingFlow,
+        massFlowRate: Math.round(massFlowRate),
+        asmeVIIIDesignFlow,
+      }
+      
+      localStorage.setItem('nitrogen-control-flow-data', JSON.stringify(calculatedResults))
     }
-  }, [previewValues.calculatedRelievingFlow, updateCaseResult])
+  }, [previewValues.calculatedRelievingFlow, updateCaseResult, flowData])
 
   return (
     <PageTransition>

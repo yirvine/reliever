@@ -66,6 +66,16 @@ export default function ExternalFireCase() {
         // If parsing fails, keep defaults
       }
     }
+    
+    const savedPressure = localStorage.getItem('external-fire-pressure-data')
+    if (savedPressure) {
+      try {
+        const parsedPressure = JSON.parse(savedPressure)
+        setPressureData(parsedPressure)
+      } catch {
+        // If parsing fails, keep defaults
+      }
+    }
   }, [])
 
   const [pressureData, setPressureData] = useState<CasePressureData>({
@@ -74,6 +84,10 @@ export default function ExternalFireCase() {
     maxAllowedVentingPressurePercent: 0
   })
 
+  // Save pressure data to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('external-fire-pressure-data', JSON.stringify(pressureData))
+  }, [pressureData])
 
   const handleFlowDataChange = (field: keyof FlowData, value: string | number | boolean) => {
     const newData = { ...flowData, [field]: value }
@@ -88,22 +102,22 @@ export default function ExternalFireCase() {
     try {
       // Check if we have all required data
       if (!flowData.heatOfVaporization || flowData.heatOfVaporization === 0) {
-        return { calculatedRelievingFlow: null, asmeVIIIDesignFlow: null, equivalentAirFlow: null, reason: 'No heat of vaporization' }
+        return { calculatedRelievingFlow: null, asmeVIIIDesignFlow: null, equivalentAirFlow: null, wettedSurfaceArea: null, heatInput: null, environmentalFactor: null, reason: 'No heat of vaporization' }
       }
 
       if (!vesselData.vesselDiameter || !vesselData.straightSideHeight || !vesselData.headType) {
-        return { calculatedRelievingFlow: null, asmeVIIIDesignFlow: null, equivalentAirFlow: null, reason: 'Missing vessel data' }
+        return { calculatedRelievingFlow: null, asmeVIIIDesignFlow: null, equivalentAirFlow: null, wettedSurfaceArea: null, heatInput: null, environmentalFactor: null, reason: 'Missing vessel data' }
       }
 
       const fireExposedArea = calculateFireExposedArea(flowData.applicableFireCode)
       
       if (!fireExposedArea || fireExposedArea <= 0) {
-        return { calculatedRelievingFlow: null, asmeVIIIDesignFlow: null, equivalentAirFlow: null, reason: 'Invalid fire exposed area' }
+        return { calculatedRelievingFlow: null, asmeVIIIDesignFlow: null, equivalentAirFlow: null, wettedSurfaceArea: null, heatInput: null, environmentalFactor: null, reason: 'Invalid fire exposed area' }
       }
       
       // For API 521, require drainage/firefighting selection
       if (flowData.applicableFireCode === 'API 521' && flowData.hasAdequateDrainageFirefighting === undefined) {
-        return { calculatedRelievingFlow: null, asmeVIIIDesignFlow: null, equivalentAirFlow: null, reason: 'API 521 requires drainage selection' }
+        return { calculatedRelievingFlow: null, asmeVIIIDesignFlow: null, equivalentAirFlow: null, wettedSurfaceArea: null, heatInput: null, environmentalFactor: null, reason: 'API 521 requires drainage selection' }
       }
 
       // For API 521, calculate environmental factor F
@@ -130,11 +144,14 @@ export default function ExternalFireCase() {
           return { 
             calculatedRelievingFlow: null, 
             asmeVIIIDesignFlow: null, 
-            equivalentAirFlow: null, 
+            equivalentAirFlow: null,
+            wettedSurfaceArea: null,
+            heatInput: null,
+            environmentalFactor: null,
             reason: `NFPA 30 requires area ≥ 20 sq ft (current: ${fireExposedArea.toFixed(1)} sq ft)` 
           }
         }
-        return { calculatedRelievingFlow: null, asmeVIIIDesignFlow: null, equivalentAirFlow: null, reason: 'Heat input calculation failed' }
+        return { calculatedRelievingFlow: null, asmeVIIIDesignFlow: null, equivalentAirFlow: null, wettedSurfaceArea: null, heatInput: null, environmentalFactor: null, reason: 'Heat input calculation failed' }
       }
 
       let { heatInput } = heatInputResult
@@ -148,10 +165,27 @@ export default function ExternalFireCase() {
       const asmeVIIIDesignFlow = Math.round(calculatedRelievingFlow / 0.9)
       const equivalentAirFlow = Math.round(calculatedRelievingFlow * 10.28)
 
-      return { calculatedRelievingFlow, asmeVIIIDesignFlow, equivalentAirFlow, reason: null }
+      // Return ALL values including intermediate calculations for PDF generation
+      return { 
+        calculatedRelievingFlow, 
+        asmeVIIIDesignFlow, 
+        equivalentAirFlow, 
+        wettedSurfaceArea: fireExposedArea,
+        heatInput,
+        environmentalFactor,
+        reason: null 
+      }
     } catch (error) {
       console.error('Calculation error:', error)
-      return { calculatedRelievingFlow: null, asmeVIIIDesignFlow: null, equivalentAirFlow: null, reason: 'Calculation error' }
+      return { 
+        calculatedRelievingFlow: null, 
+        asmeVIIIDesignFlow: null, 
+        equivalentAirFlow: null,
+        wettedSurfaceArea: null,
+        heatInput: null,
+        environmentalFactor: null,
+        reason: 'Calculation error' 
+      }
     }
   }
 
@@ -176,8 +210,34 @@ export default function ExternalFireCase() {
         asmeVIIIDesignFlow: previewValues.asmeVIIIDesignFlow!,
         isCalculated: true
       })
+      
+      // Save ALL results to localStorage for PDF generation
+      // Use CURRENT values from previewValues (what user sees on page)
+      const calculatedResults = {
+        ...flowData, // All input parameters
+        // Overwrite with current calculated values from previewValues
+        wettedSurfaceArea: previewValues.wettedSurfaceArea,
+        heatInput: previewValues.heatInput,
+        environmentalFactor: previewValues.environmentalFactor,
+        calculatedRelievingFlow: previewValues.calculatedRelievingFlow,
+        asmeVIIIDesignFlow: previewValues.asmeVIIIDesignFlow,
+        equivalentAirFlow: previewValues.equivalentAirFlow,
+        relievingTemperature: vesselData.asmeSetPressure
+      }
+      
+      localStorage.setItem('external-fire-flow-data', JSON.stringify(calculatedResults))
     }
-  }, [previewValues.calculatedRelievingFlow, previewValues.asmeVIIIDesignFlow, updateCaseResult])
+  }, [
+    previewValues.calculatedRelievingFlow, 
+    previewValues.asmeVIIIDesignFlow, 
+    previewValues.equivalentAirFlow,
+    previewValues.wettedSurfaceArea,
+    previewValues.heatInput,
+    previewValues.environmentalFactor,
+    updateCaseResult, 
+    flowData, 
+    vesselData.asmeSetPressure
+  ])
 
   return (
     <PageTransition>
@@ -409,7 +469,7 @@ export default function ExternalFireCase() {
                       value={flowData.nfpaReductionFactor || 1.0}
                       onChange={(e) => handleFlowDataChange('nfpaReductionFactor', parseFloat(e.target.value))}
                       disabled={!isSelected}
-                      className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
+                      className={`max-w-sm h-10 px-3 py-2 border rounded-md text-gray-900 ${
                         !isSelected 
                           ? 'border-gray-200 bg-gray-50 text-gray-500' 
                           : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
@@ -431,7 +491,7 @@ export default function ExternalFireCase() {
                       value={flowData.hasAdequateDrainageFirefighting === undefined ? '' : flowData.hasAdequateDrainageFirefighting.toString()}
                       onChange={(e) => handleFlowDataChange('hasAdequateDrainageFirefighting', e.target.value === 'true')}
                       disabled={!isSelected}
-                      className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
+                      className={`max-w-sm h-10 px-3 py-2 border rounded-md text-gray-900 ${
                         !isSelected 
                           ? 'border-gray-200 bg-gray-50 text-gray-500' 
                           : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
