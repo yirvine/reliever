@@ -2,14 +2,6 @@ import { useVessel } from '../context/VesselContext'
 import { useCase } from '../context/CaseContext'
 import { useState } from 'react'
 
-// Helper function to format field names for display
-const formatFieldName = (field: string): string => {
-  return field
-    .replace(/([A-Z])/g, ' $1') // Add space before capital letters
-    .replace(/^./, str => str.toUpperCase()) // Capitalize first letter
-    .trim()
-}
-
 // Helper to capitalize text properly
 const formatTextValue = (value: string | undefined | null): string => {
   if (!value) return 'N/A'

@@ -16,22 +16,30 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create the PDF document
+    // Create the PDF document - ReportPDF returns a Document element
+    // Using type assertion to satisfy renderToStream's type requirements
     const pdfElement = createElement(ReportPDF, {
       data: {
         vesselData,
         selectedCaseResults,
         designBasisFlow,
       },
-    })
+    }) as Parameters<typeof renderToStream>[0]
 
     // Render to stream
     const stream = await renderToStream(pdfElement)
 
     // Convert stream to buffer
-    const chunks: Uint8Array[] = []
+    // Chunks can be strings or Buffers, convert all to Buffer
+    const chunks: Buffer[] = []
     for await (const chunk of stream) {
-      chunks.push(chunk)
+      if (typeof chunk === 'string') {
+        chunks.push(Buffer.from(chunk, 'utf-8'))
+      } else if (Buffer.isBuffer(chunk)) {
+        chunks.push(chunk)
+      } else {
+        chunks.push(Buffer.from(chunk))
+      }
     }
     const buffer = Buffer.concat(chunks)
 

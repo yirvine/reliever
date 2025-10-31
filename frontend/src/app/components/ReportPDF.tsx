@@ -1,6 +1,5 @@
-import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
+import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
 import { VesselData } from '../context/VesselContext'
-import { CaseResult } from '../context/CaseContext'
 
 // Define styles for the PDF document
 const styles = StyleSheet.create({
@@ -247,7 +246,7 @@ const ReportPDF = ({ data }: ReportPDFProps) => {
         </View>
 
         {/* Case Results */}
-        {selectedCaseResults.map((caseResult, index) => (
+        {selectedCaseResults.map((caseResult) => (
           <View key={caseResult.caseId} style={styles.caseSection}>
             <Text style={styles.caseTitle}>{caseResult.caseName}</Text>
             
