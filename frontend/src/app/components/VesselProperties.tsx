@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { getFluidNames, getFluidProperties, getStandardDiameters } from '../../../lib/database'
+import { getFluidNames, getFluidProperties, getStandardDiameters, VesselOrientation } from '../../../lib/database'
+import Tooltip from './Tooltip'
 
 interface VesselData {
   vesselTag: string
@@ -11,17 +12,23 @@ interface VesselData {
   workingFluid: string
   vesselDesignMawp: number
   asmeSetPressure: number
+  
+  // API 521 enhancements
+  vesselOrientation?: VesselOrientation
+  headProtectedBySkirt?: boolean
+  fireSourceElevation?: number
 }
 
 interface VesselPropertiesProps {
   vesselData: VesselData
-  onChange: (field: keyof VesselData, value: string | number) => void
+  onChange: (field: keyof VesselData, value: string | number | boolean) => void
   onFluidPropertiesFound?: (heatOfVaporization: number) => void // Callback for fluid properties
   hideWorkingFluid?: boolean // Hide working fluid field for nitrogen case
   disabled?: boolean // Disable all form fields
+  applicableFireCode?: string // Fire code selection to conditionally show fields
 }
 
-export default function VesselProperties({ vesselData, onChange, onFluidPropertiesFound, hideWorkingFluid = false, disabled = false }: VesselPropertiesProps) {
+export default function VesselProperties({ vesselData, onChange, onFluidPropertiesFound, hideWorkingFluid = false, disabled = false, applicableFireCode }: VesselPropertiesProps) {
   const [fluidNames] = useState(() => getFluidNames())
   const [standardDiameters] = useState(() => getStandardDiameters())
 
@@ -34,12 +41,19 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
       onFluidPropertiesFound(properties.heat_of_vaporization)
     }
   }
+  
+  // Determine which advanced fields to show based on fire code
+  const showAdvancedAPI521Fields = applicableFireCode === 'API 521'
+  
+  // Check if sphere is selected - hide irrelevant fields
+  const isSphere = vesselData.vesselOrientation === 'sphere'
+  
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <h2 className="text-xl font-bold text-gray-900 mb-6">Vessel Properties</h2>
       
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* First row: vessel tag, straight side height, vessel diameter, working fluid */}
+        {/* First row: vessel tag, vessel orientation, vessel diameter, working fluid */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Vessel Tag
@@ -60,23 +74,45 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Straight Side Height (inches)
-          </label>
-          <input
-            type="number"
-            step="0.1"
-            value={vesselData.straightSideHeight || ''}
-            onChange={(e) => onChange('straightSideHeight', parseFloat(e.target.value) || 0)}
+          <div className="flex items-center gap-2 mb-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Vessel Orientation
+            </label>
+            <Tooltip
+              className="w-80"
+              content={
+                <>
+                  <div className="mb-2">
+                    <strong className="text-blue-300">Required for Both Codes:</strong>
+                  </div>
+                  <div className="mb-1"><strong>Vertical:</strong> Standard vertical pressure vessel</div>
+                  <div className="mb-1"><strong>Horizontal:</strong> Horizontal drum or tank</div>
+                  <div className="mb-2">
+                    <strong>Sphere:</strong> Spherical vessel<br/>
+                    • NFPA 30 §22.7.3.2.3: Uses 55% of total exposed area<br/>
+                    • API 521 Table 4: Uses entire bottom hemisphere minimum
+                  </div>
+                  <div className="text-xs border-t border-gray-600 pt-2 mt-2">
+                    Affects wetted surface area calculation for fire exposure.
+                  </div>
+                </>
+              }
+            />
+          </div>
+          <select
+            value={vesselData.vesselOrientation || 'vertical'}
+            onChange={(e) => onChange('vesselOrientation', e.target.value)}
             disabled={disabled}
-            className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 placeholder-gray-400 ${
+            className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
               disabled 
                 ? 'border-gray-200 bg-gray-50 text-gray-500' 
                 : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
             }`}
-            placeholder="e.g., 24.0"
-            required
-          />
+          >
+            <option value="vertical">Vertical</option>
+            <option value="horizontal">Horizontal</option>
+            <option value="sphere">Sphere</option>
+          </select>
         </div>
 
         <div>
@@ -129,7 +165,30 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
           </div>
         )}
 
-        {/* Second row: construction code, head type, set pressure, MAWP */}
+        {/* Second row: construction code, head type (if not sphere), straight side height (if not sphere), set pressure, MAWP */}
+        {!isSphere && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Straight Side Height (inches)
+            </label>
+            <input
+              type="number"
+              step="0.1"
+              value={vesselData.straightSideHeight || ''}
+              onChange={(e) => onChange('straightSideHeight', parseFloat(e.target.value) || 0)}
+              disabled={disabled}
+              className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 placeholder-gray-400 ${
+                disabled 
+                  ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                  : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+              }`}
+              placeholder="e.g., 24.0"
+              required
+            />
+          </div>
+        )}
+
+        {/* Second row: construction code, head type (not for sphere), set pressure, MAWP */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Vessel Construction Code
@@ -142,25 +201,27 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Head Type
-          </label>
-          <select
-            value={vesselData.headType}
-            onChange={(e) => onChange('headType', e.target.value)}
-            disabled={disabled}
-            className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
-              disabled 
-                ? 'border-gray-200 bg-gray-50 text-gray-500' 
-                : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-            }`}
-          >
-            <option value="Hemispherical">Hemispherical</option>
-            <option value="Elliptical">Elliptical</option>
-            <option value="Flat">Flat</option>
-          </select>
-        </div>
+        {!isSphere && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Head Type
+            </label>
+            <select
+              value={vesselData.headType}
+              onChange={(e) => onChange('headType', e.target.value)}
+              disabled={disabled}
+              className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
+                disabled 
+                  ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                  : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+              }`}
+            >
+              <option value="Hemispherical">Hemispherical</option>
+              <option value="Elliptical">Elliptical</option>
+              <option value="Flat">Flat</option>
+            </select>
+          </div>
+        )}
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -201,6 +262,97 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
             required
           />
         </div>
+
+        {/* API 521-specific fields - only show when API 521 is selected */}
+        {showAdvancedAPI521Fields && (
+          <>
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Head Protected by Skirt?
+                </label>
+                <Tooltip
+                  className="w-80"
+                  content={
+                    <>
+                      <div className="mb-2">
+                        <strong className="text-blue-300">API 521 Only - §4.4.13.2.2:</strong>
+                      </div>
+                      <div className="mb-2">
+                        &quot;Vessel heads protected by support skirts with limited ventilation are normally not included when determining wetted area.&quot;
+                      </div>
+                      <div className="text-xs border-t border-gray-600 pt-2 mt-2">
+                        Select &quot;Yes&quot; if bottom head is protected by a support skirt that limits fire exposure.
+                      </div>
+                    </>
+                  }
+                />
+              </div>
+              <select
+                value={vesselData.headProtectedBySkirt ? 'true' : 'false'}
+                onChange={(e) => onChange('headProtectedBySkirt', e.target.value === 'true')}
+                disabled={disabled}
+                className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
+                  disabled 
+                    ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                }`}
+              >
+                <option value="false">No</option>
+                <option value="true">Yes (skirt protection)</option>
+              </select>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Fire Source Elevation (ft)
+                </label>
+                <Tooltip
+                  className="w-80"
+                  content={
+                    <>
+                      <div className="mb-2">
+                        <strong className="text-blue-300">API 521 Only - §4.4.13.2.2:</strong>
+                      </div>
+                      <div className="mb-2">
+                        Only wetted surface ≤25 ft above fire source is included in fire exposure calculation.
+                      </div>
+                      <div className="text-xs border-t border-gray-600 pt-2 mt-2">
+                        Enter elevation of fire source above grade (0 = grade level, typical). Use for vessels on elevated platforms.
+                      </div>
+                    </>
+                  }
+                />
+              </div>
+              <input
+                type="number"
+                step="1"
+                value={vesselData.fireSourceElevation ?? 0}
+                onChange={(e) => onChange('fireSourceElevation', parseFloat(e.target.value) || 0)}
+                disabled={disabled}
+                className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 placeholder-gray-400 ${
+                  disabled 
+                    ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                }`}
+                placeholder="0"
+              />
+            </div>
+
+            {/* Empty cell for grid alignment when API 521 is selected */}
+            <div></div>
+          </>
+        )}
+
+        {/* Empty cells for grid alignment when NFPA 30 is selected */}
+        {!showAdvancedAPI521Fields && (
+          <>
+            <div></div>
+            <div></div>
+            <div></div>
+          </>
+        )}
       </div>
     </div>
   )

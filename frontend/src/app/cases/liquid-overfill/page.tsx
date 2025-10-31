@@ -114,10 +114,10 @@ export default function LiquidOverfillCase() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
         <Header />
 
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="mb-8">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+          <div className="mb-4 sm:mb-8">
             {/* Back to Cases Navigation */}
-            <div className="mb-4">
+            <div className="mb-2 sm:mb-4">
               <Link 
                 href="/cases" 
                 className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors duration-200"
@@ -129,9 +129,9 @@ export default function LiquidOverfillCase() {
               </Link>
             </div>
             
-            <div className="flex-1 min-w-0">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Case 3 - Liquid Overfill</h1>
-              <p className="text-gray-600 mb-4">
+            <div className="flex flex-col gap-3">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Case 3 - Liquid Overfill</h1>
+              <p className="text-sm sm:text-base text-gray-600">
                 Calculate relief requirements for liquid overfill scenarios where the vessel receives liquid 
                 at a rate faster than it can be removed.
               </p>

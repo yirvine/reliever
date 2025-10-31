@@ -16,7 +16,7 @@ export default function ReferencePage() {
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16">
           <div className="max-w-4xl">
             <h1 className="text-3xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-6 font-inter">
-              Reference Data
+              Datasets
             </h1>
             
             <p className="text-lg text-gray-600 mb-12 font-inter leading-relaxed">
@@ -28,7 +28,7 @@ export default function ReferencePage() {
             <div className="grid md:grid-cols-2 gap-6">
               {/* Fluid Properties Card */}
               <Link 
-                href="/reference/fluids"
+                href="/datasets/fluids"
                 className="group bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-blue-300 transition-all duration-200"
               >
                 <div className="flex items-center mb-4">
@@ -55,7 +55,7 @@ export default function ReferencePage() {
 
               {/* Vessel Head Areas Card */}
               <Link 
-                href="/reference/vessel-head-areas"
+                href="/datasets/vessel-head-areas"
                 className="group bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-blue-300 transition-all duration-200"
               >
                 <div className="flex items-center mb-4">

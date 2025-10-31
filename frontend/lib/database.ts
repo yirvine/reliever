@@ -1,14 +1,23 @@
 /**
  * database.ts
  * 
- * Engineering reference data and calculation functions for pressure relief valve sizing.
+ * Engineering datasets and calculation functions for pressure relief valve sizing.
  * Currently uses in-memory data structures, designed to be replaced with SQLite/API calls.
  * 
  * Key Features:
  * - Fluid property lookups (heat of vaporization, molecular weight, density)
  * - Vessel geometry calculations (head areas, fire exposed areas)
  * - Heat input formulas from NFPA 30 and API 521
+ * - Environmental factor calculations per API 521 (insulation, storage type)
+ * - API 521 compliance: 25 ft height limit, sphere logic, support skirts
  * - Standard vessel dimensions and lookup tables
+ * 
+ * API 521 Enhancements:
+ * - Wetted surface area limited to ≤25 ft above fire source (API 521 §4.4.13.2.2)
+ * - Sphere-specific rules for bottom hemisphere (API 521 Table 4)
+ * - Support skirt exclusion logic (API 521 §4.4.13.2.2)
+ * - Environmental factor F for insulation credit (API 521 §4.4.13.2.7.4, Eq 16/17)
+ * - Storage type factors: earth-covered (F=0.03), below-grade (F=0.0)
  * 
  * Note: The nitrogen control failure case is under development and will require
  * additional formulas and lookup tables for nitrogen-specific calculations.
@@ -60,15 +69,195 @@ const FLUID_PROPERTIES: FluidProperty[] = [
 ]
 
 /**
+ * Insulation Material Properties
+ * From API 521 Table 6: Thermal Conductivity Values for Typical Thermal Insulations
+ * 
+ * Note: k values are at mean temperature between fire temp (~1660°F) and process temp
+ * For fire-rated insulation credit per API 521:
+ * - Must withstand 1660°F for up to 2 hours
+ * - Must resist dislodgment by fire hose streams
+ * - Stainless steel jacketing recommended
+ */
+export interface InsulationMaterial {
+  id: number
+  name: string
+  /** Thermal conductivity at 1000°F, Btu·in/(h·ft²·°F) */
+  thermalConductivity_1000F: number
+  /** Maximum use temperature, °F */
+  maxTemp: number
+  description: string
+}
+
+const INSULATION_MATERIALS: InsulationMaterial[] = [
+  { 
+    id: 1, 
+    name: 'Calcium Silicate Type I', 
+    thermalConductivity_1000F: 0.77, 
+    maxTemp: 1200,
+    description: 'Common fire-rated insulation for pressure vessels'
+  },
+  { 
+    id: 2, 
+    name: 'Calcium Silicate Type II', 
+    thermalConductivity_1000F: 0.77, 
+    maxTemp: 1700,
+    description: 'High-temperature calcium silicate, suitable for fire protection'
+  },
+  { 
+    id: 3, 
+    name: 'Mineral Fiber Blanket/Block', 
+    thermalConductivity_1000F: 0.70, 
+    maxTemp: 1200,
+    description: 'Rock, slag, or glass fiber insulation'
+  },
+  { 
+    id: 4, 
+    name: 'Cellular Glass Type I', 
+    thermalConductivity_1000F: 0.63, 
+    maxTemp: 900,
+    description: 'Lower temperature limit, not suitable for all fire scenarios'
+  },
+  { 
+    id: 5, 
+    name: 'Lightweight Cementitious', 
+    thermalConductivity_1000F: 3.6, 
+    maxTemp: 2000,
+    description: 'High-temperature fire protection, higher conductivity'
+  },
+  { 
+    id: 6, 
+    name: 'Dense Cementitious', 
+    thermalConductivity_1000F: 10.5, 
+    maxTemp: 2000,
+    description: 'Very high temperature, but high conductivity reduces credit'
+  }
+]
+
+/**
+ * Get available insulation materials
+ */
+export function getInsulationMaterials(): InsulationMaterial[] {
+  return [...INSULATION_MATERIALS]
+}
+
+/**
+ * Get insulation material by name
+ */
+export function getInsulationMaterial(name: string): InsulationMaterial | null {
+  return INSULATION_MATERIALS.find(m => m.name === name) || null
+}
+
+/**
+ * Storage type options for environmental factor calculation
+ * Per API 521 Table 5
+ */
+export type StorageType = 'above-grade' | 'earth-covered' | 'below-grade'
+
+/**
+ * Vessel orientation types
+ * Affects wetted surface area calculation per API 521 Table 4
+ */
+export type VesselOrientation = 'vertical' | 'horizontal' | 'sphere'
+
+/**
+ * Environmental Factor Parameters for API 521
+ * Used to calculate F factor in heat input equations
+ */
+export interface EnvironmentalFactorParams {
+  /** Storage type: affects base F value */
+  storageType?: StorageType
+  /** Insulation material name (if insulated) */
+  insulationMaterial?: string
+  /** Insulation thickness, inches */
+  insulationThickness?: number
+  /** Process temperature at relieving conditions, °F */
+  processTemperature?: number
+}
+
+/**
+ * Calculate Environmental Factor F per API 521
+ * 
+ * API 521 §4.4.13.2.7.4, Equations (16) and (17):
+ * F = (k / δ_ins) × [1 / (1660°F - T_f)] × conversion_factor
+ * 
+ * Where:
+ * - k = thermal conductivity at mean temperature, Btu·in/(h·ft²·°F)
+ * - δ_ins = insulation thickness, inches
+ * - T_f = process temperature at relieving conditions, °F
+ * 
+ * Special Cases per API 521 Table 5:
+ * - Bare vessel: F = 1.0
+ * - Earth-covered: F = 0.03
+ * - Below-grade: F = 0.0
+ * - Water spray on bare vessel: F = 1.0 (no reduction per §4.4.13.2.6.2)
+ * 
+ * @returns Environmental factor F (dimensionless), or null if invalid inputs
+ */
+export function calculateEnvironmentalFactor(params: EnvironmentalFactorParams): number {
+  const { storageType, insulationMaterial, insulationThickness, processTemperature } = params
+  
+  // Special storage types override insulation (API 521 Table 5)
+  if (storageType === 'below-grade') {
+    return 0.0 // No heat input for below-grade storage
+  }
+  if (storageType === 'earth-covered') {
+    return 0.03 // Minimal heat input for earth-covered
+  }
+  
+  // If insulated, calculate F from insulation properties
+  if (insulationMaterial && insulationThickness && processTemperature !== undefined) {
+    const material = getInsulationMaterial(insulationMaterial)
+    if (!material) {
+      console.warn(`Unknown insulation material: ${insulationMaterial}`)
+      return 1.0 // Default to bare vessel
+    }
+    
+    // Validate insulation is fire-rated
+    if (material.maxTemp < 1200) {
+      console.warn(`Insulation max temp ${material.maxTemp}°F < 1200°F minimum for fire credit`)
+      return 1.0 // Cannot take credit
+    }
+    
+    // API 521 Equation (17) in USC units:
+    // F = [k / δ_ins] × [1 / (1660 - T_f)] × 260
+    const k = material.thermalConductivity_1000F // Btu·in/(h·ft²·°F)
+    const deltaIns = insulationThickness // inches
+    const fireTempF = 1660 // °F, per API 521 §4.4.13.2.7.2
+    const tempDiff = fireTempF - processTemperature // °F
+    
+    if (tempDiff <= 0) {
+      console.warn('Process temperature exceeds fire temperature - cannot calculate F factor')
+      return 1.0
+    }
+    
+    // USC conversion factor from API 521 Equation (17)
+    const conversionFactor = 260
+    const F = (k / deltaIns) * (1 / tempDiff) * conversionFactor
+    
+    // Sanity check: F should be between 0 and 1 for insulated vessels
+    if (F < 0 || F > 1) {
+      console.warn(`Calculated F factor ${F.toFixed(4)} out of range [0, 1]`)
+      return Math.max(0, Math.min(1, F)) // Clamp to valid range
+    }
+    
+    return F
+  }
+  
+  // Default: bare vessel (API 521 Table 5, note e)
+  return 1.0
+}
+
+/**
  * Heat Input Formula Interface
  * 
  * Represents a formula used to calculate heat input (Q) based on wetted surface area.
  * Different formulas apply to different area ranges and conditions.
  * 
- * General form: Q = C * A^n
+ * General form: Q = C * F * A^n
  * where:
  * - Q = Heat input (BTU/hr)
  * - C = Coefficient (varies by standard)
+ * - F = Environmental factor (API 521 only)
  * - A = Wetted surface area (sq ft)
  * - n = Exponent (varies by standard)
  */
@@ -165,20 +354,32 @@ export function getHeatInputFormula(
 
 /**
  * Calculate heat input (Q) using the appropriate formula
+ * 
+ * @param standard - Fire code: NFPA 30 or API 521
+ * @param area - Wetted surface area (sq ft)
+ * @param hasAdequateDrainageFirefighting - For API 521: adequate drainage/firefighting?
+ * @param environmentalFactor - For API 521: F factor (default 1.0 for bare vessel)
+ * @returns Heat input result with formula used, or null if invalid
  */
 export function calculateHeatInput(
   standard: 'NFPA 30' | 'API 521',
   area: number,
-  hasAdequateDrainageFirefighting?: boolean
-): { heatInput: number; formula: HeatInputFormula } | null {
+  hasAdequateDrainageFirefighting?: boolean,
+  environmentalFactor?: number
+): { heatInput: number; formula: HeatInputFormula; environmentalFactor?: number } | null {
   const formula = getHeatInputFormula(standard, area, hasAdequateDrainageFirefighting)
   if (!formula) return null
   
-  // For API 521, F factor is assumed to be 1.0 for simplicity
-  const F = 1.0
+  // For API 521, apply environmental factor F (default 1.0 for bare vessel)
+  // For NFPA 30, F factor not used in heat input calculation
+  const F = standard === 'API 521' ? (environmentalFactor ?? 1.0) : 1.0
   const heatInput = formula.coefficient * Math.pow(area, formula.exponent) * (standard === 'API 521' ? F : 1)
   
-  return { heatInput, formula }
+  return { 
+    heatInput, 
+    formula,
+    ...(standard === 'API 521' && { environmentalFactor: F })
+  }
 }
 
 /**
@@ -257,35 +458,130 @@ function getEllipticalAreaFromTable(diameter: number): number {
 }
 
 /**
- * Calculate fire exposed area based on vessel dimensions and fire code
- * This replaces the simple calculation in VesselContext
+ * Parameters for fire exposed area calculation
+ * Enhanced to support API 521 requirements
  */
-export function calculateFireExposedArea(
-  vesselDiameter: number, // inches
-  straightSideHeight: number, // inches
-  headType: 'Elliptical' | 'Hemispherical' | 'Flat',
+export interface FireExposedAreaParams {
+  vesselDiameter: number // inches
+  straightSideHeight: number // inches
+  headType: 'Elliptical' | 'Hemispherical' | 'Flat'
   fireCode: 'NFPA 30' | 'API 521'
-): number {
-  if (!vesselDiameter || !straightSideHeight) return 0
+  
+  // API 521 specific parameters
+  vesselOrientation?: VesselOrientation // Default: 'vertical'
+  headProtectedBySkirt?: boolean // Default: false
+  fireSourceElevation?: number // feet above grade, default: 0
+}
+
+/**
+ * Calculate fire exposed (wetted) area per API 521 §4.4.13.2.2 and Table 4
+ * 
+ * Key API 521 Requirements:
+ * 1. Only wetted surface ≤25 ft above fire source is included
+ * 2. Spheres: minimum bottom hemisphere, even if equator >25 ft
+ * 3. Heads protected by support skirts with limited ventilation excluded
+ * 4. Portions in contact with foundations/ground normally excluded
+ * 
+ * NFPA 30: Generally follows similar principles but less specific
+ * 
+ * @param params - Fire exposed area calculation parameters
+ * @returns Wetted surface area in square feet
+ */
+export function calculateFireExposedArea(params: FireExposedAreaParams): number {
+  const {
+    vesselDiameter,
+    straightSideHeight,
+    headType,
+    fireCode,
+    vesselOrientation = 'vertical',
+    headProtectedBySkirt = false,
+    fireSourceElevation = 0 // Grade level by default
+  } = params
+  
+  if (!vesselDiameter || vesselDiameter <= 0 || !straightSideHeight || straightSideHeight <= 0) {
+    return 0
+  }
   
   const radius = vesselDiameter / 2 / 12 // Convert inches to feet
-  const height = straightSideHeight / 12 // Convert inches to feet
+  const diameterFt = vesselDiameter / 12 // feet
+  const heightFt = straightSideHeight / 12 // feet
   
-  // Cylindrical surface area (always exposed)
-  const cylindricalArea = 2 * Math.PI * radius * height
+  // API 521: Maximum height above fire source for wetted area consideration
+  const maxHeightAboveFire = fireCode === 'API 521' ? 25 : 9999 // 25 ft per API 521 §4.4.13.2.2
+  
+  // Calculate wetted area based on vessel orientation
+  if (vesselOrientation === 'sphere') {
+    const sphereRadius = diameterFt / 2
+    const totalSphereArea = 4 * Math.PI * Math.pow(sphereRadius, 2) // Total sphere surface
+    
+    if (fireCode === 'NFPA 30') {
+      // NFPA 30 §22.7.3.2.3: "Fifty-five percent of the total exposed area of a sphere or spheroid"
+      return totalSphereArea * 0.55
+    } else {
+      // API 521 Table 4: Spheres and spheroids
+      // "Up to the maximum horizontal diameter or up to the height of 7.6 m (25 ft), whichever is greater"
+      // This means: entire bottom hemisphere minimum, even if equator > 25 ft
+      
+      const bottomHemisphereArea = 2 * Math.PI * Math.pow(sphereRadius, 2) // Half of sphere surface
+      
+      // Check if equator is above 25 ft
+      const equatorHeight = sphereRadius // Height of center from bottom
+      
+      if (equatorHeight <= maxHeightAboveFire) {
+        // Entire bottom hemisphere exposed
+        return bottomHemisphereArea
+      } else {
+        // Equator > 25 ft, but still use entire bottom hemisphere per API 521
+        // "as a minimum, the wetted surface area of the entire bottom hemisphere shall be used"
+        return bottomHemisphereArea
+      }
+    }
+  }
+  
+  // For vertical and horizontal vessels
+  let wettedArea = 0
+  
+  // Determine effective height to consider (capped at 25 ft above fire source)
+  const effectiveHeightLimit = fireSourceElevation + maxHeightAboveFire
+  const effectiveHeight = Math.min(heightFt, effectiveHeightLimit)
+  
+  if (effectiveHeight <= 0) {
+    // Vessel entirely above height limit
+    return 0
+  }
+  
+  // Cylindrical surface area (wetted portion only)
+  const cylindricalArea = 2 * Math.PI * radius * effectiveHeight
+  wettedArea += cylindricalArea
   
   // Head area from lookup table
   const headArea = getVesselHeadArea(vesselDiameter, headType)
   
-  // Total exposed area (typically one head + cylindrical surface)
-  // Different fire codes might have different calculation methods
-  const totalArea = cylindricalArea + headArea
-  
-  // Apply fire code specific factors if needed
-  if (fireCode === 'API 521') {
-    // API 521 might have different calculation factors
-    return totalArea * 1.0 // No modification for now
+  // Add bottom head if not protected by skirt
+  // API 521: "vessel heads protected by support skirts with limited ventilation
+  // are normally not included when determining wetted area"
+  if (!headProtectedBySkirt) {
+    wettedArea += headArea
   }
   
-  return totalArea
+  // For vertical vessels, check if top head is within fire exposure height
+  if (vesselOrientation === 'vertical') {
+    const topHeadHeight = heightFt
+    if (topHeadHeight <= effectiveHeightLimit) {
+      // Top head within exposure zone - include it
+      wettedArea += headArea
+    }
+  }
+  
+  // For horizontal vessels, both heads typically included if vessel within height limit
+  if (vesselOrientation === 'horizontal' && effectiveHeight >= heightFt) {
+    // Add second head (first one already added if not protected by skirt)
+    if (!headProtectedBySkirt) {
+      wettedArea += headArea // Both ends
+    } else {
+      wettedArea += headArea // Only one end (other protected)
+    }
+  }
+  
+  return wettedArea
 }

@@ -19,19 +19,19 @@ export default function NavDropdown({ title, items, href }: NavDropdownProps) {
 
   return (
     <div 
-      className="relative"
+      className="relative inline-flex items-center"
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
     >
       {href ? (
         <Link 
           href={href}
-          className="text-gray-700 hover:text-blue-600 px-1 sm:px-3 py-2 text-xs sm:text-lg lg:text-xl font-medium transition-colors duration-200 font-inter navbar-text"
+          className="text-gray-700 hover:text-blue-600 px-1 sm:px-3 py-2 text-xs sm:text-lg lg:text-xl font-medium transition-colors duration-200 font-inter navbar-text inline-flex items-center"
         >
           {title}
         </Link>
       ) : (
-        <button className="text-gray-700 hover:text-blue-600 px-1 sm:px-3 py-2 text-xs sm:text-lg lg:text-xl font-medium transition-colors duration-200 font-inter navbar-text">
+        <button className="text-gray-700 hover:text-blue-600 px-1 sm:px-3 py-2 text-xs sm:text-lg lg:text-xl font-medium transition-colors duration-200 font-inter navbar-text inline-flex items-center">
           {title}
         </button>
       )}

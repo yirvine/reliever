@@ -33,7 +33,6 @@ export default function Header({ showBreadcrumb = false, breadcrumbText }: Heade
                 />
               </div>
             </Link>
-            <span className="ml-2 sm:ml-3 text-xs sm:text-sm text-gray-500 bg-gray-100 px-1 sm:px-2 py-1 rounded">MVP</span>
             {showBreadcrumb && breadcrumbText && (
               <span className="ml-2 sm:ml-4 text-sm sm:text-lg text-gray-600 hidden sm:block">/ {breadcrumbText}</span>
             )}
@@ -60,11 +59,11 @@ export default function Header({ showBreadcrumb = false, breadcrumbText }: Heade
               About
             </Link> */}
             <NavDropdown 
-              title="Reference Data" 
-              href="/reference"
+              title="Datasets" 
+              href="/datasets"
               items={[
-                { label: 'Fluid Properties', href: '/reference/fluids' },
-                { label: 'Vessel Head Areas', href: '/reference/vessel-head-areas' }
+                { label: 'Fluid Properties', href: '/datasets/fluids' },
+                { label: 'Vessel Head Areas', href: '/datasets/vessel-head-areas' }
               ]} 
             />
           </div>

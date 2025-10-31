@@ -43,9 +43,9 @@ export default function Home() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-white relative">
-        {/* Subtle background image spanning hero and how-it-works sections */}
+        {/* Subtle background image spanning entire page */}
         <div className={`absolute inset-0 pointer-events-none z-0 transition-all duration-1000 ease-out ${
-          isVisible ? 'opacity-20' : 'opacity-0'
+          isVisible ? 'opacity-10' : 'opacity-0'
         }`}>
           <Image 
             src="/pressure_vessel_bw.jpeg" 
@@ -154,7 +154,7 @@ export default function Home() {
               Relief sizing made simple.
             </h1>
             <p className="text-lg md:text-xl text-gray-800 max-w-4xl mx-auto mb-12 font-inter leading-relaxed drop-shadow-xs">
-              Calculate the required relieving rate for pressure vessels in common scenarios in accordance with NFPA 30, API 521, and ASME VIII standards to properly size your relief device.
+              Calculate required relieving flow rates for pressure vessels confidently and efficiently.
             </p>
             
             {/* Action Buttons */}
@@ -308,7 +308,7 @@ export default function Home() {
         }`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <p className="text-gray-500 font-inter">
-              Built for engineers, by engineers. Following NFPA 30, API 521, and ASME VIII standards.
+              Prototype build ©2025 ReliefGuard
             </p>
           </div>
         </footer>
