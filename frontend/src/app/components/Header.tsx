@@ -45,12 +45,15 @@ export default function Header({ showBreadcrumb = false, breadcrumbText }: Heade
               <span className="hidden sm:inline">Home</span>
               <span className="sm:hidden">Home</span>
             </Link>
-            <Link 
-              href="/cases" 
-              className="px-1 sm:px-3 py-2 text-xs sm:text-lg lg:text-xl font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200 font-inter navbar-text"
-            >
-              Cases
-            </Link>
+            <NavDropdown 
+              title="Cases" 
+              href="/cases"
+              items={[
+                { label: '1 - External Fire', href: '/cases/external-fire' },
+                { label: '2 - Control Valve Failure', href: '/cases/control-valve-failure' },
+                { label: '3 - Liquid Overfill', href: '/cases/liquid-overfill' }
+              ]} 
+            />
             {/* Temporarily hidden About button - keeping logic for future use */}
             {/* <Link 
               href="/#how-it-works" 
@@ -63,6 +66,7 @@ export default function Header({ showBreadcrumb = false, breadcrumbText }: Heade
               href="/datasets"
               items={[
                 { label: 'Fluid Properties', href: '/datasets/fluids' },
+                { label: 'Gas Properties', href: '/data/gas-properties' },
                 { label: 'Vessel Head Areas', href: '/datasets/vessel-head-areas' }
               ]} 
             />

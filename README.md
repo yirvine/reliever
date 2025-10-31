@@ -42,23 +42,31 @@ A clean, fast, web-based replacement for legacy VBA-driven Excel workbooks used 
   - Case toggle with smooth animations
   - Consistent styling for editable/uneditable fields
 
-### ✅ **Case 2: Nitrogen Control Failure**
+### ✅ **Case 2: Control Valve Failure (Gas Service)**
+- **Multi-Gas Support**
+  - Gas selection: Nitrogen, Air, Oxygen, CO2, Methane, or Custom Gas
+  - Automatic molecular weight and specific gravity from NIST/Perry's Handbook
+  - Custom gas properties for unlisted gases
 - **Dual Calculation Methods**
   - Manual flow input (direct lb/hr entry)
   - Pressure-based calculation using ISA gas flow formulas
   - Real-time switching between calculation methods
+- **API 521 Advanced Features**
+  - Bypass valve consideration (Section 4.4.8.3) with effective Cv calculation
+  - Outlet flow credit (Section 4.4.8.4) for net relief requirement
+  - Detailed scenario explanations with code references
 - **Advanced Input Parameters**
-  - Total Cv, inlet/outlet pressures
-  - Temperature, compressibility factor, pressure drop ratio
-  - Nitrogen-specific constants and properties
+  - Control valve Cv and optional bypass valve Cv
+  - Maximum upstream supply and vessel relieving pressures
+  - Temperature, compressibility factor (Z), pressure drop ratio (x_t)
 - **API 520 Compliance**
-  - ISA gas flow formulas for choked/non-choked flow
-  - Flow regime detection and validation
+  - ISA-S75.01 gas flow formulas for choked/non-choked flow
+  - Automatic flow regime detection and validation
   - Comprehensive error handling and warnings
 - **Professional UX**
-  - Debounced calculations for performance
-  - Detailed tooltips with formula explanations
-  - Real-time validation and error display
+  - Real-time calculations with optimized performance
+  - Detailed tooltips with formula explanations and API references
+  - Collapsible About section with scenario guidance
   - Case toggle integration with design basis flow
 
 ### ✅ **Case 3: Liquid Overfill**
@@ -76,36 +84,42 @@ A clean, fast, web-based replacement for legacy VBA-driven Excel workbooks used 
   - Case toggle with visual feedback
 
 ### ✅ **Engineering Database**
-- **Fluid Properties**: 20+ fluids with heat of vaporization, molecular weight, density
+- **Fluid Properties**: 20+ liquids with heat of vaporization, molecular weight, density (NFPA 30)
+- **Gas Properties**: Common gases (N₂, O₂, Air, CO₂, CH₄) with molecular weights and specific gravities (NIST/Perry's)
 - **Vessel Head Areas**: Comprehensive lookup tables for standard vessel sizes
 - **Heat Input Formulas**: NFPA 30 piecewise functions and API 521 formulas
 - **Standard Diameters**: Industry-standard vessel diameter options
 
 ### ✅ **Advanced UX Features**
-- **Data Persistence**: Form data saved across navigation using localStorage
-- **Context Management**: Shared vessel properties across all cases
-- **Interactive Tooltips**: Detailed formula explanations with selectable text
+- **Data Persistence**: Automatic localStorage sync with custom hooks for all case data
+- **Context Management**: Shared vessel properties and case results across all cases
+- **Interactive Tooltips**: Sticky tooltips with detailed formula explanations and selectable text
 - **Case Toggle System**: Include/exclude cases from both main page and case pages
-- **Real-time Updates**: Calculations update automatically as inputs change
+- **Real-time Updates**: Calculations update automatically as inputs change with optimized performance
+- **Smart Navigation**: Dropdown menus for quick access to cases and datasets
 - **Responsive Design**: Works seamlessly on desktop and mobile
-- **Smooth Animations**: Fade-in effects and smooth transitions throughout
+- **Smooth Animations**: Page transitions and fade-in effects throughout
+- **Collapsible Sections**: Scenario descriptions with clean show/hide functionality
 
 ### ✅ **Technical Architecture**
 - **Frontend**: Next.js 15+ with App Router, TypeScript, TailwindCSS v4
 - **State Management**: 
   - React Context API for vessel data and case results
-  - Local storage for data persistence across navigation
-  - Memoized callbacks to prevent unnecessary re-renders
+  - Custom `useLocalStorage` hook for automatic data persistence
+  - Centralized type definitions and storage key constants
+  - Functional setState patterns to prevent stale closures
+  - Memoized calculations for optimized performance
 - **Database & Calculations**:
-  - In-memory JavaScript objects (simulating SQLite for MVP)
+  - In-memory JavaScript objects with comprehensive gas and fluid properties
   - Pure TypeScript functions with strict type safety
-  - Industry-validated formulas with detailed documentation
-  - Real-time calculation updates with error handling
+  - Industry-validated formulas (NIST, Perry's, API, NFPA, ASME standards)
+  - Real-time calculation updates with comprehensive error handling
 - **UI/UX**:
-  - League Spartan font for professional typography
-  - Consistent component library (inputs, dropdowns, tooltips)
-  - Smooth page transitions and animations
-  - Responsive design with 4-column grid system
+  - League Spartan and Inter fonts for professional typography
+  - Reusable component library (inputs, dropdowns, tooltips, collapsible sections)
+  - Smooth page transitions with PageTransition component
+  - Responsive design with adaptive grid layouts
+  - Sticky tooltips with hover persistence
 
 ## **Future Roadmap**
 
@@ -169,17 +183,22 @@ Visit `http://localhost:3000` to see the application.
 ### Project Structure
 ```
 reliever/
-├── frontend/                 # Next.js application
-│   ├── src/app/             # App Router pages and components
-│   │   ├── cases/           # Individual calculation case pages
-│   │   │   ├── external-fire/    # Case 1: External Fire
-│   │   │   ├── nitrogen-failure/ # Case 2: Nitrogen Control Failure
-│   │   │   └── liquid-overfill/  # Case 3: Liquid Overfill
-│   │   ├── components/      # Reusable UI components
-│   │   └── context/         # React Context for state management
-│   └── lib/                 # Utilities and database functions
-├── database/                # Database schema and data files
-└── README.md               # This file
+├── frontend/                     # Next.js application
+│   ├── src/app/                 # App Router pages and components
+│   │   ├── cases/               # Individual calculation case pages
+│   │   │   ├── external-fire/        # Case 1: External Fire
+│   │   │   ├── control-valve-failure/ # Case 2: Control Valve Failure
+│   │   │   └── liquid-overfill/      # Case 3: Liquid Overfill
+│   │   ├── components/          # Reusable UI components
+│   │   ├── context/             # React Context for state management
+│   │   ├── hooks/               # Custom React hooks (useLocalStorage, etc.)
+│   │   ├── types/               # Shared TypeScript type definitions
+│   │   ├── data/                # Data reference pages
+│   │   └── datasets/            # Dataset listing pages
+│   └── lib/                     # Utilities and database functions
+├── database/                    # Database schema and data files
+├── journal.md                   # Development log
+└── README.md                   # This file
 ```
 
 ## **Engineering Standards**
@@ -188,6 +207,7 @@ reliever/
 - **NFPA 30** (2018): Flammable and Combustible Liquids Code
 - **API 521** (2000): Pressure-relieving and Depressuring Systems
 - **API 520**: Sizing, Selection, and Installation of Pressure-Relieving Devices
+- **ISA-S75.01**: Control Valve Sizing Equations (for gas flow calculations)
 - **ASME VIII**: Boiler and Pressure Vessel Code
 
 ### Calculation Accuracy
@@ -198,7 +218,7 @@ reliever/
 ### Formula References
 - **NFPA 30 Heat Input**: Piecewise functions for different area ranges
 - **API 521 Heat Input**: Environmental factor considerations with drainage conditions
-- **API 520 Gas Flow**: ISA gas flow formulas for choked/non-choked conditions
+- **API 520 Gas Flow**: ISA-S75.01 gas flow formulas for choked/non-choked conditions with multiple gas support
 - **Fire Exposed Area**: Code-specific wetted surface calculations
 - **Relief Flow**: Heat input divided by fluid heat of vaporization
 - **ASME VIII Design**: Relief flow divided by 0.9 safety factor
@@ -222,22 +242,24 @@ reliever/
 
 ### Completed ✅
 - [x] Landing page with case selection and smooth animations
-- [x] Case 1: External Fire with full calculations
-- [x] Case 2: Nitrogen Control Failure with dual calculation methods
+- [x] Case 1: External Fire with NFPA 30 and API 521 compliance
+- [x] Case 2: Control Valve Failure with multi-gas support and API 521 advanced features
 - [x] Case 3: Liquid Overfill with simple manual input
-- [x] Database integration for fluid properties
-- [x] Real-time calculation updates across all cases
-- [x] Data persistence across navigation
+- [x] Database integration for fluid and gas properties
+- [x] Real-time calculation updates across all cases with optimized performance
+- [x] Automatic data persistence with custom localStorage hook
+- [x] PDF report generation with complete case data
 - [x] Responsive design and UX polish
 - [x] Engineering validation and accuracy testing
 - [x] Case toggle system with visual feedback
-- [x] Professional sidebar navigation
+- [x] Professional navigation with dropdown menus
 - [x] Design basis flow calculation and display
+- [x] Code quality refactoring with shared utilities and types
 
 ### In Progress
 - [ ] Case 4: Blocked Outlet scenarios
-- [ ] PDF report generation
 - [ ] Enhanced error handling and validation
+- [ ] Additional gas service scenarios
 
 ### Planned
 - [ ] Production database integration

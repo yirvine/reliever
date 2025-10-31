@@ -16,7 +16,7 @@
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react'
 
 // Valid case IDs in the system. Update this when adding new cases.
-export type CaseId = 'external-fire' | 'nitrogen-control' | 'liquid-overfill' | 'additional-cases'
+export type CaseId = 'external-fire' | 'control-valve-failure' | 'liquid-overfill' | 'additional-cases'
 
 /**
  * Represents the calculation result for a specific case.
@@ -38,14 +38,14 @@ interface CaseContextType {
   caseResults: Record<CaseId, CaseResult>   // Latest calculation results
   toggleCase: (caseId: CaseId) => void      // Toggle a case's selected state
   updateCaseResult: (caseId: CaseId, result: Partial<CaseResult>) => void  // Update calculations
-  getDesignBasisFlow: () => { flow: number; caseName: string } | null      // Get highest flow
+  getDesignBasisFlow: () => { flow: number; caseName: string; caseId: CaseId } | null      // Get highest flow
   getSelectedCaseCount: () => number        // Count of active cases
   hasCalculatedResults: () => boolean       // Whether any calculations exist
 }
 
 const defaultCases = {
   'external-fire': false,
-  'nitrogen-control': false,
+  'control-valve-failure': false,
   'liquid-overfill': false,
   'additional-cases': false
 }
@@ -57,9 +57,9 @@ const defaultCaseResults: Record<CaseId, CaseResult> = {
     asmeVIIIDesignFlow: null,
     isCalculated: false
   },
-  'nitrogen-control': {
-    caseId: 'nitrogen-control',
-    caseName: 'Nitrogen Control Failure',
+  'control-valve-failure': {
+    caseId: 'control-valve-failure',
+    caseName: 'Control Valve Failure (Gas)',
     asmeVIIIDesignFlow: null,
     isCalculated: false
   },
@@ -86,23 +86,67 @@ export function CaseProvider({ children }: { children: ReactNode }) {
 
   // Load from localStorage after hydration
   useEffect(() => {
+    // MIGRATION: Clean up old 'nitrogen-control' case data and rename to 'control-valve-failure'
+    const migrateOldCaseData = () => {
+      const savedCaseResults = localStorage.getItem('reliever-case-results')
+      if (savedCaseResults) {
+        try {
+          const parsed = JSON.parse(savedCaseResults)
+          // If old 'nitrogen-control' key exists, migrate it to new key
+          if (parsed['nitrogen-control']) {
+            console.log('Migrating old nitrogen-control data to control-valve-failure')
+            parsed['control-valve-failure'] = {
+              ...parsed['nitrogen-control'],
+              caseId: 'control-valve-failure',
+              caseName: 'Control Valve Failure (Gas)'
+            }
+            delete parsed['nitrogen-control']
+            localStorage.setItem('reliever-case-results', JSON.stringify(parsed))
+            return parsed
+          }
+          return parsed
+        } catch (error) {
+          console.warn('Migration failed:', error)
+          return null
+        }
+      }
+      return null
+    }
+
     const savedSelectedCases = localStorage.getItem('reliever-selected-cases')
     if (savedSelectedCases) {
       try {
-        setSelectedCases({ ...defaultCases, ...JSON.parse(savedSelectedCases) })
+        const parsed = JSON.parse(savedSelectedCases)
+        // Migrate selected case toggle
+        if (parsed['nitrogen-control'] !== undefined) {
+          parsed['control-valve-failure'] = parsed['nitrogen-control']
+          delete parsed['nitrogen-control']
+          localStorage.setItem('reliever-selected-cases', JSON.stringify(parsed))
+        }
+        setSelectedCases({ ...defaultCases, ...parsed })
       } catch (error) {
         console.warn('Failed to parse saved selected cases:', error)
       }
     }
 
-    const savedCaseResults = localStorage.getItem('reliever-case-results')
-    if (savedCaseResults) {
-      try {
-        setCaseResults({ ...defaultCaseResults, ...JSON.parse(savedCaseResults) })
-      } catch (error) {
-        console.warn('Failed to parse saved case results:', error)
+    // Run migration and load results
+    const migratedResults = migrateOldCaseData()
+    if (migratedResults) {
+      setCaseResults({ ...defaultCaseResults, ...migratedResults })
+    } else {
+      const savedCaseResults = localStorage.getItem('reliever-case-results')
+      if (savedCaseResults) {
+        try {
+          setCaseResults({ ...defaultCaseResults, ...JSON.parse(savedCaseResults) })
+        } catch (error) {
+          console.warn('Failed to parse saved case results:', error)
+        }
       }
     }
+
+    // Clean up old localStorage keys
+    localStorage.removeItem('nitrogen-control-flow-data')
+    localStorage.removeItem('nitrogen-control-pressure-data')
 
     setIsHydrated(true)
   }, [])
@@ -168,7 +212,8 @@ export function CaseProvider({ children }: { children: ReactNode }) {
     
     return {
       flow: maxCase.asmeVIIIDesignFlow!,
-      caseName: maxCase.caseName
+      caseName: maxCase.caseName,
+      caseId: maxCase.caseId
     }
   }
 

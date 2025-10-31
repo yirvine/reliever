@@ -1,35 +1,30 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
 import VesselProperties from '../../components/VesselProperties'
 import CasePressureSettings from '../../components/CasePressureSettings'
 import Header from '../../components/Header'
 import PageTransition from '../../components/PageTransition'
 import Tooltip from '../../components/Tooltip'
+import ScenarioAbout from '../../components/ScenarioAbout'
 import { useVessel } from '../../context/VesselContext'
 import { useCase } from '../../context/CaseContext'
 import { calculateHeatInput, calculateEnvironmentalFactor, getInsulationMaterials } from '../../../../lib/database'
 import { useScrollPosition } from '../../hooks/useScrollPosition'
+import { useLocalStorage } from '../../hooks/useLocalStorage'
+import { CasePressureData, STORAGE_KEYS } from '../../types/case-types'
 
 interface FlowData {
   applicableFireCode: string
   heatOfVaporization: number
-  hasAdequateDrainageFirefighting?: boolean // For API 521 only
-  nfpaReductionFactor?: number // For NFPA 30 protection (1.0 = none, 0.5, 0.4, 0.3)
-  
-  // API 521 Priority 2: Environmental factor inputs
-  storageType?: 'above-grade' | 'earth-covered' | 'below-grade' // Default: 'above-grade'
-  hasInsulation?: boolean // Whether vessel has fire-rated insulation
-  insulationMaterial?: string // Name of insulation material
-  insulationThickness?: number // inches
-  processTemperature?: number // °F, for F factor calculation
-}
-
-interface CasePressureData {
-  maxAllowedVentingPressure: number
-  maxAllowableBackpressure: number
-  maxAllowedVentingPressurePercent: number
+  hasAdequateDrainageFirefighting?: boolean
+  nfpaReductionFactor?: number
+  storageType?: 'above-grade' | 'earth-covered' | 'below-grade'
+  hasInsulation?: boolean
+  insulationMaterial?: string
+  insulationThickness?: number
+  processTemperature?: number
 }
 
 export default function ExternalFireCase() {
@@ -37,17 +32,14 @@ export default function ExternalFireCase() {
   const { updateCaseResult, selectedCases, toggleCase, getDesignBasisFlow } = useCase()
   const isSelected = selectedCases['external-fire']
   
-  const [showAbout, setShowAbout] = useState(false)
-  
   useScrollPosition()
 
-  const [flowData, setFlowData] = useState<FlowData>({
+  // Use custom hook for automatic localStorage sync
+  const [flowData, setFlowData] = useLocalStorage<FlowData>(STORAGE_KEYS.EXTERNAL_FIRE_FLOW, {
     applicableFireCode: 'NFPA 30',
     heatOfVaporization: 0,
     hasAdequateDrainageFirefighting: undefined,
-    nfpaReductionFactor: 1.0, // Default: no reduction
-    
-    // Priority 2 defaults (backward compatible)
+    nfpaReductionFactor: 1.0,
     storageType: 'above-grade',
     hasInsulation: false,
     insulationMaterial: undefined,
@@ -55,46 +47,14 @@ export default function ExternalFireCase() {
     processTemperature: undefined
   })
 
-  // Load from localStorage after component mounts (client-side only)
-  useEffect(() => {
-    const saved = localStorage.getItem('external-fire-flow-data')
-    if (saved) {
-      try {
-        const parsedData = JSON.parse(saved)
-        setFlowData(parsedData)
-      } catch {
-        // If parsing fails, keep defaults
-      }
-    }
-    
-    const savedPressure = localStorage.getItem('external-fire-pressure-data')
-    if (savedPressure) {
-      try {
-        const parsedPressure = JSON.parse(savedPressure)
-        setPressureData(parsedPressure)
-      } catch {
-        // If parsing fails, keep defaults
-      }
-    }
-  }, [])
-
-  const [pressureData, setPressureData] = useState<CasePressureData>({
+  const [pressureData, setPressureData] = useLocalStorage<CasePressureData>(STORAGE_KEYS.EXTERNAL_FIRE_PRESSURE, {
     maxAllowedVentingPressure: 0,
     maxAllowableBackpressure: 0,
     maxAllowedVentingPressurePercent: 0
   })
 
-  // Save pressure data to localStorage when it changes
-  useEffect(() => {
-    localStorage.setItem('external-fire-pressure-data', JSON.stringify(pressureData))
-  }, [pressureData])
-
   const handleFlowDataChange = (field: keyof FlowData, value: string | number | boolean) => {
-    const newData = { ...flowData, [field]: value }
-    setFlowData(newData)
-    
-    // Save to localStorage (client-side only)
-    localStorage.setItem('external-fire-flow-data', JSON.stringify(newData))
+    setFlowData(prev => ({ ...prev, [field]: value }))
   }
 
   // Calculate preview values in real-time
@@ -263,23 +223,29 @@ export default function ExternalFireCase() {
             <div className="flex-1 min-w-0">
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Case 1 - External Fire</h1>
               
-              {/* Collapsible About Section */}
-              <div className={showAbout ? 'mb-2' : 'mb-1'}>
-                <button
-                  onClick={() => setShowAbout(!showAbout)}
-                  className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200"
-                >
-                  <svg 
-                    className={`w-4 h-4 mr-1 transition-transform duration-200 ${showAbout ? 'rotate-90' : ''}`}
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                  About
-                </button>
-              </div>
+              {/* About Section */}
+              <ScenarioAbout>
+                <p>
+                  <strong>External fire exposure</strong> occurs when a vessel containing flammable or non-flammable materials is exposed to an external pool fire, typically from a spill or adjacent equipment failure. The fire heats the vessel contents, causing liquid to vaporize and pressure to rise.
+                </p>
+                <p>
+                  This case calculates the required relief capacity to prevent vessel rupture during fire exposure by determining the heat input rate based on the fire-exposed wetted surface area and applying code-specific formulas.
+                </p>
+                
+                <div className="border-t border-blue-300 pt-3 space-y-2">
+                  <p className="font-semibold text-gray-800">Code Selection: NFPA 30 vs API 521</p>
+                  <p>
+                    <strong>NFPA 30 (Chapter 22.7)</strong> is the standard for flammable and combustible liquids storage. Originally developed for storage tanks, it&apos;s widely applied to process vessels. NFPA 30 uses conservative piecewise formulas that typically result in higher heat input values and larger required relief capacities. It&apos;s the preferred choice for flammable liquid services, tank farms, and when simple, conservative calculations are acceptable.
+                  </p>
+                  <p>
+                    <strong>API 521</strong> is a comprehensive process industry standard covering all equipment types. It offers more sophisticated heat input calculations with the ability to take credit for fire protection measures such as insulation, drainage systems, water spray protection, and special storage configurations (earth-covered, below-grade). API 521 is preferred when detailed engineering analysis can justify reduced relief requirements, or when process fluids are non-flammable. The environmental factor (F) in API 521 can significantly reduce required capacity when proper mitigation is in place.
+                  </p>
+                </div>
+                
+                <p className="text-xs text-gray-600 border-t border-blue-200 pt-2">
+                  External fire is often the governing case for pressure relief valve sizing in process vessels and storage tanks.
+                </p>
+              </ScenarioAbout>
             </div>
 
             {/* Include Case and Applicable Code - Right Side on desktop, below title on mobile */}
@@ -311,7 +277,7 @@ export default function ExternalFireCase() {
                   className="w-72"
                   content={
                     <div className="text-sm">
-                      Select the applicable code for heat input calculation. NFPA 30 is typically used for flammable liquids (more conservative), while API 521 offers advanced fire protection credits. See the <strong>About</strong> section above for detailed guidance on code selection.
+                      Select the applicable code for heat input calculation. NFPA 30 is typically used for flammable liquids (more conservative), while API 521 offers advanced fire protection credits. See the <strong>About this scenario</strong> section above for detailed guidance on code selection.
                     </div>
                   }
                 />
@@ -337,36 +303,6 @@ export default function ExternalFireCase() {
                   <option value="API 521">API 521</option>
                 </select>
               </div>
-            </div>
-          </div>
-
-          {/* Expanded About Section - Full Width */}
-          <div 
-            className={`overflow-hidden transition-all duration-300 ease-in-out ${
-              showAbout ? 'max-h-[600px] opacity-100 mt-2' : 'max-h-0 opacity-0'
-            }`}
-          >
-            <div className="text-sm text-gray-700 bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
-              <p>
-                <strong>External fire exposure</strong> occurs when a vessel containing flammable or non-flammable materials is exposed to an external pool fire, typically from a spill or adjacent equipment failure. The fire heats the vessel contents, causing liquid to vaporize and pressure to rise.
-              </p>
-              <p>
-                This case calculates the required relief capacity to prevent vessel rupture during fire exposure by determining the heat input rate based on the fire-exposed wetted surface area and applying code-specific formulas.
-              </p>
-              
-              <div className="border-t border-blue-300 pt-3 space-y-2">
-                <p className="font-semibold text-gray-800">Code Selection: NFPA 30 vs API 521</p>
-                <p>
-                  <strong>NFPA 30 (Chapter 22.7)</strong> is the standard for flammable and combustible liquids storage. Originally developed for storage tanks, it&apos;s widely applied to process vessels. NFPA 30 uses conservative piecewise formulas that typically result in higher heat input values and larger required relief capacities. It&apos;s the preferred choice for flammable liquid services, tank farms, and when simple, conservative calculations are acceptable.
-                </p>
-                <p>
-                  <strong>API 521</strong> is a comprehensive process industry standard covering all equipment types. It offers more sophisticated heat input calculations with the ability to take credit for fire protection measures such as insulation, drainage systems, water spray protection, and special storage configurations (earth-covered, below-grade). API 521 is preferred when detailed engineering analysis can justify reduced relief requirements, or when process fluids are non-flammable. The environmental factor (F) in API 521 can significantly reduce required capacity when proper mitigation is in place.
-                </p>
-              </div>
-              
-              <p className="text-xs text-gray-600 border-t border-blue-200 pt-2">
-                External fire is often the governing case for pressure relief valve sizing in process vessels and storage tanks.
-              </p>
             </div>
           </div>
         </div>

@@ -113,3 +113,61 @@
 - **Why single page PDF**: Keeps reports concise, forces focus on essential data
 - **Why localStorage for reports**: Client-side data, no backend needed, instant generation
 - **Why explicit input listing**: Prevents old calculated results from contaminating new data (lesson learned the hard way)
+
+---
+
+## 2025-10-31 - Control Valve Failure Generalization & Code Quality Improvements
+
+### Case 2: Nitrogen → Control Valve Failure (Gas Service)
+- **Generalized from nitrogen-only to any gas service**: Renamed and refactored Case 2 to support multiple gas types
+- **Gas selection database**: Added support for Nitrogen, Air, Oxygen, CO2, Methane, and Custom Gas with proper molecular weights and specific gravities sourced from NIST and Perry's Handbook
+- **Custom gas inputs**: Allow users to specify custom MW and SG for unlisted gases - fields become editable when Custom Gas is selected
+- **API-521 compliance enhancements**:
+  - **Bypass valve consideration** (Section 4.4.8.3): Option to include inadvertent bypass valve opening scenario, calculates effective total Cv
+  - **Outlet flow credit** (Section 4.4.8.4): Allows crediting normal outlet flow against inlet flow for net relief requirement
+  - Detailed tooltips referencing specific API-521 sections
+- **About section added**: Created reusable `ScenarioAbout` component with collapsible scenario descriptions, used across External Fire and Control Valve cases
+- **Gas Properties dataset page**: New reference page documenting gas properties used in calculations with source citations
+
+### Navigation & UX Enhancements
+- **Cases dropdown in navbar**: Added dropdown menu for direct access to Case 1 - External Fire, Case 2 - Control Valve Failure, Case 3 - Liquid Overfill
+- **Datasets dropdown enhancement**: Added Gas Properties to datasets navigation
+- **3-column dataset layout**: Datasets page now displays 3 cards per row on large screens instead of 2
+- **Tooltip icon fix**: Updated question mark SVG to include dot at bottom for proper symbol rendering
+- **Include Case toggle positioning**: Moved to right side of page header for consistency across all cases
+
+### Code Quality Refactoring
+- **Created `useLocalStorage` custom hook**: Eliminated 120+ lines of duplicate localStorage boilerplate code across all case pages
+- **Centralized type definitions**: Created `types/case-types.ts` with shared `CasePressureData` interface and `STORAGE_KEYS` constants
+- **Improved React patterns**: Standardized functional setState pattern (`prev => ({ ...prev, ...})`) to prevent stale closures
+- **Bug fixes**:
+  - Fixed PDF report generator reading stale/incorrect data - calculated results weren't being saved to localStorage
+  - Fixed custom gas SG/MW changes not affecting flow calculations due to stale closure in useCallback
+  - Restored explicit localStorage save for calculated outputs (useLocalStorage only handles inputs)
+
+### Data Migration & Persistence
+- **LocalStorage migration logic**: Added automatic migration from old `nitrogen-control` keys to new `control-valve-failure` keys in CaseContext
+- **Robust key handling**: All localStorage keys now use centralized constants to prevent typos and enable easy refactoring
+
+### Technical Notes
+- **Critical lesson on custom hooks**: Document clearly what hooks do and DON'T do - useLocalStorage handles inputs but not derived/calculated values
+- **Functional setState pattern**: Always use `setState(prev => ...)` to avoid stale closures, especially in callbacks with dependencies
+- **Report generator architecture**: PDF needs both input AND output data explicitly saved; don't rely on automatic sync for calculated values
+
+### Files Modified
+- Renamed `frontend/src/app/cases/nitrogen-failure/` → `control-valve-failure/`
+- Updated `calculations.ts` with generic gas flow formulas and gas properties database
+- Refactored all 3 case pages to use new `useLocalStorage` hook
+- Created `frontend/src/app/hooks/useLocalStorage.ts`
+- Created `frontend/src/app/types/case-types.ts`
+- Created `frontend/src/app/components/ScenarioAbout.tsx`
+- Created `frontend/src/app/data/gas-properties/page.tsx`
+- Updated navigation in Header, Sidebar, NavDropdown components
+- Updated CaseContext with migration logic and new case ID
+- Updated useReportGenerator with new field names and gas properties
+
+### Architecture Decisions
+- **Why generalize nitrogen case**: Control valve failures apply to many gas services (air, oxygen, inert gases) - same physics, different properties
+- **Why separate gas properties page**: Transparency about data sources; users can verify MW/SG values against standards
+- **Why useLocalStorage hook**: DRY principle - eliminate duplicate code while maintaining type safety and error handling
+- **Why explicit calculated saves**: Report generator operates independently of UI state; needs complete snapshot of inputs+outputs

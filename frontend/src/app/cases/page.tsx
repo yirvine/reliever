@@ -158,10 +158,10 @@ export default function Calculator() {
               )}
             </div>
 
-            {/* Nitrogen Control Case */}
+            {/* Control Valve Failure Case */}
             <div className={`
               p-6 border rounded-lg transition-all duration-200 relative
-              ${selectedCases['nitrogen-control'] 
+              ${selectedCases['control-valve-failure'] 
                 ? 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md' 
                 : 'border-gray-200 bg-gray-50'
               }
@@ -170,22 +170,22 @@ export default function Calculator() {
                 <div className="flex items-center space-x-2">
                   <span className="text-xs text-gray-500">Include</span>
                   <ToggleSwitch
-                    enabled={selectedCases['nitrogen-control']}
-                    onChange={() => toggleCase('nitrogen-control')}
+                    enabled={selectedCases['control-valve-failure']}
+                    onChange={() => toggleCase('control-valve-failure')}
                     size="sm"
                   />
                 </div>
               </div>
               
-              {selectedCases['nitrogen-control'] ? (
-                <Link href="/cases/nitrogen-failure" className="block">
+              {selectedCases['control-valve-failure'] ? (
+                <Link href="/cases/control-valve-failure" className="block">
                   <div className="flex items-center justify-between pr-16">
                     <div>
                       <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                        Case 2 - Nitrogen Control Failure
+                        Case 2 - Control Valve Failure
                       </h4>
                       <p className="text-gray-600">
-                        Calculate relief requirements for nitrogen control system failure.
+                        Calculate relief requirements for gas control valve failure (any gas service).
                       </p>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-2">
                         Available
@@ -200,10 +200,10 @@ export default function Calculator() {
                 <div className="flex items-center justify-between pr-16">
                   <div>
                     <h4 className="text-lg font-semibold text-gray-500 mb-2">
-                      Case 2 - Nitrogen Control Failure
+                      Case 2 - Control Valve Failure 
                     </h4>
                     <p className="text-gray-500">
-                      Calculate relief requirements for nitrogen control system failure.
+                      Calculate relief requirements for gas control valve failure (any gas service).
                     </p>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 mt-2">
                       Not Selected

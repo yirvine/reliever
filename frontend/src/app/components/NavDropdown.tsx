@@ -37,7 +37,7 @@ export default function NavDropdown({ title, items, href }: NavDropdownProps) {
       )}
       
       <div className={`
-        absolute top-full right-0 mt-0 w-48 sm:w-52 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50
+        absolute top-full right-0 mt-0 w-56 sm:w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50
         transition-all duration-200 ease-in-out transform origin-top-right
         ${isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}
       `}>

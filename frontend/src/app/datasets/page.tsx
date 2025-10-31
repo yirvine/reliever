@@ -14,7 +14,7 @@ export default function ReferencePage() {
         <Header />
         
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16">
-          <div className="max-w-4xl">
+          <div>
             <h1 className="text-3xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-6 font-inter">
               Datasets
             </h1>
@@ -25,7 +25,7 @@ export default function ReferencePage() {
               to ensure calculation accuracy and consistency.
             </p>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Fluid Properties Card */}
               <Link 
                 href="/datasets/fluids"
@@ -47,6 +47,33 @@ export default function ReferencePage() {
                 </p>
                 <div className="mt-4 flex items-center text-blue-600 font-medium group-hover:text-blue-700 transition-colors duration-200">
                   <span>View Fluid Properties</span>
+                  <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </Link>
+
+              {/* Gas Properties Card */}
+              <Link 
+                href="/data/gas-properties"
+                className="group bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-purple-300 transition-all duration-200"
+              >
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center mr-4 group-hover:bg-purple-100 transition-colors duration-200">
+                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors duration-200 font-inter">
+                    Gas Properties
+                  </h2>
+                </div>
+                <p className="text-gray-600 font-inter">
+                  Molecular weight, specific gravity, and compressibility factors for common industrial gases 
+                  used in control valve failure calculations per API-521.
+                </p>
+                <div className="mt-4 flex items-center text-blue-600 font-medium group-hover:text-blue-700 transition-colors duration-200">
+                  <span>View Gas Properties</span>
                   <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>

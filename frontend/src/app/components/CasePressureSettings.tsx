@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import Tooltip from './Tooltip'
 
 interface CasePressureData {
@@ -24,6 +25,23 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
   const autoPercent = mawpPercent
   const autoMavp = vesselMawp * (autoPercent / 100) // MAVP = % of MAWP
   const autoBackpressure = Math.abs(vesselMawp - autoMavp) // |MAWP - MAVP|
+
+  // Auto-sync calculated values to parent component
+  useEffect(() => {
+    if (isAutoCalculated && vesselMawp > 0) {
+      // Only update if values have changed to avoid infinite loops
+      if (Math.abs(pressureData.maxAllowedVentingPressurePercent - autoPercent) > 0.01) {
+        onChange('maxAllowedVentingPressurePercent', autoPercent)
+      }
+      if (Math.abs(pressureData.maxAllowedVentingPressure - autoMavp) > 0.01) {
+        onChange('maxAllowedVentingPressure', autoMavp)
+      }
+      if (Math.abs(pressureData.maxAllowableBackpressure - autoBackpressure) > 0.01) {
+        onChange('maxAllowableBackpressure', autoBackpressure)
+      }
+    }
+  }, [isAutoCalculated, vesselMawp, autoPercent, autoMavp, autoBackpressure, pressureData, onChange])
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">

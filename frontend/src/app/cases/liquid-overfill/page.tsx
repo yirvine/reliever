@@ -10,15 +10,11 @@ import Tooltip from '../../components/Tooltip'
 import { useVessel } from '../../context/VesselContext'
 import { useCase } from '../../context/CaseContext'
 import { useScrollPosition } from '../../hooks/useScrollPosition'
+import { useLocalStorage } from '../../hooks/useLocalStorage'
+import { CasePressureData, STORAGE_KEYS } from '../../types/case-types'
 
 interface FlowData {
-  manualFlowRate: number // User inputs the flow in lb/hr
-}
-
-interface CasePressureData {
-  maxAllowedVentingPressure: number
-  maxAllowableBackpressure: number
-  maxAllowedVentingPressurePercent: number
+  manualFlowRate: number
 }
 
 export default function LiquidOverfillCase() {
@@ -28,48 +24,16 @@ export default function LiquidOverfillCase() {
   
   useScrollPosition()
 
-  const [flowData, setFlowData] = useState<FlowData>({
+  // Use custom hook for automatic localStorage sync
+  const [flowData, setFlowData] = useLocalStorage<FlowData>(STORAGE_KEYS.LIQUID_OVERFILL_FLOW, {
     manualFlowRate: 0
   })
 
-  const [casePressureData, setCasePressureData] = useState<CasePressureData>({
+  const [casePressureData, setCasePressureData] = useLocalStorage<CasePressureData>(STORAGE_KEYS.LIQUID_OVERFILL_PRESSURE, {
     maxAllowedVentingPressure: 0,
     maxAllowableBackpressure: 0,
     maxAllowedVentingPressurePercent: 110
   })
-
-  // Load from localStorage after component mounts (client-side only)
-  useEffect(() => {
-    const savedFlow = localStorage.getItem('liquid-overfill-flow-data')
-    const savedPressure = localStorage.getItem('liquid-overfill-pressure-data')
-    
-    if (savedFlow) {
-      try {
-        const parsedData = JSON.parse(savedFlow)
-        setFlowData(parsedData)
-      } catch {
-        // If parsing fails, keep defaults
-      }
-    }
-    
-    if (savedPressure) {
-      try {
-        const parsedData = JSON.parse(savedPressure)
-        setCasePressureData(parsedData)
-      } catch {
-        // If parsing fails, keep defaults
-      }
-    }
-  }, [])
-
-  // Save to localStorage when data changes
-  useEffect(() => {
-    localStorage.setItem('liquid-overfill-flow-data', JSON.stringify(flowData))
-  }, [flowData])
-
-  useEffect(() => {
-    localStorage.setItem('liquid-overfill-pressure-data', JSON.stringify(casePressureData))
-  }, [casePressureData])
 
   const updateFlowData = (field: keyof FlowData, value: number) => {
     setFlowData(prev => ({ ...prev, [field]: value }))

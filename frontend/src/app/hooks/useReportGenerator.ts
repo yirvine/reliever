@@ -57,28 +57,41 @@ const extractExternalFireData = () => {
   }
 }
 
-const extractNitrogenFailureData = () => {
-  const flowDataStr = localStorage.getItem('nitrogen-control-flow-data')
-  const pressureDataStr = localStorage.getItem('nitrogen-control-pressure-data')
+const extractControlValveFailureData = () => {
+  const flowDataStr = localStorage.getItem('control-valve-failure-flow-data')
+  const pressureDataStr = localStorage.getItem('control-valve-failure-pressure-data')
   
   if (!flowDataStr) return null
   
   const flow = JSON.parse(flowDataStr)
   const pressure = pressureDataStr ? JSON.parse(pressureDataStr) : {}
   
+  // Get gas properties
+  const gasName = flow.gasProperties?.name || flow.selectedGas || 'Nitrogen (N₂)'
+  const molWeight = flow.gasProperties?.molecularWeight || 28.0134
+  const specGravity = flow.gasProperties?.specificGravity || 0.967
+  
   return {
     inputData: {
-      // Note: Using ACTUAL field names from nitrogen case (not placeholder names)
-      // These fields may change when nitrogen case is reviewed
-      'Total Cv': typeof flow.totalCv === 'number' ? flow.totalCv : 'N/A',
-      'Inlet Pressure (psia)': typeof flow.inletPressure === 'number' ? flow.inletPressure : 'N/A',
-      'Outlet Pressure (psia)': typeof flow.outletPressure === 'number' ? flow.outletPressure : 'N/A',
+      'Gas Type': gasName,
+      'Molecular Weight (lb/lbmol)': typeof molWeight === 'number' ? molWeight.toFixed(2) : 'N/A',
+      'Specific Gravity': typeof specGravity === 'number' ? specGravity.toFixed(3) : 'N/A',
+      'Control Valve Cv': typeof flow.totalCv === 'number' ? flow.totalCv : 'N/A',
+      'Bypass Valve Included': flow.considerBypass ? 'Yes' : 'No',
+      ...(flow.considerBypass && flow.bypassCv ? { 'Bypass Valve Cv': flow.bypassCv } : {}),
+      ...(flow.effectiveCv ? { 'Effective Total Cv': flow.effectiveCv.toFixed(1) } : {}),
+      'Inlet Pressure (psig)': typeof flow.inletPressure === 'number' ? flow.inletPressure : 'N/A',
+      'Outlet Pressure (psig)': typeof flow.outletPressure === 'number' ? flow.outletPressure : 'N/A',
       'Temperature (°F)': typeof flow.temperatureF === 'number' ? flow.temperatureF : 'N/A',
       'Compressibility (Z)': typeof flow.compressibilityZ === 'number' ? flow.compressibilityZ : 'N/A',
-      'Xt Factor': typeof flow.xt === 'number' ? flow.xt : 'N/A',
+      'Pressure Drop Ratio (xt)': typeof flow.xt === 'number' ? flow.xt : 'N/A',
+      'Outlet Flow Credit Applied': flow.creditOutletFlow ? 'Yes' : 'No',
+      ...(flow.creditOutletFlow && flow.outletFlowCredit ? { 'Normal Outlet Flow (SCFH)': flow.outletFlowCredit.toLocaleString() } : {}),
     },
     outputData: {
-      'Calculated Relieving Flow (SCFH)': typeof flow.calculatedRelievingFlow === 'number' ? flow.calculatedRelievingFlow.toLocaleString() : 'N/A',
+      'Gross Inlet Flow (SCFH)': typeof flow.calculatedRelievingFlow === 'number' ? flow.calculatedRelievingFlow.toLocaleString() : 'N/A',
+      ...(flow.netRelievingFlow && flow.creditOutletFlow ? { 'Net Relief Flow (SCFH)': flow.netRelievingFlow.toLocaleString() } : {}),
+      ...(flow.outletCreditApplied && flow.creditOutletFlow ? { 'Outlet Credit Applied (SCFH)': flow.outletCreditApplied.toLocaleString() } : {}),
       'Mass Flow Rate (lb/hr)': typeof flow.massFlowRate === 'number' ? flow.massFlowRate.toLocaleString() : 'N/A',
       'ASME VIII Design Flow (lb/hr)': typeof flow.asmeVIIIDesignFlow === 'number' ? flow.asmeVIIIDesignFlow.toLocaleString() : 'N/A',
       'Max Allowed Venting Pressure (psig)': typeof pressure.maxAllowedVentingPressure === 'number' ? pressure.maxAllowedVentingPressure.toFixed(2) : 'N/A',
@@ -132,12 +145,12 @@ export const useReportGenerator = () => {
         }
       }
       
-      if (selectedCases['nitrogen-control'] && caseResults['nitrogen-control'].isCalculated) {
-        const data = extractNitrogenFailureData()
+      if (selectedCases['control-valve-failure'] && caseResults['control-valve-failure'].isCalculated) {
+        const data = extractControlValveFailureData()
         if (data) {
           selectedCaseResults.push({
-            caseId: 'nitrogen-control',
-            caseName: 'Case 2 - Nitrogen Control Failure',
+            caseId: 'control-valve-failure',
+            caseName: 'Case 2 - Control Valve Failure (Gas Service)',
             ...data,
           })
         }

@@ -15,9 +15,9 @@ export default function Sidebar() {
       href: '/cases/external-fire',
     },
     {
-      id: 'nitrogen-control' as const,
-      name: '2 - Nitrogen Control',
-      href: '/cases/nitrogen-failure',
+      id: 'control-valve-failure' as const,
+      name: '2 - Control Valve Failure',
+      href: '/cases/control-valve-failure',
     },
     {
       id: 'liquid-overfill' as const,
