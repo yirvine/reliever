@@ -2,306 +2,290 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import ToggleSwitch from '../components/ToggleSwitch'
 import Header from '../components/Header'
 import PageTransition from '../components/PageTransition'
 import { useCase } from '../context/CaseContext'
+import { useVessel } from '../context/VesselContext'
 import { useScrollPosition } from '../hooks/useScrollPosition'
 import { useReportGenerator } from '../hooks/useReportGenerator'
 
 export default function Calculator() {
-  const { selectedCases, toggleCase, getDesignBasisFlow, getSelectedCaseCount, hasCalculatedResults } = useCase()
+  const { selectedCases, caseResults, toggleCase, getDesignBasisFlow, getSelectedCaseCount, hasCalculatedResults } = useCase()
+  const { vesselData } = useVessel()
   const { generateReport, isGenerating } = useReportGenerator()
   const designBasisFlow = getDesignBasisFlow()
   const selectedCount = getSelectedCaseCount()
   
-  const [showCard, setShowCard] = useState(!!designBasisFlow)
-  const [animatingOut, setAnimatingOut] = useState(false)
-  
   useScrollPosition()
-
-  useEffect(() => {
-    if (designBasisFlow && !showCard) {
-      // Flow appeared, show card
-      setShowCard(true)
-      setAnimatingOut(false)
-    } else if (!designBasisFlow && showCard) {
-      // Flow disappeared, start exit animation
-      setAnimatingOut(true)
-      const timer = setTimeout(() => {
-        setShowCard(false)
-        setAnimatingOut(false)
-      }, 300) // Match animation duration
-      return () => clearTimeout(timer)
+  
+  // Get fluid/gas name for each case
+  const getFluidName = (caseId: string): string => {
+    if (caseId === 'external-fire') {
+      return vesselData.workingFluid || ''
+    } else if (caseId === 'control-valve-failure') {
+      const flowData = localStorage.getItem('control-valve-failure-flow-data')
+      if (flowData) {
+        try {
+          const parsed = JSON.parse(flowData)
+          return parsed.gasProperties?.name || ''
+        } catch {
+          return ''
+        }
+      }
+    } else if (caseId === 'liquid-overfill') {
+      return vesselData.workingFluid || ''
     }
-  }, [designBasisFlow, showCard])
+    return ''
+  }
 
   return (
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
         <Header />
 
+        {/* Sticky Design Basis Flow Banner */}
+        <div 
+          className={`sticky top-0 z-10 bg-gradient-to-r from-slate-600 to-slate-700 border-b-2 border-slate-800 shadow-lg overflow-hidden transition-all duration-300 ease-in-out ${
+            designBasisFlow 
+              ? 'max-h-20 opacity-100' 
+              : 'max-h-0 opacity-0 border-b-0 pointer-events-none'
+          }`}
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex items-center gap-3">
+              <svg className="w-5 h-5 text-slate-100 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <span className="text-sm font-semibold text-slate-100 font-inter uppercase tracking-wide whitespace-nowrap">Current Design Basis Flow:</span>
+              {designBasisFlow && (
+                <>
+                  <span className="text-3xl font-bold text-white font-inter">{designBasisFlow.flow.toLocaleString()}</span>
+                  <span className="text-lg text-white font-medium">lb/hr</span>
+                  <span className="text-sm text-slate-100">from {designBasisFlow.caseName}</span>
+                  <div className="relative group">
+                    <svg className="w-5 h-5 text-slate-200 cursor-help" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z" />
+                    </svg>
+                    <div className="absolute left-full top-1/2 transform -translate-y-1/2 ml-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-20">
+                      Maximum flow across all calculated cases for hydraulic network modeling
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Hero Section */}
-        <div className="mb-8 text-left">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4 font-inter">
-            Relief sizing made simple.
+        <div className="mb-6 text-left">
+          <h2 className="text-3xl font-bold text-gray-900 mb-3 font-inter">
+            Available Relief Scenarios
           </h2>
-          <p className="text-lg text-gray-600 max-w-8xl font-inter">
+          <p className="text-base text-gray-600 mb-2 font-inter">
             Calculate the required relieving rate for common scenarios in accordance with NFPA 30, API 521, and ASME VIII.
-            Use this rate in your preferred hydraulic simulation software (e.g. FluidFlow, Aspen HYSYS, etc.) to size the appropriate relief valve or burst disc,
-            then import the final device selection here for reporting.
+          </p>
+          <p className="text-sm text-gray-500 font-inter">
+            Select scenarios to include in your relief load summary. Only completed calculations will appear in the generated report.
           </p>
         </div>
 
-
-
-
-        {/* Design Basis Flow Summary - Only when calculated */}
-        {showCard && (
-          <div className={`bg-slate-50 border border-slate-200 rounded-lg p-6 mb-6 ${
-            animatingOut ? 'animate-out' : 'animate-in'
-          }`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="flex items-center mb-2">
-                  <h3 className="text-lg font-semibold text-slate-700 font-inter mr-2">Current Design Basis Flow</h3>
-                  <div className="relative group">
-                    <svg className="w-4 h-4 text-gray-600 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                      Maximum flow across all calculated cases
-                    </div>
-                  </div>
-                </div>
-                <p className="text-gray-700">
-                  <span className="text-2xl font-bold font-inter">{designBasisFlow?.flow.toLocaleString()}</span> lb/hr
-                  <span className="text-sm ml-2">from {designBasisFlow?.caseName}</span>
-                </p>
-                <p className="text-sm text-gray-600 mt-1">
-                  This is the maximum flow across all calculated cases and should be used for hydraulic network modeling.
-                </p>
-              </div>
-              <div className="text-gray-500">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Calculation Cases */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-bold text-gray-900 font-inter">Available Calculation Cases</h3>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">Included in Calculation</span>
+            </div>
             <div className="text-sm text-gray-500">
-              {selectedCount} of 4 cases selected
+              {selectedCount} of 4 selected
             </div>
           </div>
           
-          <div className="grid gap-4">
+          <div className="space-y-3">
             {/* External Fire Case */}
             <div className={`
-              p-6 border rounded-lg transition-all duration-200 relative
+              p-4 border rounded-lg transition-all duration-200
               ${selectedCases['external-fire'] 
-                ? 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md' 
-                : 'border-gray-200 bg-gray-50'
+                ? 'border-gray-300 bg-white hover:border-blue-400 hover:shadow-md' 
+                : 'border-gray-200 bg-gray-50 opacity-60'
               }
             `}>
-              <div className="absolute top-4 right-4">
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-gray-500">Include</span>
-                  <ToggleSwitch
-                    enabled={selectedCases['external-fire']}
-                    onChange={() => toggleCase('external-fire')}
-                    size="sm"
-                  />
-                </div>
-              </div>
-              
-              {selectedCases['external-fire'] ? (
-                <Link href="/cases/external-fire" className="block">
-                  <div className="flex items-center justify-between pr-16">
-                    <div>
-                      <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                        Case 1 - External Fire
-                      </h4>
-                      <p className="text-gray-600">
-                        Calculate relief requirements for external fire exposure.
+              <div className="flex items-center gap-4">
+                {/* Checkbox */}
+                <input
+                  type="checkbox"
+                  checked={selectedCases['external-fire']}
+                  onChange={() => toggleCase('external-fire')}
+                  className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                />
+                
+                {/* Card Content */}
+                <Link href="/cases/external-fire" className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <h4 className={`text-base font-semibold ${selectedCases['external-fire'] ? 'text-gray-900' : 'text-gray-500'}`}>
+                          External Fire
+                        </h4>
+                        {selectedCases['external-fire'] && (
+                          <>
+                            {caseResults['external-fire'].isCalculated && caseResults['external-fire'].asmeVIIIDesignFlow ? (
+                              <span className="text-sm font-medium text-blue-600">
+                                {caseResults['external-fire'].asmeVIIIDesignFlow.toLocaleString()} lb/hr
+                                {getFluidName('external-fire') && ` ${getFluidName('external-fire')}`}
+                              </span>
+                            ) : (
+                              <span className="text-sm text-amber-600 font-medium">Incomplete</span>
+                            )}
+                          </>
+                        )}
+                      </div>
+                      <p className={`text-sm mt-1 ${selectedCases['external-fire'] ? 'text-gray-600' : 'text-gray-400'}`}>
+                        Relief from external fire exposure.
                       </p>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-2">
-                        Available
-                      </span>
                     </div>
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                    {selectedCases['external-fire'] && (
+                      <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    )}
                   </div>
                 </Link>
-              ) : (
-                <div className="flex items-center justify-between pr-16">
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-500 mb-2">
-                      Case 1 - External Fire
-                    </h4>
-                    <p className="text-gray-500">
-                      Calculate relief requirements for external fire exposure.
-                    </p>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 mt-2">
-                      Not Selected
-                    </span>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
 
             {/* Control Valve Failure Case */}
             <div className={`
-              p-6 border rounded-lg transition-all duration-200 relative
+              p-4 border rounded-lg transition-all duration-200
               ${selectedCases['control-valve-failure'] 
-                ? 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md' 
-                : 'border-gray-200 bg-gray-50'
+                ? 'border-gray-300 bg-white hover:border-blue-400 hover:shadow-md' 
+                : 'border-gray-200 bg-gray-50 opacity-60'
               }
             `}>
-              <div className="absolute top-4 right-4">
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-gray-500">Include</span>
-                  <ToggleSwitch
-                    enabled={selectedCases['control-valve-failure']}
-                    onChange={() => toggleCase('control-valve-failure')}
-                    size="sm"
-                  />
-                </div>
-              </div>
-              
-              {selectedCases['control-valve-failure'] ? (
-                <Link href="/cases/control-valve-failure" className="block">
-                  <div className="flex items-center justify-between pr-16">
-                    <div>
-                      <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                        Case 2 - Control Valve Failure
-                      </h4>
-                      <p className="text-gray-600">
-                        Calculate relief requirements for gas control valve failure (any gas service).
+              <div className="flex items-center gap-4">
+                <input
+                  type="checkbox"
+                  checked={selectedCases['control-valve-failure']}
+                  onChange={() => toggleCase('control-valve-failure')}
+                  className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                />
+                
+                <Link href="/cases/control-valve-failure" className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <h4 className={`text-base font-semibold ${selectedCases['control-valve-failure'] ? 'text-gray-900' : 'text-gray-500'}`}>
+                          Control Valve Failure
+                        </h4>
+                        {selectedCases['control-valve-failure'] && (
+                          <>
+                            {caseResults['control-valve-failure'].isCalculated && caseResults['control-valve-failure'].asmeVIIIDesignFlow ? (
+                              <span className="text-sm font-medium text-blue-600">
+                                {caseResults['control-valve-failure'].asmeVIIIDesignFlow.toLocaleString()} lb/hr
+                                {getFluidName('control-valve-failure') && ` ${getFluidName('control-valve-failure')}`}
+                              </span>
+                            ) : (
+                              <span className="text-sm text-amber-600 font-medium">Incomplete</span>
+                            )}
+                          </>
+                        )}
+                      </div>
+                      <p className={`text-sm mt-1 ${selectedCases['control-valve-failure'] ? 'text-gray-600' : 'text-gray-400'}`}>
+                        Gas control valve stuck-open scenario.
                       </p>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-2">
-                        Available
-                      </span>
                     </div>
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                    {selectedCases['control-valve-failure'] && (
+                      <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    )}
                   </div>
                 </Link>
-              ) : (
-                <div className="flex items-center justify-between pr-16">
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-500 mb-2">
-                      Case 2 - Control Valve Failure 
-                    </h4>
-                    <p className="text-gray-500">
-                      Calculate relief requirements for gas control valve failure (any gas service).
-                    </p>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 mt-2">
-                      Not Selected
-                    </span>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
 
             {/* Liquid Overfill Case */}
             <div className={`
-              p-6 border rounded-lg transition-all duration-200 relative
+              p-4 border rounded-lg transition-all duration-200
               ${selectedCases['liquid-overfill'] 
-                ? 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md' 
-                : 'border-gray-200 bg-gray-50'
+                ? 'border-gray-300 bg-white hover:border-blue-400 hover:shadow-md' 
+                : 'border-gray-200 bg-gray-50 opacity-60'
               }
             `}>
-              <div className="absolute top-4 right-4">
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-gray-500">Include</span>
-                  <ToggleSwitch
-                    enabled={selectedCases['liquid-overfill']}
-                    onChange={() => toggleCase('liquid-overfill')}
-                    size="sm"
-                  />
-                </div>
-              </div>
-              
-              {selectedCases['liquid-overfill'] ? (
-                <Link href="/cases/liquid-overfill" className="block">
-                  <div className="flex items-center justify-between pr-16">
-                    <div>
-                      <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                        Case 3 - Liquid Overfill
-                      </h4>
-                      <p className="text-gray-600">
-                        Calculate relief requirements for liquid overfill scenarios where vessel receives liquid faster than it can be removed.
+              <div className="flex items-center gap-4">
+                <input
+                  type="checkbox"
+                  checked={selectedCases['liquid-overfill']}
+                  onChange={() => toggleCase('liquid-overfill')}
+                  className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                />
+                
+                <Link href="/cases/liquid-overfill" className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <h4 className={`text-base font-semibold ${selectedCases['liquid-overfill'] ? 'text-gray-900' : 'text-gray-500'}`}>
+                          Liquid Overfill
+                        </h4>
+                        {selectedCases['liquid-overfill'] && (
+                          <>
+                            {caseResults['liquid-overfill'].isCalculated && caseResults['liquid-overfill'].asmeVIIIDesignFlow ? (
+                              <span className="text-sm font-medium text-blue-600">
+                                {caseResults['liquid-overfill'].asmeVIIIDesignFlow.toLocaleString()} lb/hr
+                                {getFluidName('liquid-overfill') && ` ${getFluidName('liquid-overfill')}`}
+                              </span>
+                            ) : (
+                              <span className="text-sm text-amber-600 font-medium">Incomplete</span>
+                            )}
+                          </>
+                        )}
+                      </div>
+                      <p className={`text-sm mt-1 ${selectedCases['liquid-overfill'] ? 'text-gray-600' : 'text-gray-400'}`}>
+                        Vessel filling faster than liquid removal.
                       </p>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-2">
-                        Available
-                      </span>
                     </div>
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                    {selectedCases['liquid-overfill'] && (
+                      <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    )}
                   </div>
                 </Link>
-              ) : (
-                <div className="flex items-center justify-between pr-16">
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-500 mb-2">
-                      Case 3 - Liquid Overfill
-                    </h4>
-                    <p className="text-gray-500">
-                      Calculate relief requirements for liquid overfill scenarios where vessel receives liquid faster than it can be removed.
-                    </p>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 mt-2">
-                      Not Selected
-                    </span>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
 
             {/* Additional Cases */}
             <div className={`
-              p-6 border rounded-lg transition-all duration-200 relative
+              p-4 border rounded-lg transition-all duration-200
               ${selectedCases['additional-cases'] 
-                ? 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md' 
-                : 'border-gray-200 bg-gray-50'
+                ? 'border-gray-300 bg-white' 
+                : 'border-gray-200 bg-gray-50 opacity-60'
               }
             `}>
-              <div className="absolute top-4 right-4">
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-gray-500">Include</span>
-                  <ToggleSwitch
-                    enabled={selectedCases['additional-cases']}
-                    onChange={() => toggleCase('additional-cases')}
-                    size="sm"
-                  />
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between pr-16">
-                <div>
-                  <h4 className={`text-lg font-semibold mb-2 ${selectedCases['additional-cases'] ? 'text-gray-900' : 'text-gray-500'}`}>
-                    Case 4 - Additional Cases
-                  </h4>
-                  <p className={selectedCases['additional-cases'] ? 'text-gray-600' : 'text-gray-500'}>
+              <div className="flex items-center gap-4">
+                <input
+                  type="checkbox"
+                  checked={selectedCases['additional-cases']}
+                  onChange={() => toggleCase('additional-cases')}
+                  className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                />
+                
+                <div className="flex-1">
+                  <div className="flex items-center gap-3">
+                    <h4 className={`text-base font-semibold ${selectedCases['additional-cases'] ? 'text-gray-900' : 'text-gray-500'}`}>
+                      Additional Cases
+                    </h4>
+                    <span className="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 font-medium">
+                      Coming Soon
+                    </span>
+                  </div>
+                  <p className={`text-sm mt-1 ${selectedCases['additional-cases'] ? 'text-gray-600' : 'text-gray-400'}`}>
                     Split Exchanger Tube, Blocked Discharge, Heating/Cooling Control Failure, and more.
                   </p>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-2 ${
-                    selectedCases['additional-cases'] 
-                      ? 'bg-yellow-100 text-yellow-800' 
-                      : 'bg-gray-100 text-gray-600'
-                  }`}>
-                    {selectedCases['additional-cases'] ? 'Coming Soon' : 'Not Selected'}
-                  </span>
                 </div>
               </div>
             </div>

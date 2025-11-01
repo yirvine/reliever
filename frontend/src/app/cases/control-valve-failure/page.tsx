@@ -170,6 +170,11 @@ export default function ControlValveFailureCase() {
       }
       
       localStorage.setItem('control-valve-failure-flow-data', JSON.stringify(calculatedResults))
+    } else {
+      // Mark as incomplete when calculation is invalid
+      updateCaseResult('control-valve-failure', {
+        isCalculated: false
+      })
     }
   }, [previewValues.netRelievingFlow, previewValues.calculatedRelievingFlow, previewValues.massFlowRate, 
       previewValues.effectiveCv, previewValues.outletCreditApplied, updateCaseResult, flowData])

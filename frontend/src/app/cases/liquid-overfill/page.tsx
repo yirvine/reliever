@@ -63,6 +63,11 @@ export default function LiquidOverfillCase() {
         asmeVIIIDesignFlow: previewValues.asmeVIIIDesignFlow,
         isCalculated: true
       })
+    } else {
+      // Mark as incomplete when calculation is invalid
+      updateCaseResult('liquid-overfill', {
+        isCalculated: false
+      })
     }
   }, [previewValues.calculatedRelievingFlow, previewValues.asmeVIIIDesignFlow, updateCaseResult])
 

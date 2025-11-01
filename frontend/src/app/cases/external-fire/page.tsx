@@ -186,6 +186,11 @@ export default function ExternalFireCase() {
       }
       
       localStorage.setItem('external-fire-flow-data', JSON.stringify(calculatedResults))
+    } else {
+      // Mark as incomplete when calculation is invalid
+      updateCaseResult('external-fire', {
+        isCalculated: false
+      })
     }
   }, [
     previewValues.calculatedRelievingFlow, 

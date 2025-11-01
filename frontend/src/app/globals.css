@@ -128,19 +128,11 @@
 @keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateY(-20px);
-    max-height: 0;
-    margin-bottom: 0;
-    padding-top: 0;
-    padding-bottom: 0;
+    transform: translateY(-100%);
   }
   to {
     opacity: 1;
     transform: translateY(0);
-    max-height: 200px;
-    margin-bottom: 1.5rem;
-    padding-top: 1.5rem;
-    padding-bottom: 1.5rem;
   }
 }
 
@@ -148,18 +140,10 @@
   from {
     opacity: 1;
     transform: translateY(0);
-    max-height: 200px;
-    margin-bottom: 1.5rem;
-    padding-top: 1.5rem;
-    padding-bottom: 1.5rem;
   }
   to {
     opacity: 0;
-    transform: translateY(-20px);
-    max-height: 0;
-    margin-bottom: 0;
-    padding-top: 0;
-    padding-bottom: 0;
+    transform: translateY(-100%);
   }
 }
 

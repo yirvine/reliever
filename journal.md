@@ -171,3 +171,72 @@
 - **Why separate gas properties page**: Transparency about data sources; users can verify MW/SG values against standards
 - **Why useLocalStorage hook**: DRY principle - eliminate duplicate code while maintaining type safety and error handling
 - **Why explicit calculated saves**: Report generator operates independently of UI state; needs complete snapshot of inputs+outputs
+
+---
+
+## 2025-11-01 - Cases Summary Page Redesign & Calculation State Management
+
+### Case Summary Page Redesign
+- **Replaced toggles with checkboxes**: Changed "Include" toggles to clean checkbox interface with "Included in Calculation" label
+- **Flow display on cards**: Cases now show calculated flow directly on card (e.g., "6 lb/hr Ethanol") when calculated
+- **Incomplete status indicator**: Cards display amber "Incomplete" badge when case is selected but calculations aren't complete
+- **Only shows status for selected cases**: Unselected cases don't show "Incomplete" to reduce visual noise
+- **Removed "Available" badges**: Cleaned up card appearance by removing redundant status indicators
+- **Simplified case titles**: Changed from "Case 1 - External Fire" to just "External Fire" on cards
+- **Concise descriptions**: Updated descriptions to be more succinct and action-oriented
+- **Slimmer card design**: Reduced padding from p-6 to p-4 for more compact layout
+
+### Design Basis Flow Banner
+- **Sticky banner implementation**: Created sticky header that displays current design basis flow with navy theme matching generate report button
+- **Smooth slide animations**: Banner smoothly slides down when appearing and up when disappearing using CSS transitions
+- **Single-line layout**: Condensed to one line: "Current Design Basis Flow: X lb/hr from Case"
+- **Tooltip positioning**: Question mark tooltip appears to the RIGHT of case name to prevent header overlap
+- **Responsive tooltip**: Uses filled question mark icon (w-5 h-5) with hover text appearing to side instead of above
+- **Thinner border**: Changed from 4px to 2px border for more subtle appearance
+
+### Report Generator Enhancements
+- **Conditional parameters**: Report now includes different fields based on calculation method (manual vs pressure-based)
+- **Manual flow input**: When user selects manual flow, report only shows minimal parameters (flow value, ASME design flow)
+- **Pressure-based calculation**: Full parameter listing including all gas properties, pressures, temperatures, bypass/outlet settings
+- **Cleaner reports**: Prevents cluttering report with irrelevant parameters when user bypasses pressure calculations
+- **Validation warnings hidden for manual input**: Removed pressure validation warnings when user selects manual flow input mode
+
+### Critical Bug Fix: Calculation State Management
+- **Problem identified**: When users removed fields making calculations invalid, old flow values persisted on summary page
+- **Root cause**: `isCalculated` flag was only set to `true` when calculations succeeded, but never reset to `false` when they became invalid
+- **Solution applied to all cases**: Added `else` clause to update useEffect hooks that explicitly marks case as incomplete:
+  ```typescript
+  if (validFlow) {
+    updateCaseResult(caseId, { asmeVIIIDesignFlow, isCalculated: true })
+  } else {
+    updateCaseResult(caseId, { isCalculated: false })
+  }
+  ```
+- **Consistency across cases**: Applied fix to External Fire, Control Valve Failure, and Liquid Overfill cases
+- **Immediate feedback**: Summary page now instantly shows "Incomplete" when user removes required fields
+
+### Case Name Dynamic Updates
+- **Control Valve Failure case name**: Now dynamically includes gas name in design basis flow (e.g., "Control Valve Failure (Oxygen)")
+- **Dual naming system**: Added `name` (clean) and `displayName` (with formula) to gas properties for different display contexts
+- **Report integration**: Gas name with chemical formula (O₂, N₂, CO₂, CH₄) appears correctly in PDF reports
+
+### Technical Notes
+- **Lesson on reactive state**: Always handle BOTH success and failure cases in state updates - don't assume invalid states won't occur
+- **Banner animation approach**: Using `max-height` + `opacity` transitions with `pointer-events-none` provides smooth appearance/disappearance without DOM mounting/unmounting complexity
+- **Tooltip z-index management**: Design basis banner tooltips need higher z-index (z-20) and right-side positioning to avoid header overlap
+- **Report architecture**: Separation of concerns - manual input bypasses complex parameters entirely rather than showing them as N/A
+
+### Files Modified
+- `frontend/src/app/cases/page.tsx` - Complete redesign of summary page with new banner, checkboxes, flow display
+- `frontend/src/app/cases/external-fire/page.tsx` - Added `isCalculated: false` in else clause
+- `frontend/src/app/cases/control-valve-failure/page.tsx` - Added `isCalculated: false`, dynamic case naming, warning suppression for manual input
+- `frontend/src/app/cases/liquid-overfill/page.tsx` - Added `isCalculated: false` in else clause
+- `frontend/src/app/cases/control-valve-failure/calculations.ts` - Added `displayName` to gas properties
+- `frontend/src/app/hooks/useReportGenerator.ts` - Conditional parameter inclusion based on calculation method
+- `frontend/src/app/globals.css` - Updated slideIn/slideOut animations to use only transform and opacity
+
+### UX Improvements
+- **Clearer user guidance**: "Only completed calculations will appear in the generated report" message added to page header
+- **Visual feedback**: Immediate status updates when toggling cases or modifying inputs
+- **Professional appearance**: Navy banner theme consistent with overall application design
+- **Reduced cognitive load**: Simplified card layout focuses attention on essential information (case name, flow, status)
