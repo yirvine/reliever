@@ -232,7 +232,7 @@ export default function Home() {
                   <span className="sm:hidden">3. </span>Document & Size
                 </h3>
                 <p className="text-gray-600 font-inter">
-                  Use the calculated flow to size a relief valve or rupture disc in FluidFlow (or similar software), then return to ReliefGuard to record the selected device and generate a final, standards-compliant report.
+                  Use the calculated flow to size a relief valve or rupture disc in your preferred hydraulic simulation software (e.g., FluidFlow, Aspen HYSYS, etc.), then return to ReliefGuard to record the selected device and generate a final, standards-compliant report.
                 </p>
               </div>
             </div>

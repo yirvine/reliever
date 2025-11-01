@@ -50,7 +50,7 @@ export default function Calculator() {
           </h2>
           <p className="text-lg text-gray-600 max-w-8xl font-inter">
             Calculate the required relieving rate for common scenarios in accordance with NFPA 30, API 521, and ASME VIII.
-            Use this rate in simulation software (e.g. FluidFlow) to size the appropriate relief valve or burst disc,
+            Use this rate in your preferred hydraulic simulation software (e.g. FluidFlow, Aspen HYSYS, etc.) to size the appropriate relief valve or burst disc,
             then import the final device selection here for reporting.
           </p>
         </div>
@@ -81,7 +81,7 @@ export default function Calculator() {
                   <span className="text-sm ml-2">from {designBasisFlow?.caseName}</span>
                 </p>
                 <p className="text-sm text-gray-600 mt-1">
-                  This is the maximum flow across all calculated cases and should be used for FluidFlow modeling.
+                  This is the maximum flow across all calculated cases and should be used for hydraulic network modeling.
                 </p>
               </div>
               <div className="text-gray-500">
@@ -314,7 +314,7 @@ export default function Calculator() {
             <h3 className="text-xl font-bold text-gray-900 mb-4">Next Steps</h3>
             <p className="text-gray-600 mb-6">
               {hasCalculatedResults() 
-                ? 'Complete calculations for all selected cases, then proceed to FluidFlow modeling using the Design Basis Flow.'
+                ? 'Complete calculations for all selected cases, then import the Design Basis Flow into your preferred process or hydraulic simulation software (e.g., FluidFlow, Aspen HYSYS, etc.) for detailed modeling.'
                 : 'Calculate relief requirements for your selected cases. The highest flow will become your Design Basis Flow.'
               }
             </p>

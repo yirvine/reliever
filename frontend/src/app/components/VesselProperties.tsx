@@ -224,29 +224,27 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            ASME Set Pressure (psig)
-          </label>
-          <input
-            type="number"
-            step="0.1"
-            value={vesselData.asmeSetPressure || ''}
-            onChange={(e) => onChange('asmeSetPressure', parseFloat(e.target.value) || 0)}
-            disabled={disabled}
-            className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 placeholder-gray-400 ${
-              disabled 
-                ? 'border-gray-200 bg-gray-50 text-gray-500' 
-                : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-            }`}
-            placeholder="e.g., 14.9"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Vessel Design MAWP (psig)
-          </label>
+          <div className="flex items-center gap-2 mb-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Vessel Design MAWP (psig)
+            </label>
+            <Tooltip
+              className="w-80"
+              content={
+                <>
+                  <div className="mb-2">
+                    <strong className="text-blue-300">Maximum Allowable Working Pressure:</strong>
+                  </div>
+                  <div className="mb-2">
+                    The maximum gauge pressure permissible at the top of the vessel in its operating position at the designated coincident temperature specified for that pressure.
+                  </div>
+                  <div className="text-xs border-t border-gray-600 pt-2 mt-2">
+                    Per ASME Section VIII Div. 1: Relief device set pressure must not exceed MAWP.
+                  </div>
+                </>
+              }
+            />
+          </div>
           <input
             type="number"
             step="0.1"
@@ -258,9 +256,55 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
                 ? 'border-gray-200 bg-gray-50 text-gray-500' 
                 : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
             }`}
+            placeholder="e.g., 15"
+            required
+          />
+        </div>
+
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <label className="block text-sm font-medium text-gray-700">
+              ASME Set Pressure (psig)
+            </label>
+            <Tooltip
+              className="w-80"
+              content={
+                <>
+                  <div className="mb-2">
+                    <strong className="text-blue-300">Relief Device Set Pressure:</strong>
+                  </div>
+                  <div className="mb-2">
+                    The inlet gauge pressure at which the pressure relief device is set to open.
+                  </div>
+                  <div className="text-xs border-t border-gray-600 pt-2 mt-2 text-yellow-200">
+                    <strong>⚠️ ASME Requirement:</strong> Set pressure must not exceed vessel MAWP (typically set at or slightly below MAWP).
+                  </div>
+                </>
+              }
+            />
+          </div>
+          <input
+            type="number"
+            step="0.1"
+            value={vesselData.asmeSetPressure || ''}
+            onChange={(e) => onChange('asmeSetPressure', parseFloat(e.target.value) || 0)}
+            disabled={disabled}
+            className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 placeholder-gray-400 ${
+              disabled 
+                ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                : vesselData.asmeSetPressure > vesselData.vesselDesignMawp
+                  ? 'border-yellow-500 focus:ring-yellow-500 focus:border-yellow-500'
+                  : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+            }`}
             placeholder="e.g., 14.9"
             required
           />
+          {vesselData.asmeSetPressure > vesselData.vesselDesignMawp && vesselData.vesselDesignMawp > 0 && (
+            <p className="text-xs text-yellow-600 mt-1 flex items-center gap-1">
+              <span>⚠️</span>
+              <span>Set pressure exceeds MAWP - not compliant with ASME Section VIII</span>
+            </p>
+          )}
         </div>
 
         {/* API 521-specific fields - only show when API 521 is selected */}

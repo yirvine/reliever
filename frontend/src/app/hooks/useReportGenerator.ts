@@ -66,14 +66,33 @@ const extractControlValveFailureData = () => {
   const flow = JSON.parse(flowDataStr)
   const pressure = pressureDataStr ? JSON.parse(pressureDataStr) : {}
   
-  // Get gas properties
-  const gasName = flow.gasProperties?.name || flow.selectedGas || 'Nitrogen (N₂)'
+  // Get gas properties - use displayName for report with chemical formula
+  const gasDisplayName = flow.gasProperties?.displayName || flow.gasProperties?.name || 'Nitrogen (N₂)'
   const molWeight = flow.gasProperties?.molecularWeight || 28.0134
   const specGravity = flow.gasProperties?.specificGravity || 0.967
+  const isManualInput = flow.isManualFlowInput === true
   
+  // For manual flow input, only show minimal parameters
+  if (isManualInput) {
+    return {
+      inputData: {
+        'Flow Calculation Method': 'Manual Flow Input',
+        'Manual Mass Flow Rate (lb/hr)': typeof flow.manualFlowRate === 'number' ? flow.manualFlowRate.toLocaleString() : 'N/A',
+      },
+      outputData: {
+        'Mass Flow Rate (lb/hr)': typeof flow.massFlowRate === 'number' ? flow.massFlowRate.toLocaleString() : 'N/A',
+        'ASME VIII Design Flow (lb/hr)': typeof flow.asmeVIIIDesignFlow === 'number' ? flow.asmeVIIIDesignFlow.toLocaleString() : 'N/A',
+        'Max Allowed Venting Pressure (psig)': typeof pressure.maxAllowedVentingPressure === 'number' ? pressure.maxAllowedVentingPressure.toFixed(2) : 'N/A',
+        'Max Allowable Backpressure (psig)': typeof pressure.maxAllowableBackpressure === 'number' ? pressure.maxAllowableBackpressure.toFixed(2) : 'N/A',
+      },
+    }
+  }
+  
+  // For pressure-based calculations, show all parameters
   return {
     inputData: {
-      'Gas Type': gasName,
+      'Flow Calculation Method': 'Pressure-Based Calculation',
+      'Gas Type': gasDisplayName,
       'Molecular Weight (lb/lbmol)': typeof molWeight === 'number' ? molWeight.toFixed(2) : 'N/A',
       'Specific Gravity': typeof specGravity === 'number' ? specGravity.toFixed(3) : 'N/A',
       'Control Valve Cv': typeof flow.totalCv === 'number' ? flow.totalCv : 'N/A',
@@ -148,9 +167,15 @@ export const useReportGenerator = () => {
       if (selectedCases['control-valve-failure'] && caseResults['control-valve-failure'].isCalculated) {
         const data = extractControlValveFailureData()
         if (data) {
+          // Use the clean gas name from data for report title
+          // If manual input, just use "Gas Service", otherwise extract gas type
+          const isManual = data.inputData['Flow Calculation Method'] === 'Manual Flow Input'
+          const gasType = 'Gas Type' in data.inputData ? data.inputData['Gas Type'] as string : undefined
+          const gasDisplayName = isManual ? 'Gas Service' : (gasType || 'Gas Service')
+          
           selectedCaseResults.push({
             caseId: 'control-valve-failure',
-            caseName: 'Case 2 - Control Valve Failure (Gas Service)',
+            caseName: `Case 2 - Control Valve Failure (${gasDisplayName})`,
             ...data,
           })
         }

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useCallback } from 'react'
+import React, { useMemo, useCallback } from 'react'
 import Link from 'next/link'
 import VesselProperties from '../../components/VesselProperties'
 import CasePressureSettings from '../../components/CasePressureSettings'
@@ -43,11 +43,10 @@ export default function ControlValveFailureCase() {
     xt: 0.7,
     gasProperties: DEFAULT_GAS_PROPERTIES,
     outletFlowCredit: 0,
-    creditOutletFlow: false
+    creditOutletFlow: false,
+    selectedGas: '',  // Store in flowData directly
+    customGasProps: COMMON_GASES.custom  // Store in flowData directly
   })
-  
-  const [selectedGas, setSelectedGas] = useState<string>('nitrogen')
-  const [customGasProps, setCustomGasProps] = useState<GasProperties>(COMMON_GASES.custom)
 
   const [pressureData, setPressureData] = useLocalStorage<CasePressureData>(STORAGE_KEYS.CONTROL_VALVE_PRESSURE, {
     maxAllowedVentingPressure: 0,
@@ -65,25 +64,39 @@ export default function ControlValveFailureCase() {
   }, [setFlowData])
   
   const handleGasChange = useCallback((gasKey: string) => {
-    setSelectedGas(gasKey)
-    const gasProps = gasKey === 'custom' ? customGasProps : COMMON_GASES[gasKey as keyof typeof COMMON_GASES]
-    setFlowData(prev => ({ 
-      ...prev, 
-      gasProperties: gasProps,
-      compressibilityZ: gasProps.defaultZ
-    }))
-  }, [customGasProps, setFlowData])
+    setFlowData(prev => {
+      // Only update gas properties if a valid gas is selected
+      if (gasKey && gasKey !== '') {
+        const gasProps = gasKey === 'custom' 
+          ? (prev.customGasProps || COMMON_GASES.custom)
+          : COMMON_GASES[gasKey as keyof typeof COMMON_GASES]
+        
+        if (gasProps) {
+          return {
+            ...prev,
+            selectedGas: gasKey,
+            gasProperties: gasProps,
+            compressibilityZ: gasProps.defaultZ
+          }
+        }
+      }
+      return { ...prev, selectedGas: gasKey }
+    })
+  }, [setFlowData])
   
   const handleCustomGasChange = useCallback((field: keyof GasProperties, value: number | string) => {
-    setCustomGasProps(prev => {
-      const newCustomProps = { ...prev, [field]: value }
-      // Also update flowData if custom gas is selected
-      if (selectedGas === 'custom') {
-        setFlowData(prevFlow => ({ ...prevFlow, gasProperties: newCustomProps }))
+    setFlowData(prev => {
+      const newCustomProps = { 
+        ...(prev.customGasProps || COMMON_GASES.custom), 
+        [field]: value 
+      } as GasProperties
+      return {
+        ...prev,
+        customGasProps: newCustomProps,
+        gasProperties: prev.selectedGas === 'custom' ? newCustomProps : prev.gasProperties
       }
-      return newCustomProps
     })
-  }, [selectedGas, setFlowData])
+  }, [setFlowData])
 
   const handlePressureDataChange = (field: keyof CasePressureData, value: number) => {
     setPressureData(prev => ({ ...prev, [field]: value }))
@@ -131,13 +144,19 @@ export default function ControlValveFailureCase() {
     if (designFlow && designFlow > 0 && previewValues.massFlowRate) {
       const asmeVIIIDesignFlow = Math.round(previewValues.massFlowRate)
       
+      // Update case name with gas type for design basis flow display
+      const gasName = flowData.gasProperties?.name || 'Gas'
+      const caseName = `Control Valve Failure (${gasName})`
+      
       updateCaseResult('control-valve-failure', {
         asmeVIIIDesignFlow,
+        caseName,
         isCalculated: true
       })
       
       // Save calculated results to localStorage for PDF generation
       // Note: useLocalStorage only saves flowData inputs, but report needs calculated outputs too
+      // Also save selectedGas and customGasProps for persistence
       const calculatedResults = {
         ...flowData,
         calculatedRelievingFlow: previewValues.calculatedRelievingFlow,
@@ -146,14 +165,15 @@ export default function ControlValveFailureCase() {
         asmeVIIIDesignFlow,
         effectiveCv: previewValues.effectiveCv,
         outletCreditApplied: previewValues.outletCreditApplied,
-        selectedGas,
-        customGasProps: selectedGas === 'custom' ? customGasProps : undefined
+        selectedGas: flowData.selectedGas,
+        customGasProps: flowData.customGasProps
       }
       
       localStorage.setItem('control-valve-failure-flow-data', JSON.stringify(calculatedResults))
     }
   }, [previewValues.netRelievingFlow, previewValues.calculatedRelievingFlow, previewValues.massFlowRate, 
-      previewValues.effectiveCv, previewValues.outletCreditApplied, updateCaseResult, flowData, selectedGas, customGasProps])
+      previewValues.effectiveCv, previewValues.outletCreditApplied, updateCaseResult, flowData])
+  
 
   return (
     <PageTransition>
@@ -288,7 +308,7 @@ export default function ControlValveFailureCase() {
                   Select Gas Type
                 </label>
                 <select
-                  value={selectedGas}
+                  value={flowData.selectedGas || ''}
                   onChange={(e) => handleGasChange(e.target.value)}
                   className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
                     !isSelected 
@@ -297,65 +317,70 @@ export default function ControlValveFailureCase() {
                   }`}
                   disabled={!isSelected}
                 >
+                  <option value="">Select a gas...</option>
                   {Object.entries(COMMON_GASES).map(([key, gas]) => (
-                    <option key={key} value={key}>{gas.name}</option>
+                    <option key={key} value={key}>{gas.displayName}</option>
                   ))}
                 </select>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  MW
-                </label>
-                {selectedGas === 'custom' ? (
-                  <div className="relative">
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={customGasProps.molecularWeight}
-                      onChange={(e) => handleCustomGasChange('molecularWeight', parseFloat(e.target.value) || 0)}
-                      className="w-full h-10 px-3 py-2 pr-20 border border-gray-300 rounded-md text-gray-900 bg-white"
-                      disabled={!isSelected}
-                      placeholder="28.0"
-                    />
-                    <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm pointer-events-none">
-                      lb/lbmol
-                    </span>
+              {flowData.selectedGas && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      MW
+                    </label>
+                    {flowData.selectedGas === 'custom' ? (
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={flowData.customGasProps?.molecularWeight || 28}
+                          onChange={(e) => handleCustomGasChange('molecularWeight', parseFloat(e.target.value) || 0)}
+                          className="w-full h-10 px-3 py-2 pr-20 border border-gray-300 rounded-md text-gray-900 bg-white"
+                          disabled={!isSelected}
+                          placeholder="28.0"
+                        />
+                        <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm pointer-events-none">
+                          lb/lbmol
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="h-10 px-3 py-2 bg-blue-50 border border-gray-300 rounded-md flex items-center">
+                        <span className="text-gray-900">{flowData.gasProperties?.molecularWeight.toFixed(2)} lb/lbmol</span>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="h-10 px-3 py-2 bg-blue-50 border border-gray-300 rounded-md flex items-center">
-                    <span className="text-gray-900">{flowData.gasProperties?.molecularWeight.toFixed(2)} lb/lbmol</span>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      SG
+                    </label>
+                    {flowData.selectedGas === 'custom' ? (
+                      <input
+                        type="number"
+                        step="0.001"
+                        min="0"
+                        max="10"
+                        value={flowData.customGasProps?.specificGravity || 1.0}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value)
+                          if (!isNaN(val) && val >= 0) {
+                            handleCustomGasChange('specificGravity', val)
+                          }
+                        }}
+                        className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
+                        disabled={!isSelected}
+                        placeholder="1.000"
+                      />
+                    ) : (
+                      <div className="h-10 px-3 py-2 bg-blue-50 border border-gray-300 rounded-md flex items-center">
+                        <span className="text-gray-900">{flowData.gasProperties?.specificGravity.toFixed(3)}</span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  SG
-                </label>
-                {selectedGas === 'custom' ? (
-                  <input
-                    type="number"
-                    step="0.001"
-                    min="0"
-                    max="10"
-                    value={customGasProps.specificGravity}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value)
-                      if (!isNaN(val) && val >= 0) {
-                        handleCustomGasChange('specificGravity', val)
-                      }
-                    }}
-                    className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
-                    disabled={!isSelected}
-                    placeholder="1.000"
-                  />
-                ) : (
-                  <div className="h-10 px-3 py-2 bg-blue-50 border border-gray-300 rounded-md flex items-center">
-                    <span className="text-gray-900">{flowData.gasProperties?.specificGravity.toFixed(3)}</span>
-                  </div>
-                )}
-              </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -778,8 +803,8 @@ export default function ControlValveFailureCase() {
               </>
             )}
 
-            {/* Error and Warning Display */}
-            {(previewValues.errors.length > 0 || previewValues.warnings.length > 0) && (
+            {/* Error and Warning Display - Only show for pressure-based calculations */}
+            {!flowData.isManualFlowInput && (previewValues.errors.length > 0 || previewValues.warnings.length > 0) && (
               <div className="mt-4 space-y-2">
                 {previewValues.errors.map((error, index) => (
                   <div key={index} className="flex items-center gap-2 text-red-600 text-sm">

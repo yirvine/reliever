@@ -12,6 +12,7 @@
 
 export interface GasProperties {
   name: string
+  displayName: string        // name with chemical formula for UI display
   molecularWeight: number    // lb/lbmol
   specificGravity: number    // relative to air
   defaultZ: number           // typical compressibility factor
@@ -31,6 +32,8 @@ export interface GasFlowInputs {
   gasProperties?: GasProperties  // selected gas properties
   outletFlowCredit?: number   // SCFH - normal outlet flow to credit
   creditOutletFlow?: boolean  // whether to apply outlet flow credit
+  selectedGas?: string        // selected gas key for persistence
+  customGasProps?: GasProperties  // custom gas properties if applicable
 }
 
 export interface CalculationResult {
@@ -65,37 +68,43 @@ export interface CalculationResult {
  */
 export const COMMON_GASES: Record<string, GasProperties> = {
   nitrogen: {
-    name: 'Nitrogen (N₂)',
+    name: 'Nitrogen',
+    displayName: 'Nitrogen (N₂)',
     molecularWeight: 28.0134,    // NIST: Diatomic nitrogen at STP
     specificGravity: 0.967,      // 28.0134 / 28.97 (relative to air)
     defaultZ: 1.0                // Near-ideal behavior at typical conditions
   },
   air: {
     name: 'Air',
+    displayName: 'Air',
     molecularWeight: 28.97,      // Standard dry air composition
     specificGravity: 1.0,        // Reference gas (by definition)
     defaultZ: 1.0                // Ideal at typical process conditions
   },
   oxygen: {
-    name: 'Oxygen (O₂)',
+    name: 'Oxygen',
+    displayName: 'Oxygen (O₂)',
     molecularWeight: 32.0,       // NIST: Diatomic oxygen at STP
     specificGravity: 1.105,      // 32.0 / 28.97
     defaultZ: 1.0                // Near-ideal behavior
   },
   co2: {
-    name: 'Carbon Dioxide (CO₂)',
+    name: 'Carbon Dioxide',
+    displayName: 'Carbon Dioxide (CO₂)',
     molecularWeight: 44.01,      // NIST: CO₂ at STP
     specificGravity: 1.52,       // 44.01 / 28.97
     defaultZ: 0.99               // Slight deviation from ideal at moderate pressures
   },
   methane: {
-    name: 'Methane (CH₄)',
+    name: 'Methane',
+    displayName: 'Methane (CH₄)',
     molecularWeight: 16.04,      // NIST: CH₄ at STP
     specificGravity: 0.554,      // 16.04 / 28.97
     defaultZ: 0.998              // Nearly ideal, slight deviation
   },
   custom: {
     name: 'Custom Gas',
+    displayName: 'Custom Gas',
     molecularWeight: 28.0134,  // default placeholder (nitrogen)
     specificGravity: 1.0,       // default placeholder (air)
     defaultZ: 1.0               // default placeholder (ideal)
