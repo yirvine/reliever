@@ -5,12 +5,7 @@ import Image from 'next/image'
 import NavDropdown from './NavDropdown'
 import { useSidebar } from './SidebarLayout'
 
-interface HeaderProps {
-  showBreadcrumb?: boolean
-  breadcrumbText?: string
-}
-
-export default function Header({ showBreadcrumb = false, breadcrumbText }: HeaderProps) {
+export default function Header() {
   const { isExpanded } = useSidebar()
   
   return (
@@ -33,18 +28,8 @@ export default function Header({ showBreadcrumb = false, breadcrumbText }: Heade
                 />
               </div>
             </Link>
-            {showBreadcrumb && breadcrumbText && (
-              <span className="ml-2 sm:ml-4 text-sm sm:text-lg text-gray-600 hidden sm:block">/ {breadcrumbText}</span>
-            )}
           </div>
           <div className="flex items-center space-x-0 sm:space-x-1">
-            <Link 
-              href="/" 
-              className="px-1 sm:px-3 py-2 text-xs sm:text-lg lg:text-xl font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200 font-inter navbar-text min-w-[2.5rem] sm:min-w-0"
-            >
-              <span className="hidden sm:inline">Home</span>
-              <span className="sm:hidden">Home</span>
-            </Link>
             <NavDropdown 
               title="Cases" 
               href="/cases"

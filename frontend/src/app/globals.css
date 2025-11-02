@@ -30,12 +30,6 @@
   --foreground: #171717;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
-}
-
 /* Inter Font */
 @font-face {
   font-family: 'Inter';
@@ -192,3 +186,9 @@ body {
   }
 }
 
+/* Fix mobile top spacing without touching desktop */
+@media (max-width: 639px) {
+  .mobile-pt-0 {
+    padding-top: 0 !important;
+  }
+}

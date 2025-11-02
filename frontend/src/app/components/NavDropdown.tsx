@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 interface DropdownItem {
   label: string
@@ -16,6 +17,10 @@ interface NavDropdownProps {
 
 export default function NavDropdown({ title, items, href }: NavDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const pathname = usePathname()
+  
+  // Check if current path matches the dropdown's href or any of its items
+  const isActive = href && (pathname === href || items.some(item => pathname.startsWith(item.href)))
 
   return (
     <div 
@@ -26,9 +31,14 @@ export default function NavDropdown({ title, items, href }: NavDropdownProps) {
       {href ? (
         <Link 
           href={href}
-          className="text-gray-700 hover:text-blue-600 px-1 sm:px-3 py-2 text-xs sm:text-lg lg:text-xl font-medium transition-colors duration-200 font-inter navbar-text inline-flex items-center"
+          className="relative text-gray-700 hover:text-blue-600 px-1 sm:px-3 py-2 text-xs sm:text-lg lg:text-xl font-medium transition-colors duration-200 font-inter navbar-text inline-flex items-center"
         >
-          {title}
+          <span className="relative inline-block">
+            {title}
+            {isActive && (
+              <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-slate-700 rounded-full"></div>
+            )}
+          </span>
         </Link>
       ) : (
         <button className="text-gray-700 hover:text-blue-600 px-1 sm:px-3 py-2 text-xs sm:text-lg lg:text-xl font-medium transition-colors duration-200 font-inter navbar-text inline-flex items-center">

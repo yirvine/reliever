@@ -187,17 +187,15 @@ export default function ControlValveFailureCase() {
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div className="mb-4 sm:mb-8">
-          {/* Back to Cases Navigation */}
+          {/* Breadcrumb Navigation */}
           <div className="mb-2 sm:mb-4">
-            <Link 
-              href="/cases" 
-              className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors duration-200"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back to Cases (progress is saved)
-            </Link>
+            <nav className="flex items-center text-sm text-gray-600">
+              <Link href="/cases" className="hover:text-blue-600 transition-colors">
+                Cases
+              </Link>
+              <span className="mx-2">›</span>
+              <span className="text-gray-900 font-medium">Control Valve Failure</span>
+            </nav>
           </div>
           
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-0">

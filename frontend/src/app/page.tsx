@@ -192,7 +192,7 @@ export default function Home() {
                 How It Works
               </h2>
               <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto font-inter">
-                {/* Three simple steps to calculate your relief valve requirements */}
+                ReliefGuard simplifies relief system design in three clear steps.
               </p>
             </div>
 
@@ -206,7 +206,8 @@ export default function Home() {
                   <span className="sm:hidden">1. </span>Select Relevant Cases
                 </h3>
                 <p className="text-gray-600 font-inter">
-                  Choose from common vessel relieving scenarios such as external fire, control valve failure, blocked discharge, and more, based on both your system design and environmental conditions.
+                  Choose applicable relief scenarios—such as external fire, control-valve failure,
+                  or blocked discharge—based on your system design and operating environment.
                 </p>
               </div>
 
@@ -219,7 +220,8 @@ export default function Home() {
                   <span className="sm:hidden">2. </span>Calculate Design Flow
                 </h3>
                 <p className="text-gray-600 font-inter">
-                  Enter vessel properties, operating conditions, and fluid data. ReliefGuard applies NFPA 30, API 521, and ASME VIII methodology to calculate the required relieving flow rate.
+                  Enter vessel properties, operating conditions, and fluid data. ReliefGuard applies
+                  NFPA 30, API 521, and ASME VIII methods to determine the required relieving flow rate.
                 </p>
               </div>
 
@@ -232,7 +234,9 @@ export default function Home() {
                   <span className="sm:hidden">3. </span>Document & Size
                 </h3>
                 <p className="text-gray-600 font-inter">
-                  Use the calculated flow to size a relief valve or rupture disc in your preferred hydraulic simulation software (e.g., FluidFlow, Aspen HYSYS, etc.), then return to ReliefGuard to record the selected device and generate a final, standards-compliant report.
+                  Use the calculated flow to size a relief valve or rupture disc in your preferred
+                  hydraulic tool (e.g., FluidFlow or Aspen HYSYS), then record the selected device in
+                  ReliefGuard to generate a standards-compliant report.
                 </p>
               </div>
             </div>
@@ -240,7 +244,7 @@ export default function Home() {
             {/* CTA buttons at bottom of How It Works */}
             <div className="text-center mt-16">
               <div className="flex flex-row gap-4 justify-center items-center">
-                <Link 
+                <Link
                   href="/cases"
                   className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 inline-flex items-center space-x-2"
                 >
@@ -249,8 +253,8 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </Link>
-                
-                <button 
+
+                <button
                   onClick={scrollToAbout}
                   className="bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 px-6 py-3 rounded-xl font-semibold shadow-sm hover:shadow-md transition-all duration-300 inline-flex items-center space-x-2"
                 >
@@ -278,25 +282,24 @@ export default function Home() {
               
               <div className="prose prose-lg max-w-none text-gray-900 font-inter leading-relaxed">
                 <p className="text-lg mb-6">
-                  <strong>ReliefGuard</strong> is a web application that streamlines the process of determining required 
-                  <strong> relieving rates for pressure vessels</strong> and documenting <strong>relief scenarios</strong> in a consistent, 
-                  standards-compliant way. It replaces legacy <strong>spreadsheet workflows</strong>, reduces manual error, and provides a reliable 
-                  foundation for <strong>pressure relief system design</strong>.
+                  ReliefGuard streamlines relief-rate determination and documentation for pressure vessels,
+                  replacing legacy spreadsheet workflows and minimizing manual error.
                 </p>
-                
+
                 <p className="text-lg mb-6">
-                  ReliefGuard supports calculations for scenarios such as <strong>external fire</strong>, <strong>control valve failure</strong>, 
-                  <strong> blocked discharge</strong>, <strong>thermal expansion</strong>, and <strong>liquid overfill</strong>. Engineers can input 
-                  vessel geometry, design conditions, and fluid data, and instantly obtain the required <strong>relieving flow rate</strong> in accordance 
-                  with <strong>NFPA 30</strong>, <strong>API 521</strong>, and <strong>ASME Section VIII</strong>.
+                  It supports key scenarios including external fire, control-valve failure, blocked discharge,
+                  thermal expansion, and liquid overfill. Engineers can input vessel geometry, design data,
+                  and fluid properties to instantly calculate the relieving flow in accordance with
+                  NFPA&nbsp;30, API&nbsp;521, and ASME&nbsp;VIII.
                 </p>
-                
+
                 <p className="text-lg">
-                  By consolidating calculations into a modern, browser-based interface with <strong>automatic saving</strong> and 
-                  <strong> consistent formatting</strong>, ReliefGuard reduces <strong>engineering effort</strong>, improves <strong>traceability</strong>, 
-                  and ensures results remain aligned with the latest <strong>industry standards</strong>.
+                  Built as a modern web application with automatic saving and consistent formatting,
+                  ReliefGuard reduces engineering effort, improves traceability, and keeps results aligned
+                  with current industry standards.
                 </p>
               </div>
+
 
             </div>
           </div>
