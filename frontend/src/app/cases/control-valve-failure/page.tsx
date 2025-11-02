@@ -708,133 +708,142 @@ export default function ControlValveFailureCase() {
                 </div>
               </div>
             
-              {/* Bypass Valve Section */}
-              <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-300">
-                <div className="flex items-center gap-3 mb-4">
-                  <input
-                    type="checkbox"
-                    id="considerBypass"
-                    checked={flowData.considerBypass || false}
-                    onChange={(e) => handleFlowDataChange('considerBypass', e.target.checked)}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                    disabled={!isSelected}
-                  />
-                  <label htmlFor="considerBypass" className="text-sm font-semibold text-gray-900">
+              {/* Bypass Valve and Outlet Flow Credit - Same Row */}
+              <div className="mt-6 grid md:grid-cols-2 gap-6">
+                {/* Bypass Valve Section */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Consider Bypass Valve Scenario
                   </label>
-                  <Tooltip 
-                    className="w-96"
-                    content={
+                  <div className="flex items-center gap-2 mb-4">
+                    <input
+                      type="checkbox"
+                      id="considerBypass"
+                      checked={flowData.considerBypass || false}
+                      onChange={(e) => handleFlowDataChange('considerBypass', e.target.checked)}
+                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                      disabled={!isSelected}
+                    />
+                    <label htmlFor="considerBypass" className="text-sm font-medium text-gray-700">
+                      Consider Bypass Valve Scenario
+                    </label>
+                    <Tooltip 
+                      className="w-96"
+                      content={
+                        <div>
+                          <div className="font-semibold mb-2">API-521 Section 4.4.8.3: Bypass Valve Consideration</div>
+                          <p className="mb-2">
+                            API-521 requires considering if bypass valves could be inadvertently opened during operations or maintenance.
+                          </p>
+                          <p className="mb-2">
+                            <strong>Scenario:</strong> Both control valve AND bypass valve are wide open simultaneously.
+                          </p>
+                          <p className="text-xs mt-2 pt-2 border-t border-gray-600">
+                            <strong>Calculation:</strong> Total Effective Cv = Control Valve Cv + Bypass Valve Cv
+                          </p>
+                        </div>
+                      }
+                    />
+                  </div>
+                  
+                  {flowData.considerBypass && (
+                    <div className="grid md:grid-cols-2 gap-4">
                       <div>
-                        <div className="font-semibold mb-2">API-521 Section 4.4.8.3: Bypass Valve Consideration</div>
-                        <p className="mb-2">
-                          API-521 requires considering if bypass valves could be inadvertently opened during operations or maintenance.
-                        </p>
-                        <p className="mb-2">
-                          <strong>Scenario:</strong> Both control valve AND bypass valve are wide open simultaneously.
-                        </p>
-                        <p className="text-xs mt-2 pt-2 border-t border-gray-600">
-                          <strong>Calculation:</strong> Total Effective Cv = Control Valve Cv + Bypass Valve Cv
-                        </p>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Bypass Valve Cv
+                        </label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={flowData.bypassCv || ''}
+                          onChange={(e) => handleFlowDataChange('bypassCv', parseFloat(e.target.value) || 0)}
+                          className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
+                          disabled={!isSelected}
+                        />
                       </div>
-                    }
-                  />
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Total Effective Cv
+                        </label>
+                        <input
+                          type="number"
+                          value={((flowData.totalCv || 0) + (flowData.bypassCv || 0)).toFixed(1)}
+                          disabled
+                          className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md bg-blue-50 text-gray-700 font-medium"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
-                {flowData.considerBypass && (
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Bypass Valve Cv
-                      </label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={flowData.bypassCv || ''}
-                        onChange={(e) => handleFlowDataChange('bypassCv', parseFloat(e.target.value) || 0)}
-                        className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
-                        disabled={!isSelected}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Total Effective Cv
-                      </label>
-                      <input
-                        type="number"
-                        value={((flowData.totalCv || 0) + (flowData.bypassCv || 0)).toFixed(1)}
-                        disabled
-                        className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md bg-blue-50 text-gray-700 font-medium"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              {/* Outlet Flow Credit Section */}
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-300">
-                <div className="flex items-center gap-3 mb-4">
-                  <input
-                    type="checkbox"
-                    id="creditOutletFlow"
-                    checked={flowData.creditOutletFlow || false}
-                    onChange={(e) => handleFlowDataChange('creditOutletFlow', e.target.checked)}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                    disabled={!isSelected}
-                  />
-                  <label htmlFor="creditOutletFlow" className="text-sm font-semibold text-gray-900">
+                {/* Outlet Flow Credit Section */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Apply Outlet Flow Credit
                   </label>
-                  <Tooltip 
-                    className="w-96"
-                    content={
-                      <div>
-                        <div className="font-semibold mb-2">API-521 Section 4.4.8.3: Outlet Flow Credit</div>
-                        <p className="mb-2">
-                          Per API-521, the required relieving rate is the difference between maximum inlet flow and normal outlet flow.
-                        </p>
-                        <p className="mb-2">
-                          <strong>Credit can be taken</strong> for outlet valves that remain in their normal operating position during the control valve failure.
-                        </p>
-                        <p className="text-xs mt-2 pt-2 border-t border-gray-600">
-                          <strong>Calculation:</strong> Net Relief Flow = Gross Inlet Flow - Normal Outlet Flow
-                        </p>
-                      </div>
-                    }
-                  />
-                </div>
-                
-                {flowData.creditOutletFlow && (
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Normal Outlet Flow (SCFH)
-                      </label>
-                      <input
-                        type="number"
-                        step="1"
-                        value={flowData.outletFlowCredit || ''}
-                        onChange={(e) => handleFlowDataChange('outletFlowCredit', parseFloat(e.target.value) || 0)}
-                        className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
-                        disabled={!isSelected}
-                        placeholder="Normal operating outlet flow"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Flow at normal minimum conditions</p>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Net Relief Flow
-                      </label>
-                      <input
-                        type="text"
-                        value={previewValues.netRelievingFlow !== null ? `${previewValues.netRelievingFlow.toLocaleString()} SCFH` : '—'}
-                        disabled
-                        className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md bg-blue-50 text-gray-700 font-medium"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Inlet flow - Outlet credit</p>
-                    </div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <input
+                      type="checkbox"
+                      id="creditOutletFlow"
+                      checked={flowData.creditOutletFlow || false}
+                      onChange={(e) => handleFlowDataChange('creditOutletFlow', e.target.checked)}
+                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                      disabled={!isSelected}
+                    />
+                    <label htmlFor="creditOutletFlow" className="text-sm font-medium text-gray-700">
+                      Apply Outlet Flow Credit
+                    </label>
+                    <Tooltip 
+                      className="w-96"
+                      content={
+                        <div>
+                          <div className="font-semibold mb-2">API-521 Section 4.4.8.3: Outlet Flow Credit</div>
+                          <p className="mb-2">
+                            Per API-521, the required relieving rate is the difference between maximum inlet flow and normal outlet flow.
+                          </p>
+                          <p className="mb-2">
+                            <strong>Credit can be taken</strong> for outlet valves that remain in their normal operating position during the control valve failure.
+                          </p>
+                          <p className="text-xs mt-2 pt-2 border-t border-gray-600">
+                            <strong>Calculation:</strong> Net Relief Flow = Gross Inlet Flow - Normal Outlet Flow
+                          </p>
+                        </div>
+                      }
+                    />
                   </div>
-                )}
+                  
+                  {flowData.creditOutletFlow && (
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Normal Outlet Flow (SCFH)
+                        </label>
+                        <input
+                          type="number"
+                          step="1"
+                          value={flowData.outletFlowCredit || ''}
+                          onChange={(e) => handleFlowDataChange('outletFlowCredit', parseFloat(e.target.value) || 0)}
+                          className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
+                          disabled={!isSelected}
+                          placeholder="Normal operating outlet flow"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Flow at normal minimum conditions</p>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Net Relief Flow
+                        </label>
+                        <input
+                          type="text"
+                          value={previewValues.netRelievingFlow !== null ? `${previewValues.netRelievingFlow.toLocaleString()} SCFH` : '—'}
+                          disabled
+                          className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md bg-blue-50 text-gray-700 font-medium"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Inlet flow - Outlet credit</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
               </>
             )}

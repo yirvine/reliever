@@ -129,6 +129,12 @@ const extractLiquidOverfillData = () => {
   const pressure = pressureDataStr ? JSON.parse(pressureDataStr) : {}
   
   // Use saved calculated values if available, otherwise calculate on the fly
+  const grossFlowRate = typeof flow.grossFlowRate === 'number' 
+    ? flow.grossFlowRate 
+    : flow.manualFlowRate
+  const outletCreditApplied = typeof flow.outletCreditApplied === 'number'
+    ? flow.outletCreditApplied
+    : 0
   const calculatedRelievingFlow = typeof flow.calculatedRelievingFlow === 'number' 
     ? flow.calculatedRelievingFlow 
     : flow.manualFlowRate
@@ -136,12 +142,22 @@ const extractLiquidOverfillData = () => {
     ? flow.asmeVIIIDesignFlow
     : (typeof flow.manualFlowRate === 'number' ? Math.round(flow.manualFlowRate / 0.9) : 0)
   
+  const inputData: Record<string, string> = {
+    'Maximum Inlet Flow Rate (lb/hr)': typeof flow.manualFlowRate === 'number' ? flow.manualFlowRate.toLocaleString() : 'N/A',
+  }
+  
+  // Add outlet flow credit if applied
+  if (flow.creditOutletFlow && flow.outletFlowCredit > 0) {
+    inputData['Outlet Flow Credit Applied'] = 'Yes'
+    inputData['Normal Outlet Flow Rate (lb/hr)'] = typeof flow.outletFlowCredit === 'number' ? flow.outletFlowCredit.toLocaleString() : 'N/A'
+  }
+  
   return {
-    inputData: {
-      'Manual Flow Rate (lb/hr)': typeof flow.manualFlowRate === 'number' ? flow.manualFlowRate.toLocaleString() : 'N/A',
-    },
+    inputData,
     outputData: {
-      'Calculated Relieving Flow (lb/hr)': typeof calculatedRelievingFlow === 'number' ? calculatedRelievingFlow.toLocaleString() : 'N/A',
+      'Gross Inlet Flow (lb/hr)': typeof grossFlowRate === 'number' ? grossFlowRate.toLocaleString() : 'N/A',
+      'Outlet Credit Applied (lb/hr)': outletCreditApplied > 0 ? outletCreditApplied.toLocaleString() : '0',
+      'Net Relieving Flow (lb/hr)': typeof calculatedRelievingFlow === 'number' ? calculatedRelievingFlow.toLocaleString() : 'N/A',
       'ASME VIII Design Flow (lb/hr)': typeof asmeVIIIDesignFlow === 'number' ? asmeVIIIDesignFlow.toLocaleString() : 'N/A',
       'Max Allowed Venting Pressure (psig)': typeof pressure.maxAllowedVentingPressure === 'number' ? pressure.maxAllowedVentingPressure.toFixed(2) : 'N/A',
       'Max Allowable Backpressure (psig)': typeof pressure.maxAllowableBackpressure === 'number' ? pressure.maxAllowableBackpressure.toFixed(2) : 'N/A',

@@ -10,12 +10,13 @@ import Tooltip from '../../components/Tooltip'
 import ScenarioAbout from '../../components/ScenarioAbout'
 import { useVessel } from '../../context/VesselContext'
 import { useCase } from '../../context/CaseContext'
-import { calculateHeatInput, calculateEnvironmentalFactor, getInsulationMaterials } from '../../../../lib/database'
+import { calculateHeatInput, calculateEnvironmentalFactor, getInsulationMaterials, getFluidNames, getFluidProperties } from '../../../../lib/database'
 import { useScrollPosition } from '../../hooks/useScrollPosition'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { CasePressureData, STORAGE_KEYS } from '../../types/case-types'
 
 interface FlowData {
+  workingFluid: string
   applicableFireCode: string
   heatOfVaporization: number
   hasAdequateDrainageFirefighting?: boolean
@@ -37,6 +38,7 @@ export default function ExternalFireCase() {
 
   // Use custom hook for automatic localStorage sync
   const [flowData, setFlowData] = useLocalStorage<FlowData>(STORAGE_KEYS.EXTERNAL_FIRE_FLOW, {
+    workingFluid: '',
     applicableFireCode: 'NFPA 30',
     heatOfVaporization: 0,
     hasAdequateDrainageFirefighting: undefined,
@@ -54,7 +56,7 @@ export default function ExternalFireCase() {
     maxAllowedVentingPressurePercent: 0
   })
 
-  const handleFlowDataChange = (field: keyof FlowData, value: string | number | boolean) => {
+  const handleFlowDataChange = (field: keyof FlowData, value: string | number | boolean | undefined) => {
     setFlowData(prev => ({ ...prev, [field]: value }))
   }
 
@@ -153,11 +155,7 @@ export default function ExternalFireCase() {
   const previewValues = calculatePreview()
 
   const handleFluidPropertiesFound = (heatOfVaporization: number) => {
-    const newData = { ...flowData, heatOfVaporization }
-    setFlowData(newData)
-    
-    // Save to localStorage (client-side only)
-    localStorage.setItem('external-fire-flow-data', JSON.stringify(newData))
+    handleFlowDataChange('heatOfVaporization', heatOfVaporization)
   }
 
   const handlePressureDataChange = (field: keyof CasePressureData, value: number) => {
@@ -348,7 +346,7 @@ export default function ExternalFireCase() {
           <VesselProperties 
             vesselData={vesselData} 
             onChange={updateVesselData}
-            onFluidPropertiesFound={handleFluidPropertiesFound}
+            hideWorkingFluid={true}
             disabled={!isSelected}
             applicableFireCode={flowData.applicableFireCode}
           />
@@ -375,6 +373,37 @@ export default function ExternalFireCase() {
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Working Fluid
+                </label>
+                <select
+                  value={flowData.workingFluid || ''}
+                  onChange={(e) => {
+                    handleFlowDataChange('workingFluid', e.target.value)
+                    // Get fluid properties and update heat of vaporization
+                    const properties = getFluidProperties(e.target.value)
+                    if (properties) {
+                      handleFluidPropertiesFound(properties.heat_of_vaporization)
+                    }
+                  }}
+                  disabled={!isSelected}
+                  className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
+                    !isSelected 
+                      ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                      : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                  }`}
+                  required
+                >
+                  <option value="">Select fluid...</option>
+                  {getFluidNames().map((fluid: string) => (
+                    <option key={fluid} value={fluid}>
+                      {fluid}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Heat of Vaporization (Btu/lb)
                 </label>
                 <input
@@ -388,12 +417,35 @@ export default function ExternalFireCase() {
                 <p className="text-xs text-gray-500 mt-1">Auto-filled from working fluid selection</p>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Molecular Weight (lb/lbmol)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={(() => {
+                    if (flowData.workingFluid) {
+                      const properties = getFluidProperties(flowData.workingFluid)
+                      return properties?.molecular_weight || ''
+                    }
+                    return ''
+                  })()}
+                  disabled
+                  className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md bg-blue-50 text-gray-700 font-medium"
+                  title="Auto-filled from selected working fluid"
+                />
+                <p className="text-xs text-gray-500 mt-1">Auto-filled from working fluid selection</p>
+              </div>
+
               {/* Fire Protection / Mitigation - Dynamic based on selected code */}
-              <div className="lg:col-span-2">
+              <div>
                 <div className="mb-2">
                   <div className="flex items-center gap-1">
                     <label className="text-sm font-medium text-gray-700">
-                      Fire Protection / Mitigation
+                      {flowData.applicableFireCode === 'NFPA 30' 
+                        ? 'Fire protection / mitigation factor'
+                        : 'Adequate drainage & firefighting?'}
                     </label>
                     <Tooltip 
                       className="w-80 break-words"
@@ -413,7 +465,7 @@ export default function ExternalFireCase() {
                           </>
                         ) : (
                           <>
-                            <div className="font-semibold mb-2">API 521 Heat Input Formulas:</div>
+                            <div className="font-semibold mb-2">API 521 Section 4.4.13.2.4.2 - Heat Input Formulas:</div>
                             <div className="mb-2">
                               <div className="font-medium">With adequate drainage & firefighting:</div>
                               <div>Q = 21,000 F (A<sub>wet</sub>)<sup>0.82</sup></div>
@@ -422,10 +474,24 @@ export default function ExternalFireCase() {
                               <div className="font-medium">Without adequate drainage & firefighting:</div>
                               <div>Q = 34,500 F (A<sub>wet</sub>)<sup>0.82</sup></div>
                             </div>
-                            <div className="text-xs mt-2 border-t border-gray-600 pt-2">
+                            <div className="text-xs mt-2 mb-2 border-t border-gray-600 pt-2">
                               <div>Q = Total heat absorption (BTU/hr)</div>
                               <div>F = Environmental factor (default: 1)</div>
                               <div>A<sub>wet</sub> = Total wetted surface area (sq ft)</div>
+                            </div>
+                            <div className="text-xs border-t border-gray-600 pt-2 mt-2">
+                              <div className="font-semibold mb-1">Adequate Drainage Criteria (per API 521):</div>
+                              <div className="mb-1">
+                                The determination is <strong>subjective and left to the user</strong>, but should:
+                              </div>
+                              <ul className="list-disc list-inside space-y-0.5 ml-1">
+                                <li>Carry flammable/combustible liquids away from vessel</li>
+                                <li>Consider removal methods: sewers, open trenches, sloping, etc.</li>
+                                <li>Account for both pool fire liquids AND firewater from responders</li>
+                              </ul>
+                              <div className="mt-1 italic">
+                                Example drainage criteria: See API 2510
+                              </div>
                             </div>
                           </>
                         )
@@ -441,16 +507,16 @@ export default function ExternalFireCase() {
                       value={flowData.nfpaReductionFactor || 1.0}
                       onChange={(e) => handleFlowDataChange('nfpaReductionFactor', parseFloat(e.target.value))}
                       disabled={!isSelected}
-                      className={`max-w-sm h-10 px-3 py-2 border rounded-md text-gray-900 ${
+                      className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
                         !isSelected 
                           ? 'border-gray-200 bg-gray-50 text-gray-500' 
                           : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                       }`}
                     >
-                      <option value="1.0">No protection (Factor: 1.0)</option>
-                      <option value="0.5">Drainage provided (Factor: 0.5)</option>
-                      <option value="0.4">Water spray + drainage (Factor: 0.4)</option>
-                      <option value="0.3">Auto water spray or insulation (Factor: 0.3)</option>
+                      <option value="1.0">No protection (1.0)</option>
+                      <option value="0.5">Drainage provided (0.5)</option>
+                      <option value="0.4">Water spray + drainage (0.4)</option>
+                      <option value="0.3">Auto spray or insulation (0.3)</option>
                     </select>
                     <p className="text-xs text-gray-500 mt-1">Reduction factor per NFPA 30 Section 22.7.3.5</p>
                   </>
@@ -463,7 +529,7 @@ export default function ExternalFireCase() {
                       value={flowData.hasAdequateDrainageFirefighting === undefined ? '' : flowData.hasAdequateDrainageFirefighting.toString()}
                       onChange={(e) => handleFlowDataChange('hasAdequateDrainageFirefighting', e.target.value === 'true')}
                       disabled={!isSelected}
-                      className={`max-w-sm h-10 px-3 py-2 border rounded-md text-gray-900 ${
+                      className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
                         !isSelected 
                           ? 'border-gray-200 bg-gray-50 text-gray-500' 
                           : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
@@ -471,8 +537,8 @@ export default function ExternalFireCase() {
                       required
                     >
                       <option value="">Select...</option>
-                      <option value="true">Yes - Adequate drainage & firefighting</option>
-                      <option value="false">No - Inadequate or no protection</option>
+                      <option value="true">Yes</option>
+                      <option value="false">No</option>
                     </select>
                     <p className="text-xs text-gray-500 mt-1">Affects heat input coefficient (21,000 vs 34,500)</p>
                   </>
