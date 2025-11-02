@@ -206,8 +206,8 @@ export default function Home() {
                   <span className="sm:hidden">1. </span>Select Relevant Cases
                 </h3>
                 <p className="text-gray-600 font-inter">
-                  Choose applicable relief scenarios—such as external fire, control-valve failure,
-                  or blocked discharge—based on your system design and operating environment.
+                Based on your system design and operating environment, choose applicable relief scenarios, such as
+                 external fire exposure, control-valve failure, or blocked discharge.
                 </p>
               </div>
 
