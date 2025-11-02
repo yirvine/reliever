@@ -45,33 +45,29 @@ export default function Calculator() {
 
         {/* Sticky Design Basis Flow Banner */}
         <div 
-          className={`sticky top-0 z-10 bg-gradient-to-r from-slate-600 to-slate-700 border-b-2 border-slate-800 shadow-lg overflow-hidden transition-all duration-300 ease-in-out ${
+          className={`sticky top-0 z-10 bg-gradient-to-r from-slate-600 to-slate-700 border-b-2 border-slate-800 shadow-lg overflow-hidden transition-all duration-500 ease-in-out ${
             designBasisFlow 
               ? 'max-h-20 opacity-100' 
               : 'max-h-0 opacity-0 border-b-0 pointer-events-none'
           }`}
         >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <div className="flex items-center gap-3">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 transition-opacity duration-500">
+            <div className="flex items-center gap-3 whitespace-nowrap">
               <svg className="w-5 h-5 text-slate-100 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
               <span className="text-sm font-semibold text-slate-100 font-inter uppercase tracking-wide whitespace-nowrap">Current Design Basis Flow:</span>
-              {designBasisFlow && (
-                <>
-                  <span className="text-3xl font-bold text-white font-inter">{designBasisFlow.flow.toLocaleString()}</span>
-                  <span className="text-lg text-white font-medium">lb/hr</span>
-                  <span className="text-sm text-slate-100">from {designBasisFlow.caseName}</span>
-                  <div className="relative group">
-                    <svg className="w-5 h-5 text-slate-200 cursor-help" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z" />
-                    </svg>
-                    <div className="absolute left-full top-1/2 transform -translate-y-1/2 ml-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-20">
-                      Maximum flow across all calculated cases for hydraulic network modeling
-                    </div>
-                  </div>
-                </>
-              )}
+              <span className="text-3xl font-bold text-white font-inter">{designBasisFlow?.flow.toLocaleString() || '0'}</span>
+              <span className="text-lg text-white font-medium">lb/hr</span>
+              <span className="text-sm text-slate-100">from {designBasisFlow?.caseName || ''}</span>
+              <div className="relative group">
+                <svg className="w-5 h-5 text-slate-200 cursor-help" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z" />
+                </svg>
+                <div className="absolute left-full top-1/2 transform -translate-y-1/2 ml-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-20">
+                  Maximum flow across all calculated cases for hydraulic network modeling
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -293,7 +289,13 @@ export default function Calculator() {
         </div>
 
         {/* Next Steps */}
-        {selectedCount > 0 && (
+        <div 
+          className={`overflow-hidden transition-all duration-500 ease-in-out ${
+            selectedCount > 0 
+              ? 'max-h-96 opacity-100 mt-6' 
+              : 'max-h-0 opacity-0 mt-0'
+          }`}
+        >
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
             <h3 className="text-xl font-bold text-gray-900 mb-4">Next Steps</h3>
             <p className="text-gray-600 mb-6">
@@ -310,9 +312,11 @@ export default function Calculator() {
                 className={`
                   px-8 py-4 rounded-xl font-semibold shadow-lg transition-all duration-300 
                   flex items-center space-x-2
-                  ${isGenerating || !hasCalculatedResults()
+                  ${isGenerating
+                    ? 'bg-gray-400 cursor-wait opacity-60'
+                    : !hasCalculatedResults()
                     ? 'bg-gray-400 cursor-not-allowed opacity-60'
-                    : 'bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 hover:shadow-xl transform hover:-translate-y-0.5 text-white'
+                    : 'bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 hover:shadow-xl transform hover:-translate-y-0.5 text-white cursor-pointer'
                   }
                 `}
               >
@@ -335,7 +339,7 @@ export default function Calculator() {
               </button>
             </div>
           </div>
-        )}
+        </div>
 
         {/* Footer */}
         <div className="mt-12 text-center text-gray-500">

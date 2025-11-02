@@ -63,13 +63,23 @@ export default function LiquidOverfillCase() {
         asmeVIIIDesignFlow: previewValues.asmeVIIIDesignFlow,
         isCalculated: true
       })
+      
+      // Save calculated results to localStorage for PDF generation (like other cases)
+      // useLocalStorage only saves input data, but report generator needs calculated values too
+      const calculatedResults = {
+        ...flowData, // All input parameters
+        calculatedRelievingFlow: previewValues.calculatedRelievingFlow,
+        asmeVIIIDesignFlow: previewValues.asmeVIIIDesignFlow
+      }
+      
+      localStorage.setItem(STORAGE_KEYS.LIQUID_OVERFILL_FLOW, JSON.stringify(calculatedResults))
     } else {
       // Mark as incomplete when calculation is invalid
       updateCaseResult('liquid-overfill', {
         isCalculated: false
       })
     }
-  }, [previewValues.calculatedRelievingFlow, previewValues.asmeVIIIDesignFlow, updateCaseResult])
+  }, [previewValues.calculatedRelievingFlow, previewValues.asmeVIIIDesignFlow, updateCaseResult, flowData])
 
   // Auto-enable case when user starts entering data
   useEffect(() => {
@@ -99,7 +109,7 @@ export default function LiquidOverfillCase() {
             </div>
             
             <div className="flex flex-col gap-3">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Case 3 - Liquid Overfill</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Liquid Overfill</h1>
               <p className="text-sm sm:text-base text-gray-600">
                 Calculate relief requirements for liquid overfill scenarios where the vessel receives liquid 
                 at a rate faster than it can be removed.

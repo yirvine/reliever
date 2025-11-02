@@ -55,7 +55,7 @@ export default function ReferencePage() {
 
               {/* Gas Properties Card */}
               <Link 
-                href="/data/gas-properties"
+                href="/datasets/gas-properties"
                 className="group bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-purple-300 transition-all duration-200"
               >
                 <div className="flex items-center mb-4">

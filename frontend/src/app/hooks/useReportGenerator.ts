@@ -128,13 +128,21 @@ const extractLiquidOverfillData = () => {
   const flow = JSON.parse(flowDataStr)
   const pressure = pressureDataStr ? JSON.parse(pressureDataStr) : {}
   
+  // Use saved calculated values if available, otherwise calculate on the fly
+  const calculatedRelievingFlow = typeof flow.calculatedRelievingFlow === 'number' 
+    ? flow.calculatedRelievingFlow 
+    : flow.manualFlowRate
+  const asmeVIIIDesignFlow = typeof flow.asmeVIIIDesignFlow === 'number'
+    ? flow.asmeVIIIDesignFlow
+    : (typeof flow.manualFlowRate === 'number' ? Math.round(flow.manualFlowRate / 0.9) : 0)
+  
   return {
     inputData: {
       'Manual Flow Rate (lb/hr)': typeof flow.manualFlowRate === 'number' ? flow.manualFlowRate.toLocaleString() : 'N/A',
     },
     outputData: {
-      'Calculated Relieving Flow (lb/hr)': typeof flow.manualFlowRate === 'number' ? flow.manualFlowRate.toLocaleString() : 'N/A',
-      'ASME VIII Design Flow (lb/hr)': typeof flow.manualFlowRate === 'number' ? Math.round(flow.manualFlowRate / 0.9).toLocaleString() : 'N/A',
+      'Calculated Relieving Flow (lb/hr)': typeof calculatedRelievingFlow === 'number' ? calculatedRelievingFlow.toLocaleString() : 'N/A',
+      'ASME VIII Design Flow (lb/hr)': typeof asmeVIIIDesignFlow === 'number' ? asmeVIIIDesignFlow.toLocaleString() : 'N/A',
       'Max Allowed Venting Pressure (psig)': typeof pressure.maxAllowedVentingPressure === 'number' ? pressure.maxAllowedVentingPressure.toFixed(2) : 'N/A',
       'Max Allowable Backpressure (psig)': typeof pressure.maxAllowableBackpressure === 'number' ? pressure.maxAllowableBackpressure.toFixed(2) : 'N/A',
     },
@@ -158,7 +166,7 @@ export const useReportGenerator = () => {
         if (data) {
           selectedCaseResults.push({
             caseId: 'external-fire',
-            caseName: 'Case 1 - External Fire',
+            caseName: 'External Fire',
             ...data,
           })
         }
@@ -175,7 +183,7 @@ export const useReportGenerator = () => {
           
           selectedCaseResults.push({
             caseId: 'control-valve-failure',
-            caseName: `Case 2 - Control Valve Failure (${gasDisplayName})`,
+            caseName: `Control Valve Failure (${gasDisplayName})`,
             ...data,
           })
         }
@@ -186,7 +194,7 @@ export const useReportGenerator = () => {
         if (data) {
           selectedCaseResults.push({
             caseId: 'liquid-overfill',
-            caseName: 'Case 3 - Liquid Overfill',
+            caseName: 'Liquid Overfill',
             ...data,
           })
         }

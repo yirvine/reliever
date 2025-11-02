@@ -226,7 +226,7 @@ export default function ExternalFireCase() {
           
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-0">
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Case 1 - External Fire</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">External Fire</h1>
               
               {/* About Section */}
               <ScenarioAbout>

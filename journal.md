@@ -130,7 +130,7 @@
 - **Gas Properties dataset page**: New reference page documenting gas properties used in calculations with source citations
 
 ### Navigation & UX Enhancements
-- **Cases dropdown in navbar**: Added dropdown menu for direct access to Case 1 - External Fire, Case 2 - Control Valve Failure, Case 3 - Liquid Overfill
+- **Cases dropdown in navbar**: Added dropdown menu for direct access to External Fire, Control Valve Failure, Liquid Overfill
 - **Datasets dropdown enhancement**: Added Gas Properties to datasets navigation
 - **3-column dataset layout**: Datasets page now displays 3 cards per row on large screens instead of 2
 - **Tooltip icon fix**: Updated question mark SVG to include dot at bottom for proper symbol rendering
@@ -182,7 +182,7 @@
 - **Incomplete status indicator**: Cards display amber "Incomplete" badge when case is selected but calculations aren't complete
 - **Only shows status for selected cases**: Unselected cases don't show "Incomplete" to reduce visual noise
 - **Removed "Available" badges**: Cleaned up card appearance by removing redundant status indicators
-- **Simplified case titles**: Changed from "Case 1 - External Fire" to just "External Fire" on cards
+- **Simplified case titles**: Changed from "External Fire" to just "External Fire" on cards
 - **Concise descriptions**: Updated descriptions to be more succinct and action-oriented
 - **Slimmer card design**: Reduced padding from p-6 to p-4 for more compact layout
 

@@ -49,9 +49,9 @@ export default function Header({ showBreadcrumb = false, breadcrumbText }: Heade
               title="Cases" 
               href="/cases"
               items={[
-                { label: '1 - External Fire', href: '/cases/external-fire' },
-                { label: '2 - Control Valve Failure', href: '/cases/control-valve-failure' },
-                { label: '3 - Liquid Overfill', href: '/cases/liquid-overfill' }
+                { label: 'External Fire', href: '/cases/external-fire' },
+                { label: 'Control Valve Failure', href: '/cases/control-valve-failure' },
+                { label: 'Liquid Overfill', href: '/cases/liquid-overfill' }
               ]} 
             />
             {/* Temporarily hidden About button - keeping logic for future use */}
@@ -66,7 +66,7 @@ export default function Header({ showBreadcrumb = false, breadcrumbText }: Heade
               href="/datasets"
               items={[
                 { label: 'Fluid Properties', href: '/datasets/fluids' },
-                { label: 'Gas Properties', href: '/data/gas-properties' },
+                { label: 'Gas Properties', href: '/datasets/gas-properties' },
                 { label: 'Vessel Head Areas', href: '/datasets/vessel-head-areas' }
               ]} 
             />

@@ -11,22 +11,22 @@ export default function Sidebar() {
   const cases = [
     {
       id: 'external-fire' as const,
-      name: '1 - External Fire',
+      name: 'External Fire',
       href: '/cases/external-fire',
     },
     {
       id: 'control-valve-failure' as const,
-      name: '2 - Control Valve Failure',
+      name: 'Control Valve Failure',
       href: '/cases/control-valve-failure',
     },
     {
       id: 'liquid-overfill' as const,
-      name: '3 - Liquid Overfill',
+      name: 'Liquid Overfill',
       href: '/cases/liquid-overfill',
     },
     {
       id: 'additional-cases' as const,
-      name: '4 - Additional Cases',
+      name: 'Additional Cases',
       href: '#',
     }
   ]
@@ -89,7 +89,7 @@ export default function Sidebar() {
         {isExpanded && (
           <div className="p-2 border-t border-gray-200">
             <div className="text-sm text-gray-500 font-inter whitespace-nowrap">
-              v1.0.0 MVP
+              linkedin.com/in/yene-irvine
             </div>
           </div>
         )}
