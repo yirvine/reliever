@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React from 'react'
 import Link from 'next/link'
-import VesselProperties from '../../components/VesselProperties'
+import CollapsibleVesselProperties from '../../components/CollapsibleVesselProperties'
 import CasePressureSettings from '../../components/CasePressureSettings'
 import Header from '../../components/Header'
 import PageTransition from '../../components/PageTransition'
@@ -23,11 +23,11 @@ interface FlowData {
 }
 
 export default function LiquidOverfillCase() {
-  const { vesselData, updateVesselData } = useVessel()
+  const { vesselData } = useVessel()
   const { updateCaseResult, selectedCases, toggleCase, getDesignBasisFlow } = useCase()
   const designBasisFlow = getDesignBasisFlow()
   const isSelected = selectedCases['liquid-overfill']
-  
+
   useScrollPosition()
 
   // Use custom hook for automatic localStorage sync
@@ -105,12 +105,6 @@ export default function LiquidOverfillCase() {
     }
   }, [previewValues.calculatedRelievingFlow, previewValues.asmeVIIIDesignFlow, previewValues.grossFlowRate, previewValues.outletCreditApplied, updateCaseResult, flowData])
 
-  // Auto-enable case when user starts entering data
-  useEffect(() => {
-    if (!isSelected && (vesselData.vesselTag || flowData.manualFlowRate > 0)) {
-      toggleCase('liquid-overfill')
-    }
-  }, [vesselData.vesselTag, flowData.manualFlowRate, isSelected, toggleCase])
 
   return (
     <PageTransition>
@@ -153,7 +147,7 @@ export default function LiquidOverfillCase() {
           <div className="mb-4 sm:mb-8">
             {/* Breadcrumb Navigation */}
             <div className="mb-2 sm:mb-4">
-              <nav className="flex items-center text-sm text-gray-600">
+              <nav className="flex items-center text-base text-gray-600">
                 <Link href="/cases" className="hover:text-blue-600 transition-colors">
                   Cases
                 </Link>
@@ -221,12 +215,7 @@ export default function LiquidOverfillCase() {
 
           <div className={`space-y-8 transition-opacity duration-200 ${isSelected ? 'opacity-100' : 'opacity-50'}`}>
             {/* Vessel Properties */}
-            <VesselProperties
-              vesselData={vesselData}
-              onChange={updateVesselData}
-              hideWorkingFluid={true}
-              disabled={!isSelected}
-            />
+            <CollapsibleVesselProperties />
 
           {/* Case Pressure Settings */}
           <CasePressureSettings

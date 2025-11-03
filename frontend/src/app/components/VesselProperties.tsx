@@ -26,9 +26,10 @@ interface VesselPropertiesProps {
   hideWorkingFluid?: boolean // Hide working fluid field for nitrogen case
   disabled?: boolean // Disable all form fields
   applicableFireCode?: string // Fire code selection to conditionally show fields
+  hideHeading?: boolean // Hide the "Vessel Properties" heading
 }
 
-export default function VesselProperties({ vesselData, onChange, onFluidPropertiesFound, hideWorkingFluid = false, disabled = false, applicableFireCode }: VesselPropertiesProps) {
+export default function VesselProperties({ vesselData, onChange, onFluidPropertiesFound, hideWorkingFluid = false, disabled = false, applicableFireCode, hideHeading = false }: VesselPropertiesProps) {
   const [fluidNames] = useState(() => getFluidNames())
   const [standardDiameters] = useState(() => getStandardDiameters())
 
@@ -49,8 +50,8 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
   const isSphere = vesselData.vesselOrientation === 'sphere'
   
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-6">Vessel Properties</h2>
+    <div className={hideHeading ? "" : "bg-white rounded-lg shadow-sm border border-gray-200 p-6"}>
+      {!hideHeading && <h2 className="text-xl font-bold text-gray-900 mb-6">Vessel Properties</h2>}
       
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* First row: vessel tag, vessel orientation, vessel diameter, working fluid */}
@@ -307,96 +308,6 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
           )}
         </div>
 
-        {/* API 521-specific fields - only show when API 521 is selected */}
-        {showAdvancedAPI521Fields && (
-          <>
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Head Protected by Skirt?
-                </label>
-                <Tooltip
-                  className="w-80"
-                  content={
-                    <>
-                      <div className="mb-2">
-                        <strong className="text-blue-300">API 521 Only - §4.4.13.2.2:</strong>
-                      </div>
-                      <div className="mb-2">
-                        &quot;Vessel heads protected by support skirts with limited ventilation are normally not included when determining wetted area.&quot;
-                      </div>
-                      <div className="text-xs border-t border-gray-600 pt-2 mt-2">
-                        Select &quot;Yes&quot; if bottom head is protected by a support skirt that limits fire exposure.
-                      </div>
-                    </>
-                  }
-                />
-              </div>
-              <select
-                value={vesselData.headProtectedBySkirt ? 'true' : 'false'}
-                onChange={(e) => onChange('headProtectedBySkirt', e.target.value === 'true')}
-                disabled={disabled}
-                className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
-                  disabled 
-                    ? 'border-gray-200 bg-gray-50 text-gray-500' 
-                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-                }`}
-              >
-                <option value="false">No</option>
-                <option value="true">Yes (skirt protection)</option>
-              </select>
-            </div>
-
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Fire Source Elevation (ft)
-                </label>
-                <Tooltip
-                  className="w-80"
-                  content={
-                    <>
-                      <div className="mb-2">
-                        <strong className="text-blue-300">API 521 Only - §4.4.13.2.2:</strong>
-                      </div>
-                      <div className="mb-2">
-                        Only wetted surface ≤25 ft above fire source is included in fire exposure calculation.
-                      </div>
-                      <div className="text-xs border-t border-gray-600 pt-2 mt-2">
-                        Enter elevation of fire source above grade (0 = grade level, typical). Use for vessels on elevated platforms.
-                      </div>
-                    </>
-                  }
-                />
-              </div>
-              <input
-                type="number"
-                step="1"
-                value={vesselData.fireSourceElevation ?? 0}
-                onChange={(e) => onChange('fireSourceElevation', parseFloat(e.target.value) || 0)}
-                disabled={disabled}
-                className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 placeholder-gray-400 ${
-                  disabled 
-                    ? 'border-gray-200 bg-gray-50 text-gray-500' 
-                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-                }`}
-                placeholder="0"
-              />
-            </div>
-
-            {/* Empty cell for grid alignment when API 521 is selected */}
-            <div></div>
-          </>
-        )}
-
-        {/* Empty cells for grid alignment when NFPA 30 is selected */}
-        {!showAdvancedAPI521Fields && (
-          <>
-            <div></div>
-            <div></div>
-            <div></div>
-          </>
-        )}
       </div>
     </div>
   )

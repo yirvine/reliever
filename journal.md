@@ -1,242 +1,134 @@
-# ReliefGuard Development Notes
+# Relief-er Development Journal
 
-*Chronological log of significant changes and implementations*
+## November 2, 2025
 
-**Format**: Brief summaries of major changes only. Focus on substantial implementations, not minor tweaks. Include technical context when relevant.
+### Summary
+Completed multiple enhancements to the liquid overfill and external fire scenarios, moved working fluid selections to flow calculations sections, implemented unit conversion for manual flow input in the control valve failure case, refined UI styling across all cases, and implemented global vessel properties with edit warnings and collapsible read-only views on case pages.
 
----
-
-## 2024-12-19 - Navigation & Landing Page Updates
-
-### Navigation Updates
-- **Changed primary navigation**: Updated all `/calc/` references to `/cases/` - main buttons now go to cases selection page instead of calculator
-- **Fixed home navigation**: Both header logo and sidebar home button now correctly navigate to landing page (`/`) instead of `/calc/`
-- **Added Cases to navbar**: Added "Cases" link to main navigation, temporarily hid "About" button (logic preserved)
-
-### Landing Page Enhancements
-- **Added valve animation**: Integrated animated relief valve SVG to hero section showing cap movement and steam lines
-- **Optimized spacing**: Reduced top padding and tightened button spacing for better visual hierarchy
-
-### Case Page Navigation
-- **Added back navigation**: Implemented "Back to Cases (progress is saved)" links on all case-specific pages with left arrow icon
-- **Removed breadcrumbs**: Cleaned up header breadcrumbs on case pages for consistency
-
-## Technical Notes
-- All navigation changes maintain existing functionality while improving user flow
-- Valve animation uses SVG with CSS animations for smooth performance
-- Progress saving messaging reassures users their work is preserved when navigating
-
-## Future Ideas
-- **Auto-save toggle**: Add user preference to enable/disable automatic progress saving, allowing users to choose between auto-save convenience or manual save control
-
----
-
-## 2024-12-19 - Tooltip Improvements & NFPA 30 Enhancements
-
-### Universal Tooltip Component
-- **Created reusable Tooltip component**: Implemented sticky tooltips that remain visible when hovering over them, allowing users to select/copy text
-- **Applied universally**: Converted all tooltips across External Fire, Liquid Overfill, Nitrogen Failure cases and CasePressureSettings component to use new component
-- **Enhanced UX**: Tooltips now persist when user moves cursor onto them, preventing accidental disappearances while reading
+### Liquid Overfill Case Implementation
+- **Outlet flow credit**: Added optional outlet flow credit feature per API-521 §4.4.8.3 (Net Relief Flow = Maximum Inlet Flow - Normal Outlet Flow)
+- **Comprehensive tooltip**: Included section reference, explanation, example, and calculation formula for outlet flow credit
+- **"Include Case" toggle**: Moved to right side of page for consistency with other cases
+- **About scenario**: Added collapsible description explaining liquid overfill per API 521
+- **Working fluid selection**: Moved from Vessel Properties to Flow Calculations card for case independence
+- **Results summary restructured**: Now displayed in 4-column grid within Flow Calculations section showing:
+  - Gross Inlet Flow
+  - Outlet Credit
+  - Net Relieving Flow  
+  - ASME VIII Design Flow (net / 0.9)
+- **Heading changes**: "Flow Summary" → "Flow Calculations", "Case-Specific Settings" → "Pressure Limits & Allowances"
+- **ASME VIII design flow**: Clarified tooltip explaining 110% accumulation allowance requirement for liquid relief
 
 ### External Fire Case Enhancements
-- **Added NFPA 30 reduction factors**: Implemented protection options dropdown (0.5, 0.4, 0.3) for drainage, water spray, and insulation based on NFPA 30 Section 22.7.3.5
-- **Updated guidance**: Clarified NFPA 30 usage for flammable liquids vs API 521 for process equipment, acknowledging NFPA's common application to pressure vessels despite storage tank origins
-- **Added warning banner**: Blue information banner appears when NFPA 30 is selected explaining applicability to flammable/combustible liquids
-- **Updated formula tooltips**: Enhanced heat input formulas to reference Chapter 22.7 and show which reduction factor is applied
+- **Added molecular weight field**: Displayed alongside heat of vaporization in Flow Calculations (auto-filled from working fluid)
+- **Dynamic label rendering**: Fire Protection label changes based on code selection ("Fire protection / mitigation factor" for NFPA 30, "Adequate drainage & firefighting?" for API 521)
+- **Enhanced API 521 tooltip**: Added Section 4.4.13.2.4.2 reference and detailed adequate drainage criteria with reference to API 2510
+- **Simplified dropdown options**: Changed verbose API 521 options to concise "Yes" / "No" selections
+- **Equal-width field layout**: Fire protection dropdown now occupies 1/4 width matching other fields in 4-column grid
+- **Independent working fluid**: Moved from Vessel Properties to Flow Calculations for independence from other cases
 
-### Nitrogen Failure Case Updates
-- **Added outlet pressure tooltip**: "Lowest conceivable operating pressure of the tank"
-- **Updated inlet pressure tooltip**: "Maximum conceivable pressure directly upstream of failing control valve"
-- **Standardized all tooltips**: Converted remaining tooltips (Temperature, Compressibility Factor, etc.) to new component
+### Control Valve Failure Case Enhancements
+- **Unit conversion for manual flow input**: Added dropdown selector for lb/hr, SCFH, kg/hr, kg/s
+- **Conversion logic**: Values converted to lb/hr internally for calculations using molecular weight
+- **Raw value preservation**: User's input value persists when switching units (not auto-converted on display)
+- **Input validation**: Prevented negative numbers, '+' character, and scientific notation (e/E) in mass flow rate field
+- **Adjusted field width**: Mass flow rate input set to w-40 (160px) for better UX
+
+### UI/UX Consistency Improvements
+- **Simplified checkbox styling**: Removed gray background boxes from outlet flow credit and bypass valve checkboxes, using clean inline style with checkbox + label + tooltip
+- **Consistent checkbox alignment**: Checkboxes now align properly with other form fields using standard label positioning
+- **Control valve failure layout**: Consider Bypass Valve and Apply Outlet Flow Credit checkboxes now side-by-side on same row (2-column grid)
+- **Liquid overfill layout**: Working fluid, max inlet flow, and outlet credit checkbox all on same row (4-column grid with empty 4th column)
+- **Heading changes**: Changed "Case-Specific Pressure Settings" to "Pressure Limits & Allowances" for all three cases with consistent font sizing
+
+### Global Vessel Properties Implementation
+- **Created `EditWarningModal` component**: Modal with "Don't show again" checkbox stored in localStorage (key: `reliever-hide-vessel-edit-warning`)
+- **Created `CollapsibleVesselProperties` component**: Read-only collapsible display with "Edit" button that navigates to cases summary page with optional modal warning
+- **Cases summary page**: Added editable `VesselProperties` section at top of page (above case list)
+- **Case pages updated**: Replaced inline editable `VesselProperties` with collapsible read-only version on all three case pages
+- **API 521-specific fields moved**: Moved `headProtectedBySkirt` and `fireSourceElevation` from `VesselProperties` component to external fire case's "API 521 Environmental Factor (Optional)" section
+- **Vessel properties now global**: All vessel data stored in `VesselContext` and persists across all cases
+- **Edit warning behavior**: Modal warns users that "Editing vessel properties affects all cases" with Cancel/Proceed buttons
 
 ### Technical Notes
-- Tooltip component uses `mb-0` to eliminate gap between icon and text box, preventing hover state loss
-- All tooltips use consistent sticky behavior with pointer-events management
-- NFPA 30 changes maintain backward compatibility with existing data
+- **Data persistence pattern**: Working fluids stored in case-specific flowData using useLocalStorage hook ensures independence between cases
+- **Calculation consistency**: Outlet flow credit follows same pattern as control valve failure case for consistency
+- **Tooltip enhancement**: API 521 tooltip now provides complete guidance including section reference, formulas, and criteria for determining adequate drainage
+- **Dynamic rendering**: Label changes use conditional rendering based on applicableFireCode state variable
+- **Unit conversion implementation**: 
+  - `convertToLbPerHr()`: Converts from selected unit to lb/hr for calculations
+  - `manualFlowRateRaw`: Stores displayed value
+  - `manualFlowRate`: Stores converted lb/hr value
+  - Conversion factors: SCFH uses 379 ft³/lbmol, kg conversions use 0.453592 lb/kg, 3600 s/hr
+- **Modal localStorage key**: `reliever-hide-vessel-edit-warning` prevents modal from showing if user checked "Don't show again"
+- **Collapsible component**: Uses React Router's `useRouter()` to navigate to cases page for editing
+
+### Files Modified
+- `frontend/src/app/cases/liquid-overfill/page.tsx` - Complete restructuring with outlet flow credit, working fluid, about section
+- `frontend/src/app/cases/external-fire/page.tsx` - Independent working fluid, molecular weight field, dynamic labels, enhanced tooltips, API 521 fields moved to environmental factor section
+- `frontend/src/app/cases/control-valve-failure/page.tsx` - Simplified checkbox styling, layout improvements, unit conversion, input validation, removed unused updateVesselData
+- `frontend/src/app/cases/control-valve-failure/calculations.ts` - Added ManualFlowUnit type, convertToLbPerHr and convertFromLbPerHr functions
+- `frontend/src/app/hooks/useReportGenerator.ts` - Updated to handle outlet flow credit fields in liquid overfill reports
+- `frontend/src/app/components/CasePressureSettings.tsx` - Updated heading to "Pressure Limits & Allowances"
+- `frontend/src/app/components/VesselProperties.tsx` - Removed API 521-specific fields (moved to external fire case)
+- `frontend/src/app/components/EditWarningModal.tsx` - New component for edit warning with localStorage persistence
+- `frontend/src/app/components/CollapsibleVesselProperties.tsx` - New component for read-only vessel display with edit navigation
+- `frontend/src/app/cases/page.tsx` - Added editable VesselProperties section at top, imported updateVesselData
+- `frontend/lib/database.ts` - No direct changes but getFluidNames/getFluidProperties now imported at module level in case pages
+
+### API Compliance References
+- **API-521 Section 4.4.7**: Overfilling / Liquid Expansion scenarios
+- **API-521 Section 4.4.8.3**: Outlet Flow Credit - "The required relieving rate is the difference between maximum inlet flow and normal outlet flow"
+- **API-521 Section 4.4.13.2.2**: 25 ft height limit for fire-exposed wetted area, support skirt exclusion
+- **API-521 Section 4.4.13.2.4.2**: Adequate drainage and firefighting criteria
+- **API 2510**: Referenced for adequate drainage and firefighting facility standards
+- **ASME Section VIII**: 0.9 factor for liquid relief sizing (110% accumulation allowance)
 
 ---
 
-## 2025-10-31 - PDF Report Generation & Data Persistence Fixes
+## November 2, 2025 (Afternoon Session)
 
-### PDF Report Generation (Major Feature)
-- **Implemented professional PDF report generation** using `@react-pdf/renderer`
-- **Single-page layout**: Dark navy accents (#1e3a8a), light gray backgrounds for sections
-- **Design Basis Flow section**: Prominently displays governing case and required flow in lb/hr + SCFH conversion (using standard air density 0.0752 lb/ft³)
-- **Case-by-case breakdown**: Shows input parameters and calculation results for all enabled cases
-- **Download trigger**: "Generate Report" button on `/cases` page, auto-downloads as `reliefguard_report.pdf`
+### Summary
+Enhanced global vessel properties implementation with in-place editing, improved modal UX, fixed toggle functionality, and refined UI consistency across all pages.
 
-### Critical Data Architecture Fix
-- **Problem discovered**: PDF was showing wrong numbers - calculated values weren't being saved to localStorage, only input parameters
-- **Root cause**: `calculatePreview()` computed values displayed on page, but those values were never persisted
-- **Solution implemented**: 
-  - Modified `calculatePreview()` to return ALL values (flows, wetted area, heat input, environmental factor)
-  - useEffect now saves complete data object: `{...flowData (inputs), ...previewValues (calculated results)}`
-  - **Key principle**: PDF shows exactly what user sees on page - no recalculation, no stale data
-- **Applied to**: External Fire, Nitrogen Control Failure cases
+### Global Vessel Properties Enhancements
+- **In-place editing**: Modified `CollapsibleVesselProperties` to allow editing directly on case pages instead of redirecting to main page
+- **Modal improvements**: Changed edit warning modal backdrop from 50% opacity to 20% opacity (`bg-black/20`) for better visibility of underlying page
+- **Main page collapsible**: Made vessel properties collapsible on main page with `defaultExpanded={true}`, using separate localStorage keys for main page vs case pages
+- **Collapse state persistence**: Implemented independent collapse states using `reliever-vessel-properties-main-collapsed` and `reliever-vessel-properties-case-collapsed` localStorage keys
+- **Initialization fix**: Fixed flash issue by initializing state directly from localStorage in `useState` initializer instead of `useEffect`
+- **Edit button behavior**: Case pages show "Edit" button that triggers warning modal, then enables in-place editing; main page has no edit button (always editable)
+- **Component reuse**: `CollapsibleVesselProperties` now always uses `VesselProperties` component (disabled when not editing), eliminating duplicate read-only display code
+- **UI consistency**: Vessel properties heading now matches other card headings (`text-xl font-bold`)
 
-### Data Persistence Enhancements
-- **Pressure data now saved**: External Fire and Nitrogen cases now persist pressure settings (max venting pressure, backpressure) to localStorage
-- **Consistent pattern across all cases**: Load on mount, save on change via useEffect hooks
-- **localStorage keys standardized**: `{case-id}-flow-data`, `{case-id}-pressure-data`
+### UI Refinements
+- **Breadcrumb font size**: Increased from `text-sm` to `text-base` on all case pages and dataset pages
+- **"About this scenario" font size**: Increased from `text-sm` to `text-base` in `ScenarioAbout` component
+- **Chevron arrow placement**: Moved chevron arrow icon to appear immediately after "Vessel Properties" text instead of next to Edit button
+- **Removed "(Global)" label**: Simplified heading to just "Vessel Properties" on all pages
+- **Component ordering**: Moved Vessel Properties card above Gas Selection card on control valve failure page
 
-### Route & UX Updates
-- **Routes renamed**: `/reference` → `/datasets` (more accurate terminology)
-- **Dropdown width fix**: Fire Protection/Mitigation dropdown now `max-w-sm` instead of full width
-- **Mobile optimization**: Case page headers stack properly on mobile, reduced spacing
-- **Background opacity**: Homepage hero section reduced to 10% for better text readability
-- **Vessel properties reordering**: Orientation moved to 2nd field (after vessel tag), straight side height and head type hide for spheres
-- **Branding updates**: Removed "MVP" badge, added "Prototype build ©2025 ReliefGuard" footer
-
-### Nitrogen Case Field Alignment
-- **Fixed field name mismatch**: PDF generator was looking for non-existent fields (`nitrogenSupplyPressure`, etc.)
-- **Corrected to actual fields**: `totalCv`, `inletPressure`, `outletPressure`, `temperatureF`, `compressibilityZ`, `xt`
-- **Note for future**: These fields may change when nitrogen case is reviewed/refactored
+### Bug Fixes
+- **Liquid overfill toggle**: Fixed toggle not working by removing auto-enable `useEffect` that was interfering with manual toggling
+- **Main page fields**: Fixed vessel properties fields being disabled on main page by changing `disabled={!isEditing}` to `disabled={showEditButton ? !isEditing : false}`
+- **Build cache issues**: Resolved Next.js build cache errors by clearing `.next` directory
 
 ### Technical Notes
-- **Critical lesson learned**: Never recalculate values for persistence - always save what's displayed
-- **Return structure consistency**: All code paths in `calculatePreview()` must return same field structure (null vs undefined matters!)
-- **Data flow pattern**: UI calculations → previewValues → localStorage → PDF generator (single source of truth)
-- **Type safety**: Explicit `typeof` checks before formatting numbers in PDF generator prevents N/A from appearing
+- **Separate localStorage keys**: Main page and case pages use different keys to maintain independent collapse states
+- **Direct state initialization**: Using function initializer in `useState` to read localStorage synchronously during initialization, preventing flash
+- **Component props**: Added `defaultExpanded` and `showEditButton` props to `CollapsibleVesselProperties` for flexible configuration
+- **In-place editing**: When editing is enabled, `VesselProperties` component is embedded with `hideHeading={true}` and `disabled={false}`
 
 ### Files Modified
-- `frontend/src/app/cases/external-fire/page.tsx` - calculation saving, dropdown width
-- `frontend/src/app/cases/nitrogen-failure/page.tsx` - pressure data persistence
-- `frontend/src/app/hooks/useReportGenerator.ts` - data extraction, nitrogen fields
-- `frontend/src/app/components/ReportPDF.tsx` - PDF document layout and styling
-- `frontend/src/app/api/generate-report/route.ts` - PDF generation endpoint
-- `frontend/src/app/cases/page.tsx` - report button integration
-- `frontend/src/app/components/VesselProperties.tsx` - field reordering, conditional rendering
-- Route changes across datasets pages and navigation components
-
-### Architecture Decisions
-- **Why @react-pdf/renderer**: Industry standard, server-side rendering, type-safe
-- **Why single page PDF**: Keeps reports concise, forces focus on essential data
-- **Why localStorage for reports**: Client-side data, no backend needed, instant generation
-- **Why explicit input listing**: Prevents old calculated results from contaminating new data (lesson learned the hard way)
+- `frontend/src/app/components/CollapsibleVesselProperties.tsx` - Added in-place editing, separate collapse states, localStorage initialization fix
+- `frontend/src/app/components/EditWarningModal.tsx` - Reduced backdrop opacity to 20%
+- `frontend/src/app/components/VesselProperties.tsx` - Added `hideHeading` prop
+- `frontend/src/app/cases/page.tsx` - Added collapsible vessel properties with `defaultExpanded={true}` and `showEditButton={false}`
+- `frontend/src/app/cases/liquid-overfill/page.tsx` - Removed auto-enable effect that interfered with toggle
+- `frontend/src/app/cases/control-valve-failure/page.tsx` - Reordered components (Vessel Properties above Gas Selection)
+- `frontend/src/app/components/ScenarioAbout.tsx` - Increased font size from `text-sm` to `text-base`
+- All case pages (`external-fire`, `control-valve-failure`, `liquid-overfill`) - Updated breadcrumb font size to `text-base`
+- All dataset pages (`gas-properties`, `fluids`, `vessel-head-areas`) - Updated breadcrumb font size to `text-base`
 
 ---
 
-## 2025-10-31 - Control Valve Failure Generalization & Code Quality Improvements
-
-### Case 2: Nitrogen → Control Valve Failure (Gas Service)
-- **Generalized from nitrogen-only to any gas service**: Renamed and refactored Case 2 to support multiple gas types
-- **Gas selection database**: Added support for Nitrogen, Air, Oxygen, CO2, Methane, and Custom Gas with proper molecular weights and specific gravities sourced from NIST and Perry's Handbook
-- **Custom gas inputs**: Allow users to specify custom MW and SG for unlisted gases - fields become editable when Custom Gas is selected
-- **API-521 compliance enhancements**:
-  - **Bypass valve consideration** (Section 4.4.8.3): Option to include inadvertent bypass valve opening scenario, calculates effective total Cv
-  - **Outlet flow credit** (Section 4.4.8.4): Allows crediting normal outlet flow against inlet flow for net relief requirement
-  - Detailed tooltips referencing specific API-521 sections
-- **About section added**: Created reusable `ScenarioAbout` component with collapsible scenario descriptions, used across External Fire and Control Valve cases
-- **Gas Properties dataset page**: New reference page documenting gas properties used in calculations with source citations
-
-### Navigation & UX Enhancements
-- **Cases dropdown in navbar**: Added dropdown menu for direct access to External Fire, Control Valve Failure, Liquid Overfill
-- **Datasets dropdown enhancement**: Added Gas Properties to datasets navigation
-- **3-column dataset layout**: Datasets page now displays 3 cards per row on large screens instead of 2
-- **Tooltip icon fix**: Updated question mark SVG to include dot at bottom for proper symbol rendering
-- **Include Case toggle positioning**: Moved to right side of page header for consistency across all cases
-
-### Code Quality Refactoring
-- **Created `useLocalStorage` custom hook**: Eliminated 120+ lines of duplicate localStorage boilerplate code across all case pages
-- **Centralized type definitions**: Created `types/case-types.ts` with shared `CasePressureData` interface and `STORAGE_KEYS` constants
-- **Improved React patterns**: Standardized functional setState pattern (`prev => ({ ...prev, ...})`) to prevent stale closures
-- **Bug fixes**:
-  - Fixed PDF report generator reading stale/incorrect data - calculated results weren't being saved to localStorage
-  - Fixed custom gas SG/MW changes not affecting flow calculations due to stale closure in useCallback
-  - Restored explicit localStorage save for calculated outputs (useLocalStorage only handles inputs)
-
-### Data Migration & Persistence
-- **LocalStorage migration logic**: Added automatic migration from old `nitrogen-control` keys to new `control-valve-failure` keys in CaseContext
-- **Robust key handling**: All localStorage keys now use centralized constants to prevent typos and enable easy refactoring
-
-### Technical Notes
-- **Critical lesson on custom hooks**: Document clearly what hooks do and DON'T do - useLocalStorage handles inputs but not derived/calculated values
-- **Functional setState pattern**: Always use `setState(prev => ...)` to avoid stale closures, especially in callbacks with dependencies
-- **Report generator architecture**: PDF needs both input AND output data explicitly saved; don't rely on automatic sync for calculated values
-
-### Files Modified
-- Renamed `frontend/src/app/cases/nitrogen-failure/` → `control-valve-failure/`
-- Updated `calculations.ts` with generic gas flow formulas and gas properties database
-- Refactored all 3 case pages to use new `useLocalStorage` hook
-- Created `frontend/src/app/hooks/useLocalStorage.ts`
-- Created `frontend/src/app/types/case-types.ts`
-- Created `frontend/src/app/components/ScenarioAbout.tsx`
-- Created `frontend/src/app/data/gas-properties/page.tsx`
-- Updated navigation in Header, Sidebar, NavDropdown components
-- Updated CaseContext with migration logic and new case ID
-- Updated useReportGenerator with new field names and gas properties
-
-### Architecture Decisions
-- **Why generalize nitrogen case**: Control valve failures apply to many gas services (air, oxygen, inert gases) - same physics, different properties
-- **Why separate gas properties page**: Transparency about data sources; users can verify MW/SG values against standards
-- **Why useLocalStorage hook**: DRY principle - eliminate duplicate code while maintaining type safety and error handling
-- **Why explicit calculated saves**: Report generator operates independently of UI state; needs complete snapshot of inputs+outputs
-
----
-
-## 2025-11-01 - Cases Summary Page Redesign & Calculation State Management
-
-### Case Summary Page Redesign
-- **Replaced toggles with checkboxes**: Changed "Include" toggles to clean checkbox interface with "Included in Calculation" label
-- **Flow display on cards**: Cases now show calculated flow directly on card (e.g., "6 lb/hr Ethanol") when calculated
-- **Incomplete status indicator**: Cards display amber "Incomplete" badge when case is selected but calculations aren't complete
-- **Only shows status for selected cases**: Unselected cases don't show "Incomplete" to reduce visual noise
-- **Removed "Available" badges**: Cleaned up card appearance by removing redundant status indicators
-- **Simplified case titles**: Changed from "External Fire" to just "External Fire" on cards
-- **Concise descriptions**: Updated descriptions to be more succinct and action-oriented
-- **Slimmer card design**: Reduced padding from p-6 to p-4 for more compact layout
-
-### Design Basis Flow Banner
-- **Sticky banner implementation**: Created sticky header that displays current design basis flow with navy theme matching generate report button
-- **Smooth slide animations**: Banner smoothly slides down when appearing and up when disappearing using CSS transitions
-- **Single-line layout**: Condensed to one line: "Current Design Basis Flow: X lb/hr from Case"
-- **Tooltip positioning**: Question mark tooltip appears to the RIGHT of case name to prevent header overlap
-- **Responsive tooltip**: Uses filled question mark icon (w-5 h-5) with hover text appearing to side instead of above
-- **Thinner border**: Changed from 4px to 2px border for more subtle appearance
-
-### Report Generator Enhancements
-- **Conditional parameters**: Report now includes different fields based on calculation method (manual vs pressure-based)
-- **Manual flow input**: When user selects manual flow, report only shows minimal parameters (flow value, ASME design flow)
-- **Pressure-based calculation**: Full parameter listing including all gas properties, pressures, temperatures, bypass/outlet settings
-- **Cleaner reports**: Prevents cluttering report with irrelevant parameters when user bypasses pressure calculations
-- **Validation warnings hidden for manual input**: Removed pressure validation warnings when user selects manual flow input mode
-
-### Critical Bug Fix: Calculation State Management
-- **Problem identified**: When users removed fields making calculations invalid, old flow values persisted on summary page
-- **Root cause**: `isCalculated` flag was only set to `true` when calculations succeeded, but never reset to `false` when they became invalid
-- **Solution applied to all cases**: Added `else` clause to update useEffect hooks that explicitly marks case as incomplete:
-  ```typescript
-  if (validFlow) {
-    updateCaseResult(caseId, { asmeVIIIDesignFlow, isCalculated: true })
-  } else {
-    updateCaseResult(caseId, { isCalculated: false })
-  }
-  ```
-- **Consistency across cases**: Applied fix to External Fire, Control Valve Failure, and Liquid Overfill cases
-- **Immediate feedback**: Summary page now instantly shows "Incomplete" when user removes required fields
-
-### Case Name Dynamic Updates
-- **Control Valve Failure case name**: Now dynamically includes gas name in design basis flow (e.g., "Control Valve Failure (Oxygen)")
-- **Dual naming system**: Added `name` (clean) and `displayName` (with formula) to gas properties for different display contexts
-- **Report integration**: Gas name with chemical formula (O₂, N₂, CO₂, CH₄) appears correctly in PDF reports
-
-### Technical Notes
-- **Lesson on reactive state**: Always handle BOTH success and failure cases in state updates - don't assume invalid states won't occur
-- **Banner animation approach**: Using `max-height` + `opacity` transitions with `pointer-events-none` provides smooth appearance/disappearance without DOM mounting/unmounting complexity
-- **Tooltip z-index management**: Design basis banner tooltips need higher z-index (z-20) and right-side positioning to avoid header overlap
-- **Report architecture**: Separation of concerns - manual input bypasses complex parameters entirely rather than showing them as N/A
-
-### Files Modified
-- `frontend/src/app/cases/page.tsx` - Complete redesign of summary page with new banner, checkboxes, flow display
-- `frontend/src/app/cases/external-fire/page.tsx` - Added `isCalculated: false` in else clause
-- `frontend/src/app/cases/control-valve-failure/page.tsx` - Added `isCalculated: false`, dynamic case naming, warning suppression for manual input
-- `frontend/src/app/cases/liquid-overfill/page.tsx` - Added `isCalculated: false` in else clause
-- `frontend/src/app/cases/control-valve-failure/calculations.ts` - Added `displayName` to gas properties
-- `frontend/src/app/hooks/useReportGenerator.ts` - Conditional parameter inclusion based on calculation method
-- `frontend/src/app/globals.css` - Updated slideIn/slideOut animations to use only transform and opacity
-
-### UX Improvements
-- **Clearer user guidance**: "Only completed calculations will appear in the generated report" message added to page header
-- **Visual feedback**: Immediate status updates when toggling cases or modifying inputs
-- **Professional appearance**: Navy banner theme consistent with overall application design
-- **Reduced cognitive load**: Simplified card layout focuses attention on essential information (case name, flow, status)

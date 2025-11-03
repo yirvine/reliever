@@ -2,7 +2,7 @@
 
 import React, { useMemo, useCallback } from 'react'
 import Link from 'next/link'
-import VesselProperties from '../../components/VesselProperties'
+import CollapsibleVesselProperties from '../../components/CollapsibleVesselProperties'
 import CasePressureSettings from '../../components/CasePressureSettings'
 import Header from '../../components/Header'
 import PageTransition from '../../components/PageTransition'
@@ -18,12 +18,14 @@ import {
   validateInputs, 
   type GasFlowInputs, 
   type GasProperties,
+  type ManualFlowUnit,
   COMMON_GASES,
-  DEFAULT_GAS_PROPERTIES
+  DEFAULT_GAS_PROPERTIES,
+  convertToLbPerHr
 } from './calculations'
 
 export default function ControlValveFailureCase() {
-  const { vesselData, updateVesselData } = useVessel()
+  const { vesselData } = useVessel()
   const { updateCaseResult, selectedCases, toggleCase, getDesignBasisFlow } = useCase()
   const designBasisFlow = getDesignBasisFlow()
   const isSelected = selectedCases['control-valve-failure']
@@ -34,6 +36,8 @@ export default function ControlValveFailureCase() {
   const [flowData, setFlowData] = useLocalStorage<GasFlowInputs>(STORAGE_KEYS.CONTROL_VALVE_FLOW, {
     isManualFlowInput: false,
     manualFlowRate: 0,
+    manualFlowRateRaw: 0,
+    manualFlowUnit: 'lb/hr',
     totalCv: 0,
     bypassCv: 0,
     considerBypass: false,
@@ -63,6 +67,44 @@ export default function ControlValveFailureCase() {
   const handleFlowDataChange = useCallback((field: keyof GasFlowInputs, value: string | number | boolean) => {
     setFlowData(prev => ({ ...prev, [field]: value }))
   }, [setFlowData])
+
+  // Handle manual flow rate change - store the raw value, convert to lb/hr for calculations
+  const handleManualFlowRateChange = useCallback((value: number) => {
+    const gasProps = flowData.gasProperties || DEFAULT_GAS_PROPERTIES
+    const currentUnit = flowData.manualFlowUnit || 'lb/hr'
+    // Convert from current unit to lb/hr (for calculations)
+    const lbPerHr = convertToLbPerHr(value, currentUnit, gasProps.molecularWeight)
+    setFlowData(prev => ({ 
+      ...prev, 
+      manualFlowRate: lbPerHr,  // Store converted value for calculations
+      manualFlowRateRaw: value  // Store raw value for display
+    }))
+  }, [flowData.gasProperties, flowData.manualFlowUnit, setFlowData])
+
+  // Handle unit change - keep the displayed value the same, just update the unit
+  const handleManualFlowUnitChange = useCallback((newUnit: string) => {
+    const gasProps = flowData.gasProperties || DEFAULT_GAS_PROPERTIES
+    
+    setFlowData(prev => {
+      // Keep the same displayed value - it just means something different now
+      const rawValue = prev.manualFlowRateRaw ?? 0
+      
+      // Convert the raw value (interpreted in new unit) to lb/hr for storage
+      const lbPerHr = convertToLbPerHr(rawValue, newUnit as ManualFlowUnit, gasProps.molecularWeight)
+      
+      return { 
+        ...prev, 
+        manualFlowUnit: newUnit as ManualFlowUnit,
+        manualFlowRate: lbPerHr  // Update conversion based on new unit
+        // Keep manualFlowRateRaw the same - value doesn't change, just unit does
+      }
+    })
+  }, [flowData.gasProperties, setFlowData])
+
+  // Display the raw value if available, otherwise show 0
+  const displayedManualFlowRate = useMemo(() => {
+    return flowData.manualFlowRateRaw ?? 0
+  }, [flowData.manualFlowRateRaw])
   
   const handleGasChange = useCallback((gasKey: string) => {
     setFlowData(prev => {
@@ -222,7 +264,7 @@ export default function ControlValveFailureCase() {
         <div className="mb-4 sm:mb-8">
           {/* Breadcrumb Navigation */}
           <div className="mb-2 sm:mb-4">
-            <nav className="flex items-center text-sm text-gray-600">
+            <nav className="flex items-center text-base text-gray-600">
               <Link href="/cases" className="hover:text-blue-600 transition-colors">
                 Cases
               </Link>
@@ -335,6 +377,9 @@ export default function ControlValveFailureCase() {
             </div>
           </div>
 
+          {/* Vessel Properties - Shared across all cases */}
+          <CollapsibleVesselProperties />
+
           {/* Gas Selection */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Gas Selection</h2>
@@ -420,14 +465,6 @@ export default function ControlValveFailureCase() {
             </div>
           </div>
 
-          {/* Vessel Properties - Shared across all cases (hide working fluid for nitrogen case) */}
-          <VesselProperties 
-            vesselData={vesselData} 
-            onChange={updateVesselData}
-            hideWorkingFluid={true}
-            disabled={!isSelected}
-          />
-
           {/* Case-Specific Pressure Settings */}
           <CasePressureSettings
             pressureData={pressureData}
@@ -467,10 +504,6 @@ export default function ControlValveFailureCase() {
           {/* Flow Calculations - Only user inputs */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Flow Calculations</h2>
-            <p className="text-sm text-gray-600 mb-4">
-              User inputs only - other values are calculated automatically
-            </p>
-            
             {flowData.isManualFlowInput ? (
               // Manual Flow Input
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -478,21 +511,49 @@ export default function ControlValveFailureCase() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                     Mass Flow Rate
                 </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={flowData.manualFlowRate || ''}
-                  onChange={(e) => handleFlowDataChange('manualFlowRate', parseFloat(e.target.value) || 0)}
-                  className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
-                    !isSelected 
-                      ? 'border-gray-200 bg-gray-50 text-gray-500' 
-                      : getFieldError('manualFlowRate') 
-                        ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    value={displayedManualFlowRate || ''}
+                    onKeyDown={(e) => {
+                      // Prevent '-' and '+' characters
+                      if (e.key === '-' || e.key === '+' || e.key === 'e' || e.key === 'E') {
+                        e.preventDefault()
+                      }
+                    }}
+                    onChange={(e) => {
+                      // Filter out negative sign and other invalid characters
+                      const filteredValue = e.target.value.replace(/[+\-eE]/g, '')
+                      const value = parseFloat(filteredValue) || 0
+                      handleManualFlowRateChange(value)
+                    }}
+                    className={`w-45.5 h-10 px-3 py-2 border rounded-md text-gray-900 ${
+                      !isSelected 
+                        ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                        : getFieldError('manualFlowRate') 
+                          ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                          : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                    }`}
+                    disabled={!isSelected}
+                  />
+                  <select
+                    value={flowData.manualFlowUnit || 'lb/hr'}
+                    onChange={(e) => handleManualFlowUnitChange(e.target.value)}
+                    disabled={!isSelected}
+                    className={`h-10 px-3 py-2 border rounded-md text-gray-900 ${
+                      !isSelected 
+                        ? 'border-gray-200 bg-gray-50 text-gray-500' 
                         : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-                  }`}
-                  disabled={!isSelected}
-                />
-                  <p className="text-xs text-gray-500 mt-1">lb/hr</p>
+                    }`}
+                  >
+                    <option value="lb/hr">lb/hr</option>
+                    <option value="SCFH">SCFH</option>
+                    <option value="kg/hr">kg/hr</option>
+                    <option value="kg/s">kg/s</option>
+                  </select>
+                </div>
                   {getFieldError('manualFlowRate') && (
                     <p className="text-xs text-red-600 mt-1">{getFieldError('manualFlowRate')}</p>
                   )}

@@ -153,7 +153,7 @@ export default function GasPropertiesPage() {
           <div className="mb-4 sm:mb-8">
             {/* Breadcrumb Navigation */}
             <div className="mb-2 sm:mb-4">
-              <nav className="flex items-center text-sm text-gray-600">
+              <nav className="flex items-center text-base text-gray-600">
                 <Link href="/datasets" className="hover:text-blue-600 transition-colors">
                   Datasets
                 </Link>

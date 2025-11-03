@@ -2,7 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
-import VesselProperties from '../../components/VesselProperties'
+import CollapsibleVesselProperties from '../../components/CollapsibleVesselProperties'
 import CasePressureSettings from '../../components/CasePressureSettings'
 import Header from '../../components/Header'
 import PageTransition from '../../components/PageTransition'
@@ -244,7 +244,7 @@ export default function ExternalFireCase() {
         <div className="mb-4 sm:mb-8">
           {/* Breadcrumb Navigation */}
           <div className="mb-2 sm:mb-4">
-            <nav className="flex items-center text-sm text-gray-600">
+            <nav className="flex items-center text-base text-gray-600">
               <Link href="/cases" className="hover:text-blue-600 transition-colors">
                 Cases
               </Link>
@@ -343,13 +343,7 @@ export default function ExternalFireCase() {
 
         <div className={`space-y-4 transition-opacity duration-200 ${isSelected ? 'opacity-100' : 'opacity-50'}`}>
           {/* Vessel Properties - Shared across all cases */}
-          <VesselProperties 
-            vesselData={vesselData} 
-            onChange={updateVesselData}
-            hideWorkingFluid={true}
-            disabled={!isSelected}
-            applicableFireCode={flowData.applicableFireCode}
-          />
+          <CollapsibleVesselProperties />
 
           {/* Case-Specific Pressure Settings */}
           <CasePressureSettings
@@ -551,10 +545,93 @@ export default function ExternalFireCase() {
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">API 521 Environmental Factor (Optional)</h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Configure insulation or special storage conditions to reduce heat input per API 521 §4.4.13.2.7
+                  Configure vessel-specific parameters, insulation, or special storage conditions to reduce heat input per API 521 §4.4.13.2.7
                 </p>
                 
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {/* Head Protected by Skirt */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Bottom Head Protected by Skirt?
+                      </label>
+                      <Tooltip
+                        className="w-80"
+                        content={
+                          <>
+                            <div className="mb-2">
+                              <strong className="text-blue-300">API 521 §4.4.13.2.2:</strong>
+                            </div>
+                            <div className="mb-2">
+                              Vessel heads protected by support skirts with limited ventilation are normally not included when determining wetted area.
+                            </div>
+                            <div className="text-xs border-t border-gray-600 pt-2 mt-2">
+                              Select &quot;Yes&quot; if bottom head is enclosed by a support skirt with minimal ventilation.
+                            </div>
+                          </>
+                        }
+                      />
+                    </div>
+                    <select
+                      value={vesselData.headProtectedBySkirt ? 'true' : 'false'}
+                      onChange={(e) => updateVesselData('headProtectedBySkirt', e.target.value === 'true')}
+                      disabled={!isSelected}
+                      className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
+                        !isSelected 
+                          ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                          : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                      }`}
+                    >
+                      <option value="false">No</option>
+                      <option value="true">Yes (skirt protection)</option>
+                    </select>
+                  </div>
+
+                  {/* Fire Source Elevation */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Fire Source Elevation (ft)
+                      </label>
+                      <Tooltip
+                        className="w-80"
+                        content={
+                          <>
+                            <div className="mb-2">
+                              <strong className="text-blue-300">API 521 §4.4.13.2.2:</strong>
+                            </div>
+                            <div className="mb-2">
+                              Only wetted surface ≤25 ft above fire source is included in fire exposure calculation.
+                            </div>
+                            <div className="text-xs border-t border-gray-600 pt-2 mt-2">
+                              Enter elevation of fire source above grade (0 = grade level, typical). Use for vessels on elevated platforms.
+                            </div>
+                          </>
+                        }
+                      />
+                    </div>
+                    <input
+                      type="number"
+                      step="1"
+                      value={vesselData.fireSourceElevation ?? 0}
+                      onChange={(e) => updateVesselData('fireSourceElevation', parseFloat(e.target.value) || 0)}
+                      disabled={!isSelected}
+                      className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 placeholder-gray-400 ${
+                        !isSelected 
+                          ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                          : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                      }`}
+                      placeholder="0"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Grade level = 0 ft (default)</p>
+                  </div>
+                  
+                  {/* Empty cells for grid alignment */}
+                  <div></div>
+                  <div></div>
+                </div>
+                
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
                   {/* Storage Type */}
                   <div>
                     <div className="flex items-center gap-2 mb-2">

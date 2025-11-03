@@ -19,7 +19,7 @@ export default function ScenarioAbout({ children }: ScenarioAboutProps) {
       <div className={showAbout ? 'mb-2' : 'mb-1'}>
         <button
           onClick={() => setShowAbout(!showAbout)}
-          className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200"
+          className="inline-flex items-center text-base text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200"
         >
           <svg 
             className={`w-4 h-4 mr-1 transition-transform duration-200 ${showAbout ? 'rotate-90' : ''}`}

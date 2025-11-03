@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import Header from '../components/Header'
 import PageTransition from '../components/PageTransition'
+import CollapsibleVesselProperties from '../components/CollapsibleVesselProperties'
 import { useCase } from '../context/CaseContext'
 import { useVessel } from '../context/VesselContext'
 import { useScrollPosition } from '../hooks/useScrollPosition'
@@ -89,6 +90,14 @@ export default function Calculator() {
           <p className="text-sm text-gray-500 font-inter">
             Select scenarios to include in your relief load summary. Only completed calculations will appear in the generated report.
           </p>
+        </div>
+
+        {/* Global Vessel Properties Section */}
+        <div className="mb-6">
+          <CollapsibleVesselProperties 
+            defaultExpanded={true}
+            showEditButton={false}
+          />
         </div>
 
         {/* Calculation Cases */}

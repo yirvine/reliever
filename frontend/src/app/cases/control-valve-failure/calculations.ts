@@ -10,6 +10,65 @@
  * - API-520 Part I: Valve sizing equations (ISA-S75.01 gas flow formulas)
  */
 
+// Unit conversion constants
+const LB_TO_KG = 0.453592
+const HOUR_TO_SECOND = 3600
+const SCFH_TO_LBHR_FACTOR = 379 // Standard cubic feet per hour conversion factor
+
+/**
+ * Convert flow rate from any unit to lb/hr (internal storage unit)
+ */
+export function convertToLbPerHr(
+  value: number,
+  unit: ManualFlowUnit,
+  molecularWeight: number
+): number {
+  if (!value || value <= 0) return 0
+
+  switch (unit) {
+    case 'lb/hr':
+      return value
+    case 'SCFH':
+      // SCFH to lb/hr: lb/hr = (SCFH / 379) * MW
+      return (value / SCFH_TO_LBHR_FACTOR) * molecularWeight
+    case 'kg/hr':
+      // kg/hr to lb/hr: lb/hr = kg/hr / 0.453592
+      return value / LB_TO_KG
+    case 'kg/s':
+      // kg/s to lb/hr: lb/hr = (kg/s * 3600) / 0.453592
+      return (value * HOUR_TO_SECOND) / LB_TO_KG
+    default:
+      return value
+  }
+}
+
+/**
+ * Convert flow rate from lb/hr (internal storage unit) to any unit
+ */
+export function convertFromLbPerHr(
+  valueLbPerHr: number,
+  unit: ManualFlowUnit,
+  molecularWeight: number
+): number {
+  if (!valueLbPerHr || valueLbPerHr <= 0) return 0
+
+  switch (unit) {
+    case 'lb/hr':
+      return valueLbPerHr
+    case 'SCFH':
+      // lb/hr to SCFH: SCFH = (lb/hr / MW) * 379
+      return (valueLbPerHr / molecularWeight) * SCFH_TO_LBHR_FACTOR
+    case 'kg/hr':
+      // lb/hr to kg/hr: kg/hr = lb/hr * 0.453592
+      return valueLbPerHr * LB_TO_KG
+    case 'kg/s':
+      // lb/hr to kg/s: kg/s = (lb/hr * 0.453592) / 3600
+      return (valueLbPerHr * LB_TO_KG) / HOUR_TO_SECOND
+    default:
+      return valueLbPerHr
+  }
+}
+
 export interface GasProperties {
   name: string
   displayName: string        // name with chemical formula for UI display
@@ -18,9 +77,13 @@ export interface GasProperties {
   defaultZ: number           // typical compressibility factor
 }
 
+export type ManualFlowUnit = 'lb/hr' | 'SCFH' | 'kg/hr' | 'kg/s'
+
 export interface GasFlowInputs {
   isManualFlowInput: boolean
-  manualFlowRate?: number     // mass flow, lb/hr
+  manualFlowRate?: number     // mass flow (stored in lb/hr internally for calculations)
+  manualFlowRateRaw?: number // raw value entered by user (displayed value, unit-agnostic)
+  manualFlowUnit?: ManualFlowUnit  // unit for manual flow rate input
   totalCv?: number            // control valve flow coefficient
   bypassCv?: number           // bypass valve Cv (if applicable)
   considerBypass?: boolean    // whether to include bypass valve

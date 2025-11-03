@@ -44,12 +44,9 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">
-        {caseName} - Case-Specific Settings
+      <h2 className="text-xl font-bold text-gray-900 mb-6">
+        Pressure Limits & Allowances
       </h2>
-      <p className="text-sm text-gray-600 mb-4">
-        Case-specific pressure limits and allowances
-      </p>
       
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div>

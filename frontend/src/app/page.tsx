@@ -280,20 +280,20 @@ export default function Home() {
                 </h2>
               </div>
               
-              <div className="prose prose-lg max-w-none text-gray-900 font-inter leading-relaxed">
-                <p className="text-lg mb-6">
+              <div className="prose prose-lg max-w-none text-black font-inter leading-relaxed">
+                <p className="text-xl mb-6">
                   ReliefGuard streamlines relief-rate determination and documentation for pressure vessels,
                   replacing legacy spreadsheet workflows and minimizing manual error.
                 </p>
 
-                <p className="text-lg mb-6">
+                <p className="text-xl mb-6">
                   It supports key scenarios including external fire, control-valve failure, blocked discharge,
                   thermal expansion, and liquid overfill. Engineers can input vessel geometry, design data,
                   and fluid properties to instantly calculate the relieving flow in accordance with
                   NFPA&nbsp;30, API&nbsp;521, and ASME&nbsp;VIII.
                 </p>
 
-                <p className="text-lg">
+                <p className="text-xl">
                   Built as a modern web application with automatic saving and consistent formatting,
                   ReliefGuard reduces engineering effort, improves traceability, and keeps results aligned
                   with current industry standards.
