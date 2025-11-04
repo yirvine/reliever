@@ -23,8 +23,9 @@ interface CasePressureSettingsProps {
 export default function CasePressureSettings({ pressureData, onChange, caseName, isAutoCalculated = false, vesselMawp = 0, fireExposedArea, mawpPercent = 110, disabled = false }: CasePressureSettingsProps) {
   // Use provided percentage or default to 110% for non-fire cases
   const autoPercent = mawpPercent
-  const autoMavp = vesselMawp * (autoPercent / 100) // MAVP = % of MAWP
-  const autoBackpressure = Math.abs(vesselMawp - autoMavp) // |MAWP - MAVP|
+  const hasValidMawp = vesselMawp && vesselMawp > 0
+  const autoMavp = hasValidMawp ? vesselMawp * (autoPercent / 100) : 0 // MAVP = % of MAWP
+  const autoBackpressure = hasValidMawp ? Math.abs(vesselMawp - autoMavp) : 0 // |MAWP - MAVP|
 
   // Auto-sync calculated values to parent component
   useEffect(() => {
@@ -93,9 +94,9 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
             )}
           </div>
           <input
-            type="number"
+            type={isAutoCalculated && !hasValidMawp ? 'text' : 'number'}
             step="0.1"
-            value={isAutoCalculated ? autoMavp.toFixed(1) : (pressureData.maxAllowedVentingPressure || '')}
+            value={isAutoCalculated ? (hasValidMawp ? autoMavp.toFixed(1) : '—') : (pressureData.maxAllowedVentingPressure || '')}
             onChange={(e) => onChange('maxAllowedVentingPressure', parseFloat(e.target.value) || 0)}
             disabled={isAutoCalculated || disabled}
             className={`w-full h-10 px-3 py-2 border rounded-md ${
@@ -106,7 +107,7 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
                   : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400'
             }`}
             placeholder="e.g., 18.0"
-            title={isAutoCalculated ? `Auto-calculated: ${autoPercent}% of MAWP` : ''}
+            title={isAutoCalculated ? (hasValidMawp ? `Auto-calculated: ${autoPercent}% of MAWP` : 'Incomplete: Vessel Design MAWP required') : ''}
             required
           />
         </div>
@@ -124,9 +125,9 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
             )}
           </div>
           <input
-            type="number"
+            type={isAutoCalculated && !hasValidMawp ? 'text' : 'number'}
             step="0.1"
-            value={isAutoCalculated ? autoBackpressure.toFixed(1) : (pressureData.maxAllowableBackpressure || '')}
+            value={isAutoCalculated ? (hasValidMawp ? autoBackpressure.toFixed(1) : '—') : (pressureData.maxAllowableBackpressure || '')}
             onChange={(e) => onChange('maxAllowableBackpressure', parseFloat(e.target.value) || 0)}
             disabled={isAutoCalculated || disabled}
             className={`w-full h-10 px-3 py-2 border rounded-md ${
@@ -137,7 +138,7 @@ export default function CasePressureSettings({ pressureData, onChange, caseName,
                   : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400'
             }`}
             placeholder="e.g., 3.1"
-            title={isAutoCalculated ? 'Auto-calculated: |MAWP - MAVP|' : ''}
+            title={isAutoCalculated ? (hasValidMawp ? 'Auto-calculated: |MAWP - MAVP|' : 'Incomplete: Vessel Design MAWP required') : ''}
             required
           />
         </div>

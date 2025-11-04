@@ -377,6 +377,9 @@ export default function ExternalFireCase() {
                     const properties = getFluidProperties(e.target.value)
                     if (properties) {
                       handleFluidPropertiesFound(properties.heat_of_vaporization)
+                    } else {
+                      // Clear heat of vaporization when no fluid is selected
+                      handleFlowDataChange('heatOfVaporization', 0)
                     }
                   }}
                   disabled={!isSelected}
@@ -625,13 +628,7 @@ export default function ExternalFireCase() {
                     />
                     <p className="text-xs text-gray-500 mt-1">Grade level = 0 ft (default)</p>
                   </div>
-                  
-                  {/* Empty cells for grid alignment */}
-                  <div></div>
-                  <div></div>
-                </div>
-                
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+
                   {/* Storage Type */}
                   <div>
                     <div className="flex items-center gap-2 mb-2">
@@ -730,6 +727,9 @@ export default function ExternalFireCase() {
                       </p>
                     )}
                   </div>
+                </div>
+                
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
 
                   {/* Insulation Material - Only show if hasInsulation */}
                   {flowData.hasInsulation && flowData.storageType === 'above-grade' && (

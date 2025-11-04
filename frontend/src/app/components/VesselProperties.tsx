@@ -6,6 +6,7 @@ import Tooltip from './Tooltip'
 
 interface VesselData {
   vesselTag: string
+  vesselName?: string
   straightSideHeight: number
   vesselDiameter: number
   headType: string
@@ -54,7 +55,7 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
       {!hideHeading && <h2 className="text-xl font-bold text-gray-900 mb-6">Vessel Properties</h2>}
       
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* First row: vessel tag, vessel orientation, vessel diameter, working fluid */}
+        {/* First row: vessel tag, vessel name, vessel orientation, vessel diameter, working fluid */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Vessel Tag
@@ -71,6 +72,24 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
             }`}
             placeholder="e.g., 123"
             required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Vessel Name (optional)
+          </label>
+          <input
+            type="text"
+            value={vesselData.vesselName || ''}
+            onChange={(e) => onChange('vesselName', e.target.value)}
+            disabled={disabled}
+            className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 placeholder-gray-400 ${
+              disabled 
+                ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+            }`}
+            placeholder="e.g., Reactor V-101"
           />
         </div>
 
@@ -188,19 +207,6 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
             />
           </div>
         )}
-
-        {/* Second row: construction code, head type (not for sphere), set pressure, MAWP */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Vessel Construction Code
-          </label>
-          <input
-            type="text"
-            value="ASME VIII"
-            disabled
-            className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md bg-blue-50 text-gray-700 font-medium"
-          />
-        </div>
 
         {!isSphere && (
           <div>

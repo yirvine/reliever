@@ -1,9 +1,11 @@
 'use client'
 
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import Header from '../components/Header'
 import PageTransition from '../components/PageTransition'
 import CollapsibleVesselProperties from '../components/CollapsibleVesselProperties'
+import ASMEWarningModal from '../components/ASMEWarningModal'
 import { useCase } from '../context/CaseContext'
 import { useVessel } from '../context/VesselContext'
 import { useScrollPosition } from '../hooks/useScrollPosition'
@@ -15,8 +17,78 @@ export default function Calculator() {
   const { generateReport, isGenerating } = useReportGenerator()
   const designBasisFlow = getDesignBasisFlow()
   const selectedCount = getSelectedCaseCount()
+  const [showASMEWarning, setShowASMEWarning] = useState(false)
   
   useScrollPosition()
+
+  // Validate vessel properties (vesselName is optional)
+  const vesselPropertiesValid = useMemo(() => {
+    const isSphere = vesselData.vesselOrientation === 'sphere'
+    
+    // Required fields
+    if (!vesselData.vesselTag || vesselData.vesselTag.trim() === '') return false
+    if (!vesselData.vesselDiameter || vesselData.vesselDiameter <= 0) return false
+    if (!isSphere && (!vesselData.straightSideHeight || vesselData.straightSideHeight <= 0)) return false
+    if (!isSphere && (!vesselData.headType || vesselData.headType.trim() === '')) return false
+    if (!vesselData.vesselDesignMawp || vesselData.vesselDesignMawp <= 0) return false
+    if (!vesselData.asmeSetPressure || vesselData.asmeSetPressure <= 0) return false
+    if (!vesselData.vesselOrientation) return false
+    
+    return true
+  }, [vesselData])
+
+  // Get list of missing fields for error message
+  const getMissingFields = (): string[] => {
+    const missing: string[] = []
+    const isSphere = vesselData.vesselOrientation === 'sphere'
+    
+    if (!vesselData.vesselTag || vesselData.vesselTag.trim() === '') {
+      missing.push('Vessel Tag')
+    }
+    if (!vesselData.vesselDiameter || vesselData.vesselDiameter <= 0) {
+      missing.push('Vessel Diameter')
+    }
+    if (!isSphere && (!vesselData.straightSideHeight || vesselData.straightSideHeight <= 0)) {
+      missing.push('Straight Side Height')
+    }
+    if (!isSphere && (!vesselData.headType || vesselData.headType.trim() === '')) {
+      missing.push('Head Type')
+    }
+    if (!vesselData.vesselDesignMawp || vesselData.vesselDesignMawp <= 0) {
+      missing.push('Vessel Design MAWP')
+    }
+    if (!vesselData.asmeSetPressure || vesselData.asmeSetPressure <= 0) {
+      missing.push('ASME Set Pressure')
+    }
+    if (!vesselData.vesselOrientation) {
+      missing.push('Vessel Orientation')
+    }
+    
+    return missing
+  }
+
+  const handleGenerateReport = () => {
+    if (!vesselPropertiesValid) {
+      const missingFields = getMissingFields()
+      alert(`Please complete all required vessel properties before generating the report.\n\nMissing fields:\n${missingFields.join('\n')}`)
+      return
+    }
+    
+    // Check if set pressure exceeds MAWP
+    const setPressureExceedsMAWP = vesselData.asmeSetPressure > vesselData.vesselDesignMawp && vesselData.vesselDesignMawp > 0
+    
+    if (setPressureExceedsMAWP) {
+      setShowASMEWarning(true)
+      return
+    }
+    
+    generateReport()
+  }
+
+  const handleProceedWithReport = () => {
+    setShowASMEWarning(false)
+    generateReport()
+  }
   
   // Get fluid/gas name for each case
   const getFluidName = (caseId: string): string => {
@@ -318,16 +390,16 @@ export default function Calculator() {
               }
             </p>
             
-            <div className="flex justify-center">
+            <div className="flex flex-col items-center gap-3">
               <button 
-                onClick={generateReport}
-                disabled={isGenerating || !hasCalculatedResults()}
+                onClick={handleGenerateReport}
+                disabled={isGenerating || !hasCalculatedResults() || !vesselPropertiesValid}
                 className={`
                   px-8 py-4 rounded-xl font-semibold shadow-lg transition-all duration-300 
                   flex items-center space-x-2
                   ${isGenerating
                     ? 'bg-gray-400 cursor-wait opacity-60'
-                    : !hasCalculatedResults()
+                    : !hasCalculatedResults() || !vesselPropertiesValid
                     ? 'bg-gray-400 cursor-not-allowed opacity-60'
                     : 'bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 hover:shadow-xl transform hover:-translate-y-0.5 text-white cursor-pointer'
                   }
@@ -350,6 +422,13 @@ export default function Calculator() {
                   </>
                 )}
               </button>
+              {!vesselPropertiesValid && !isGenerating && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <p className="text-sm text-amber-800">
+                    Fill out all vessel properties before generating a report
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -360,6 +439,13 @@ export default function Calculator() {
         </div>
     </main>
       </div>
+      
+      {/* ASME Warning Modal */}
+      <ASMEWarningModal
+        isOpen={showASMEWarning}
+        onClose={() => setShowASMEWarning(false)}
+        onProceed={handleProceedWithReport}
+      />
     </PageTransition>
   )
 }

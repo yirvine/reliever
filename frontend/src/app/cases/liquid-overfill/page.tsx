@@ -222,7 +222,9 @@ export default function LiquidOverfillCase() {
             pressureData={casePressureData}
             onChange={updateCasePressureData}
             caseName="Liquid Overfill"
+            isAutoCalculated={true}
             vesselMawp={vesselData.vesselDesignMawp}
+            mawpPercent={110}
             disabled={!isSelected}
           />
 

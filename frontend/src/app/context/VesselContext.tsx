@@ -13,6 +13,7 @@ import { calculateFireExposedArea as dbCalculateArea, VesselOrientation } from '
  */
 export interface VesselData {
   vesselTag: string
+  vesselName?: string // Optional vessel name
   straightSideHeight: number
   vesselDiameter: number
   headType: string
@@ -34,6 +35,7 @@ interface VesselContextType {
 
 const defaultVesselData: VesselData = {
   vesselTag: '',
+  vesselName: '',
   straightSideHeight: 0,
   vesselDiameter: 0,
   headType: 'Hemispherical',
