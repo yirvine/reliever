@@ -44,9 +44,6 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
     }
   }
   
-  // Determine which advanced fields to show based on fire code
-  const showAdvancedAPI521Fields = applicableFireCode === 'API 521'
-  
   // Check if sphere is selected - hide irrelevant fields
   const isSphere = vesselData.vesselOrientation === 'sphere'
   

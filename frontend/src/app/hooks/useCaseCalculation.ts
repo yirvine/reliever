@@ -3,19 +3,25 @@ import { useEffect, useRef } from 'react'
 // Import CaseId type from context for type safety
 type CaseId = 'external-fire' | 'control-valve-failure' | 'liquid-overfill' | 'blocked-outlet'
 
-interface UseCaseCalculationOptions<T = any> {
+interface CaseResult {
+  asmeVIIIDesignFlow?: number
+  isCalculated: boolean
+  caseName?: string
+}
+
+interface UseCaseCalculationOptions<T = Record<string, unknown>> {
   caseId: CaseId
   previewValues: {
     calculatedRelievingFlow?: number | null
     asmeVIIIDesignFlow?: number | null
-    [key: string]: any
+    [key: string]: unknown
   }
   flowData: T
-  updateCaseResult: (caseId: CaseId, result: any) => void
+  updateCaseResult: (caseId: CaseId, result: Partial<CaseResult>) => void
   storageKey: string
   isValid?: boolean // Optional override for validity check
   customCaseName?: string // Optional custom case name for display
-  vesselData?: any // Optional vessel data to include in saved results
+  vesselData?: Record<string, unknown> // Optional vessel data to include in saved results
 }
 
 /**
@@ -36,7 +42,7 @@ interface UseCaseCalculationOptions<T = any> {
  *   vesselData: { asmeSetPressure: vesselData.asmeSetPressure }
  * })
  */
-export function useCaseCalculation<T = any>({
+export function useCaseCalculation<T = Record<string, unknown>>({
   caseId,
   previewValues,
   flowData,
@@ -98,7 +104,7 @@ export function useCaseCalculation<T = any>({
 
     if (calculationIsValid && asmeVIIIDesignFlow) {
       // Update case result for design basis flow comparison
-      const updatePayload: any = {
+      const updatePayload: Partial<CaseResult> = {
         asmeVIIIDesignFlow: asmeVIIIDesignFlow,
         isCalculated: true
       }

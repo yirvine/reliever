@@ -28,7 +28,6 @@ import {
 export default function ControlValveFailureCase() {
   const { vesselData } = useVessel()
   const { updateCaseResult, selectedCases, toggleCase, getDesignBasisFlow } = useCase()
-  const designBasisFlow = getDesignBasisFlow()
   const isSelected = selectedCases['control-valve-failure']
   
   useScrollPosition()
