@@ -16,7 +16,7 @@
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react'
 
 // Valid case IDs in the system. Update this when adding new cases.
-export type CaseId = 'external-fire' | 'control-valve-failure' | 'liquid-overfill' | 'blocked-outlet'
+export type CaseId = 'external-fire' | 'control-valve-failure' | 'liquid-overfill' | 'blocked-outlet' | 'cooling-reflux-failure'
 
 /**
  * Represents the calculation result for a specific case.
@@ -47,7 +47,8 @@ const defaultCases = {
   'external-fire': false,
   'control-valve-failure': false,
   'liquid-overfill': false,
-  'blocked-outlet': false
+  'blocked-outlet': false,
+  'cooling-reflux-failure': false
 }
 
 const defaultCaseResults: Record<CaseId, CaseResult> = {
@@ -72,6 +73,12 @@ const defaultCaseResults: Record<CaseId, CaseResult> = {
   'blocked-outlet': {
     caseId: 'blocked-outlet',
     caseName: 'Blocked Outlet',
+    asmeVIIIDesignFlow: null,
+    isCalculated: false
+  },
+  'cooling-reflux-failure': {
+    caseId: 'cooling-reflux-failure',
+    caseName: 'Cooling/Reflux Failure',
     asmeVIIIDesignFlow: null,
     isCalculated: false
   }

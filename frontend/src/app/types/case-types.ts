@@ -25,5 +25,7 @@ export const STORAGE_KEYS = {
   LIQUID_OVERFILL_PRESSURE: 'liquid-overfill-pressure-data',
   BLOCKED_OUTLET_FLOW: 'blocked-outlet-flow-data',
   BLOCKED_OUTLET_PRESSURE: 'blocked-outlet-pressure-data',
+  COOLING_REFLUX_FAILURE_FLOW: 'cooling-reflux-failure-flow-data',
+  COOLING_REFLUX_FAILURE_PRESSURE: 'cooling-reflux-failure-pressure-data',
 } as const
 

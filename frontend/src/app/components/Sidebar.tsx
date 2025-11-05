@@ -28,6 +28,11 @@ export default function Sidebar() {
       id: 'blocked-outlet' as const,
       name: 'Blocked Outlet',
       href: '/cases/blocked-outlet',
+    },
+    {
+      id: 'cooling-reflux-failure' as const,
+      name: 'Cooling/Reflux Failure',
+      href: '/cases/cooling-reflux-failure',
     }
   ]
 

@@ -244,6 +244,53 @@ const extractBlockedOutletData = () => {
   }
 }
 
+const extractCoolingRefluxFailureData = () => {
+  const flowDataStr = localStorage.getItem('cooling-reflux-failure-flow-data')
+  const pressureDataStr = localStorage.getItem('cooling-reflux-failure-pressure-data')
+  
+  if (!flowDataStr) return null
+  
+  const flow = JSON.parse(flowDataStr)
+  const pressure = pressureDataStr ? JSON.parse(pressureDataStr) : {}
+  
+  // Format failure mode for display
+  const failureModeMap: Record<string, string> = {
+    'total-condensing': 'Total Condensing (Complete Cooling Loss)',
+    'partial-condensing': 'Partial Condensing',
+    'air-cooler-fan': 'Air Cooler Fan Failure',
+    'pump-around': 'Pump-around Circuit Failure'
+  }
+  
+  const failureModeDisplay = failureModeMap[flow.failureMode as string] || 'N/A'
+  
+  const inputData: Record<string, string> = {
+    'Working Fluid': flow.workingFluid || 'N/A',
+    'Failure Mode': failureModeDisplay,
+    'Incoming Vapor Rate (lb/hr)': typeof flow.incomingVaporRate === 'number' ? flow.incomingVaporRate.toLocaleString() : 'N/A',
+    'Operating Temperature (°F)': typeof flow.operatingTemperature === 'number' ? flow.operatingTemperature.toLocaleString() : 'N/A',
+  }
+  
+  // Add mode-specific inputs
+  if (flow.failureMode === 'partial-condensing') {
+    inputData['Outgoing Vapor Rate (lb/hr)'] = typeof flow.outgoingVaporRate === 'number' ? flow.outgoingVaporRate.toLocaleString() : 'N/A'
+  } else if (flow.failureMode === 'air-cooler-fan') {
+    inputData['Natural Convection Credit (%)'] = typeof flow.naturalConvectionCredit === 'number' ? flow.naturalConvectionCredit.toString() : 'N/A'
+  } else if (flow.failureMode === 'pump-around') {
+    inputData['Pump-around Heat Duty (BTU/hr)'] = typeof flow.pumpAroundHeatDuty === 'number' ? flow.pumpAroundHeatDuty.toLocaleString() : 'N/A'
+    inputData['Latent Heat of Vaporization (BTU/lb)'] = typeof flow.latentHeatOfVaporization === 'number' ? flow.latentHeatOfVaporization.toLocaleString() : 'N/A'
+  }
+  
+  return {
+    inputData,
+    outputData: {
+      'Calculated Relieving Flow (lb/hr)': typeof flow.calculatedRelievingFlow === 'number' ? flow.calculatedRelievingFlow.toLocaleString() : 'N/A',
+      'ASME VIII Design Flow (lb/hr)': typeof flow.asmeVIIIDesignFlow === 'number' ? flow.asmeVIIIDesignFlow.toLocaleString() : 'N/A',
+      'Max Allowed Venting Pressure (psig)': typeof pressure.maxAllowedVentingPressure === 'number' ? pressure.maxAllowedVentingPressure.toFixed(2) : 'N/A',
+      'Max Allowable Backpressure (psig)': typeof pressure.maxAllowableBackpressure === 'number' ? pressure.maxAllowableBackpressure.toFixed(2) : 'N/A',
+    },
+  }
+}
+
 export const useReportGenerator = () => {
   const { vesselData } = useVessel()
   const { selectedCases, caseResults, getDesignBasisFlow } = useCase()
@@ -304,6 +351,17 @@ export const useReportGenerator = () => {
           selectedCaseResults.push({
             caseId: 'blocked-outlet',
             caseName: 'Blocked Outlet',
+            ...data,
+          })
+        }
+      }
+      
+      if (selectedCases['cooling-reflux-failure'] && caseResults['cooling-reflux-failure'].isCalculated) {
+        const data = extractCoolingRefluxFailureData()
+        if (data) {
+          selectedCaseResults.push({
+            caseId: 'cooling-reflux-failure',
+            caseName: 'Cooling/Reflux Failure',
             ...data,
           })
         }
