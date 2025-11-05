@@ -36,7 +36,8 @@ export default function Header() {
               items={[
                 { label: 'External Fire', href: '/cases/external-fire' },
                 { label: 'Control Valve Failure', href: '/cases/control-valve-failure' },
-                { label: 'Liquid Overfill', href: '/cases/liquid-overfill' }
+                { label: 'Liquid Overfill', href: '/cases/liquid-overfill' },
+                { label: 'Blocked Outlet', href: '/cases/blocked-outlet' }
               ]} 
             />
             {/* Temporarily hidden About button - keeping logic for future use */}

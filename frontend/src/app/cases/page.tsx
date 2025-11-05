@@ -93,7 +93,15 @@ export default function Calculator() {
   // Get fluid/gas name for each case
   const getFluidName = (caseId: string): string => {
     if (caseId === 'external-fire') {
-      return vesselData.workingFluid || ''
+      const flowData = localStorage.getItem('external-fire-flow-data')
+      if (flowData) {
+        try {
+          const parsed = JSON.parse(flowData)
+          return parsed.workingFluid || ''
+        } catch {
+          return ''
+        }
+      }
     } else if (caseId === 'control-valve-failure') {
       const flowData = localStorage.getItem('control-valve-failure-flow-data')
       if (flowData) {
@@ -105,7 +113,25 @@ export default function Calculator() {
         }
       }
     } else if (caseId === 'liquid-overfill') {
-      return vesselData.workingFluid || ''
+      const flowData = localStorage.getItem('liquid-overfill-flow-data')
+      if (flowData) {
+        try {
+          const parsed = JSON.parse(flowData)
+          return parsed.workingFluid || ''
+        } catch {
+          return ''
+        }
+      }
+    } else if (caseId === 'blocked-outlet') {
+      const flowData = localStorage.getItem('blocked-outlet-flow-data')
+      if (flowData) {
+        try {
+          const parsed = JSON.parse(flowData)
+          return parsed.workingFluid || ''
+        } catch {
+          return ''
+        }
+      }
     }
     return ''
   }
@@ -339,37 +365,56 @@ export default function Calculator() {
               </div>
             </div>
 
-            {/* Additional Cases */}
+            {/* Blocked Outlet Case */}
             <div className={`
               p-4 border rounded-lg transition-all duration-200
-              ${selectedCases['additional-cases'] 
-                ? 'border-gray-300 bg-white' 
+              ${selectedCases['blocked-outlet'] 
+                ? 'border-gray-300 bg-white hover:border-blue-400 hover:shadow-md' 
                 : 'border-gray-200 bg-gray-50 opacity-60'
               }
             `}>
               <div className="flex items-center gap-4">
                 <input
                   type="checkbox"
-                  checked={selectedCases['additional-cases']}
-                  onChange={() => toggleCase('additional-cases')}
+                  checked={selectedCases['blocked-outlet']}
+                  onChange={() => toggleCase('blocked-outlet')}
                   className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
                 />
                 
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <h4 className={`text-base font-semibold ${selectedCases['additional-cases'] ? 'text-gray-900' : 'text-gray-500'}`}>
-                      Additional Cases
-                    </h4>
-                    <span className="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 font-medium">
-                      Coming Soon
-                    </span>
+                <Link href="/cases/blocked-outlet" className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <h4 className={`text-base font-semibold ${selectedCases['blocked-outlet'] ? 'text-gray-900' : 'text-gray-500'}`}>
+                          Blocked Outlet (Closed Outlet)
+                        </h4>
+                        {selectedCases['blocked-outlet'] && (
+                          <>
+                            {caseResults['blocked-outlet'].isCalculated && caseResults['blocked-outlet'].asmeVIIIDesignFlow ? (
+                              <span className="text-sm font-medium text-blue-600">
+                                {caseResults['blocked-outlet'].asmeVIIIDesignFlow.toLocaleString()} lb/hr
+                                {getFluidName('blocked-outlet') && ` ${getFluidName('blocked-outlet')}`}
+                              </span>
+                            ) : (
+                              <span className="text-sm text-amber-600 font-medium">Incomplete</span>
+                            )}
+                          </>
+                        )}
+                      </div>
+                      <p className={`text-sm mt-1 ${selectedCases['blocked-outlet'] ? 'text-gray-600' : 'text-gray-400'}`}>
+                        Inadvertent closure of outlet valve during operation.
+                      </p>
+                    </div>
+                    {selectedCases['blocked-outlet'] && (
+                      <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    )}
                   </div>
-                  <p className={`text-sm mt-1 ${selectedCases['additional-cases'] ? 'text-gray-600' : 'text-gray-400'}`}>
-                    Split Exchanger Tube, Blocked Discharge, Heating/Cooling Control Failure, and more.
-                  </p>
-                </div>
+                </Link>
               </div>
             </div>
+
           </div>
         </div>
 

@@ -170,3 +170,69 @@ Implemented vessel properties validation, report generation safeguards, fixed da
 
 ---
 
+## November 5, 2025
+
+### Summary
+Implemented comprehensive case page refactoring, created reusable components and hooks, added Blocked Outlet case per API-521 Section 4.4.2, fixed working fluid independence issues, and established templates for future case development.
+
+### Case Page Refactoring
+- **Created reusable components**: `DesignBasisFlowBanner`, `CaseBreadcrumb`, `IncludeCaseToggle`, `CasePageHeader` (composite)
+- **Created custom hook**: `useCaseCalculation` to standardize auto-update effect pattern across all cases
+- **Refactored existing cases**: Applied new pattern to Liquid Overfill, External Fire, and Control Valve Failure pages
+- **Code reduction**: Eliminated 190+ lines of duplicate code across case pages
+- **Improved consistency**: Standardized UI/UX patterns for header, toggle, banner, and calculation updates
+
+### Blocked Outlet Case Implementation
+- **API-521 Section 4.4.2**: Implemented Closed Outlet scenario calculations
+- **Source types supported**: Centrifugal pump, positive displacement pump, pressure source, and other
+- **Calculations**: Gross source flow, optional outlet flow credit, net relieving flow, ASME VIII design flow
+- **Dynamic guidance panel**: Provides pump-specific notes and relief requirement guidance based on source type and pressure
+- **Navigation integration**: Added to Header dropdown, Sidebar menu, and Cases page listing
+- **Report generation**: Integrated with PDF report system
+
+### Working Fluid Independence Fix
+- **Issue identified**: Homepage displaying incorrect fluid names due to reading from global `vesselData.workingFluid` instead of case-specific storage
+- **Fix implemented**: Updated `getFluidName()` in `cases/page.tsx` to read each case's working fluid from its own localStorage
+- **Report updates**: Added working fluid to each case's input data section in PDF reports
+- **Vessel properties cleanup**: Removed working fluid from vessel properties section in PDF (not a vessel property, case-specific)
+- **Architecture decision**: Each case stores independent working fluid in case-specific `flowData` for maximum flexibility
+
+### Documentation & Templates
+- **Updated QUICK_REFERENCE.md**: Added comprehensive checklist including report generation, working fluid handling, and navigation integration
+- **Updated REFACTORING_RESULTS.md**: Added report generation examples, working fluid independence section, and updated FlowData interface template
+- **Template improvements**: Copy-paste starter includes all necessary imports, proper structure, and comments for case-specific customization
+- **Future case development**: Reduced estimated development time from 2-3 hours to 30-45 minutes per case
+
+### Technical Notes
+- **useCaseCalculation hook**: Handles marking cases as calculated/incomplete, saving results to localStorage for PDF generation, and updating case results for design basis flow comparison
+- **Report extraction pattern**: Each case requires extraction function in `useReportGenerator.ts` to format input/output data from localStorage
+- **Storage keys**: All cases use `STORAGE_KEYS` constant from `case-types.ts` for consistency
+- **Type safety**: `CaseId` type updated across `CaseContext`, `useCaseCalculation`, and report generator to include new cases
+
+### Files Modified
+- `frontend/src/app/components/DesignBasisFlowBanner.tsx` - New reusable banner component
+- `frontend/src/app/components/CaseBreadcrumb.tsx` - New breadcrumb component
+- `frontend/src/app/components/IncludeCaseToggle.tsx` - New toggle switch component
+- `frontend/src/app/components/CasePageHeader.tsx` - New composite header component
+- `frontend/src/app/hooks/useCaseCalculation.ts` - New custom hook for case calculations
+- `frontend/src/app/cases/liquid-overfill/page.tsx` - Refactored with new components
+- `frontend/src/app/cases/external-fire/page.tsx` - Refactored with new components
+- `frontend/src/app/cases/control-valve-failure/page.tsx` - Refactored with new components
+- `frontend/src/app/cases/blocked-outlet/page.tsx` - New case implementation
+- `frontend/src/app/cases/page.tsx` - Updated `getFluidName()` and added Blocked Outlet to listing
+- `frontend/src/app/components/Header.tsx` - Added Blocked Outlet to navigation
+- `frontend/src/app/components/Sidebar.tsx` - Added Blocked Outlet to sidebar
+- `frontend/src/app/components/ReportPDF.tsx` - Removed working fluid from vessel properties
+- `frontend/src/app/hooks/useReportGenerator.ts` - Added `extractBlockedOutletData()`, added working fluid to case input data
+- `frontend/src/app/types/case-types.ts` - Added BLOCKED_OUTLET storage keys
+- `frontend/src/app/context/CaseContext.tsx` - Added 'blocked-outlet' to CaseId type and defaults
+- `other/summaries/QUICK_REFERENCE.md` - Updated checklist and added report generation steps
+- `other/summaries/REFACTORING_RESULTS.md` - Added report generation section and working fluid independence notes
+
+### API Compliance References
+- **API-521 Section 4.4.2**: Blocked Outlet / Closed Outlet scenario requirements
+- **API-521 Section 4.4.2.2**: Centrifugal pump vs positive displacement pump relief requirements
+- **ASME Section VIII**: 0.9 factor for liquid relief sizing (110% accumulation allowance)
+
+---
+

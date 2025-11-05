@@ -250,26 +250,31 @@ export default function LiquidOverfillCase() {
 
             {/* Outlet Flow Credit Input - shown when checkbox is checked */}
             {flowData.creditOutletFlow && (
-              <div className="mb-6 max-w-md">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Normal Outlet Flow Rate (lb/hr)
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={flowData.outletFlowCredit || ''}
-                  onChange={(e) => updateFlowData('outletFlowCredit', parseFloat(e.target.value) || 0)}
-                  className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 placeholder-gray-400 ${
-                    !isSelected 
-                      ? 'border-gray-200 bg-gray-50 text-gray-500' 
-                      : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-                  }`}
-                  disabled={!isSelected}
-                  placeholder="e.g., 2000"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Normal outlet flow that remains operational during overfill (lb/hr)
-                </p>
+              <div className="mb-6 grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Normal Outlet Flow Rate (lb/hr)
+                    </label>
+                    <Tooltip 
+                      className="w-96"
+                      content="Normal outlet flow from independent valves that remain operational (lb/hr)"
+                    />
+                  </div>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={flowData.outletFlowCredit || ''}
+                    onChange={(e) => updateFlowData('outletFlowCredit', parseFloat(e.target.value) || 0)}
+                    className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 placeholder-gray-400 ${
+                      !isSelected 
+                        ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                        : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                    }`}
+                    disabled={!isSelected}
+                    placeholder="e.g., 2000"
+                  />
+                </div>
               </div>
             )}
 

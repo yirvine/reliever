@@ -24,6 +24,24 @@ const formatTextValue = (value: string | undefined | null): string => {
   return value
 }
 
+// Helper to format gas name for report title
+// Use the plain name field (without subscripts) since subscripts don't render properly in react-pdf PDFs
+const formatGasNameForReport = (gasProperties: { displayName?: string; name?: string } | undefined): string => {
+  if (!gasProperties) return 'Gas Service'
+  
+  // Just use the plain name field - it doesn't have subscripts/formulas
+  if (gasProperties.name) {
+    return gasProperties.name
+  }
+  
+  // Fallback to displayName if name doesn't exist (shouldn't happen with current data structure)
+  if (gasProperties.displayName) {
+    return gasProperties.displayName
+  }
+  
+  return 'Gas Service'
+}
+
 // Case-specific data extraction functions
 const extractExternalFireData = () => {
   const flowDataStr = localStorage.getItem('external-fire-flow-data')
@@ -36,6 +54,7 @@ const extractExternalFireData = () => {
   
   return {
     inputData: {
+      'Working Fluid': flow.workingFluid || 'N/A',
       'Applicable Fire Code': flow.applicableFireCode || 'N/A',
       'Adequate Drainage/Firefighting': flow.hasAdequateDrainageFirefighting ? 'Yes' : 'No',
       'Storage Type': formatTextValue(flow.storageType),
@@ -143,6 +162,7 @@ const extractLiquidOverfillData = () => {
     : (typeof flow.manualFlowRate === 'number' ? Math.round(flow.manualFlowRate / 0.9) : 0)
   
   const inputData: Record<string, string> = {
+    'Working Fluid': flow.workingFluid || 'N/A',
     'Maximum Inlet Flow Rate (lb/hr)': typeof flow.manualFlowRate === 'number' ? flow.manualFlowRate.toLocaleString() : 'N/A',
   }
   
@@ -156,6 +176,65 @@ const extractLiquidOverfillData = () => {
     inputData,
     outputData: {
       'Gross Inlet Flow (lb/hr)': typeof grossFlowRate === 'number' ? grossFlowRate.toLocaleString() : 'N/A',
+      'Outlet Credit Applied (lb/hr)': outletCreditApplied > 0 ? outletCreditApplied.toLocaleString() : '0',
+      'Net Relieving Flow (lb/hr)': typeof calculatedRelievingFlow === 'number' ? calculatedRelievingFlow.toLocaleString() : 'N/A',
+      'ASME VIII Design Flow (lb/hr)': typeof asmeVIIIDesignFlow === 'number' ? asmeVIIIDesignFlow.toLocaleString() : 'N/A',
+      'Max Allowed Venting Pressure (psig)': typeof pressure.maxAllowedVentingPressure === 'number' ? pressure.maxAllowedVentingPressure.toFixed(2) : 'N/A',
+      'Max Allowable Backpressure (psig)': typeof pressure.maxAllowableBackpressure === 'number' ? pressure.maxAllowableBackpressure.toFixed(2) : 'N/A',
+    },
+  }
+}
+
+const extractBlockedOutletData = () => {
+  const flowDataStr = localStorage.getItem('blocked-outlet-flow-data')
+  const pressureDataStr = localStorage.getItem('blocked-outlet-pressure-data')
+  
+  if (!flowDataStr) return null
+  
+  const flow = JSON.parse(flowDataStr)
+  const pressure = pressureDataStr ? JSON.parse(pressureDataStr) : {}
+  
+  // Format source type for display
+  const sourceTypeMap: Record<string, string> = {
+    'centrifugal-pump': 'Centrifugal Pump',
+    'positive-displacement-pump': 'Positive Displacement Pump',
+    'pressure-source': 'Pressure Source',
+    'other': 'Other'
+  }
+  
+  const sourceTypeDisplay = sourceTypeMap[flow.sourceType as string] || 'N/A'
+  
+  // Use saved calculated values if available
+  const grossFlowRate = typeof flow.grossFlowRate === 'number' 
+    ? flow.grossFlowRate 
+    : flow.maxSourceFlowRate
+  const outletCreditApplied = typeof flow.outletCreditApplied === 'number'
+    ? flow.outletCreditApplied
+    : 0
+  const calculatedRelievingFlow = typeof flow.calculatedRelievingFlow === 'number' 
+    ? flow.calculatedRelievingFlow 
+    : flow.maxSourceFlowRate
+  const asmeVIIIDesignFlow = typeof flow.asmeVIIIDesignFlow === 'number'
+    ? flow.asmeVIIIDesignFlow
+    : (typeof flow.maxSourceFlowRate === 'number' ? Math.round(flow.maxSourceFlowRate / 0.9) : 0)
+  
+  const inputData: Record<string, string> = {
+    'Working Fluid': flow.workingFluid || 'N/A',
+    'Source Type': sourceTypeDisplay,
+    'Maximum Source Pressure (psig)': typeof flow.maxSourcePressure === 'number' ? flow.maxSourcePressure.toLocaleString() : 'N/A',
+    'Maximum Source Flow Rate (lb/hr)': typeof flow.maxSourceFlowRate === 'number' ? flow.maxSourceFlowRate.toLocaleString() : 'N/A',
+  }
+  
+  // Add outlet flow credit if applied
+  if (flow.creditOutletFlow && flow.outletFlowCredit > 0) {
+    inputData['Outlet Flow Credit Applied'] = 'Yes'
+    inputData['Normal Outlet Flow Rate (lb/hr)'] = typeof flow.outletFlowCredit === 'number' ? flow.outletFlowCredit.toLocaleString() : 'N/A'
+  }
+  
+  return {
+    inputData,
+    outputData: {
+      'Gross Source Flow (lb/hr)': typeof grossFlowRate === 'number' ? grossFlowRate.toLocaleString() : 'N/A',
       'Outlet Credit Applied (lb/hr)': outletCreditApplied > 0 ? outletCreditApplied.toLocaleString() : '0',
       'Net Relieving Flow (lb/hr)': typeof calculatedRelievingFlow === 'number' ? calculatedRelievingFlow.toLocaleString() : 'N/A',
       'ASME VIII Design Flow (lb/hr)': typeof asmeVIIIDesignFlow === 'number' ? asmeVIIIDesignFlow.toLocaleString() : 'N/A',
@@ -191,11 +270,14 @@ export const useReportGenerator = () => {
       if (selectedCases['control-valve-failure'] && caseResults['control-valve-failure'].isCalculated) {
         const data = extractControlValveFailureData()
         if (data) {
-          // Use the clean gas name from data for report title
-          // If manual input, just use "Gas Service", otherwise extract gas type
+          // Get gas properties from localStorage to format name properly
+          const flowDataStr = localStorage.getItem('control-valve-failure-flow-data')
+          const flow = flowDataStr ? JSON.parse(flowDataStr) : {}
+          const gasProperties = flow.gasProperties
+          
+          // Format gas name for report title with proper chemical formulas
           const isManual = data.inputData['Flow Calculation Method'] === 'Manual Flow Input'
-          const gasType = 'Gas Type' in data.inputData ? data.inputData['Gas Type'] as string : undefined
-          const gasDisplayName = isManual ? 'Gas Service' : (gasType || 'Gas Service')
+          const gasDisplayName = isManual ? 'Gas Service' : formatGasNameForReport(gasProperties)
           
           selectedCaseResults.push({
             caseId: 'control-valve-failure',
@@ -211,6 +293,17 @@ export const useReportGenerator = () => {
           selectedCaseResults.push({
             caseId: 'liquid-overfill',
             caseName: 'Liquid Overfill',
+            ...data,
+          })
+        }
+      }
+      
+      if (selectedCases['blocked-outlet'] && caseResults['blocked-outlet'].isCalculated) {
+        const data = extractBlockedOutletData()
+        if (data) {
+          selectedCaseResults.push({
+            caseId: 'blocked-outlet',
+            caseName: 'Blocked Outlet',
             ...data,
           })
         }

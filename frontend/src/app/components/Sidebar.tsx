@@ -25,9 +25,9 @@ export default function Sidebar() {
       href: '/cases/liquid-overfill',
     },
     {
-      id: 'additional-cases' as const,
-      name: 'Additional Cases',
-      href: '#',
+      id: 'blocked-outlet' as const,
+      name: 'Blocked Outlet',
+      href: '/cases/blocked-outlet',
     }
   ]
 

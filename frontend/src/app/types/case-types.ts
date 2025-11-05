@@ -23,5 +23,7 @@ export const STORAGE_KEYS = {
   CONTROL_VALVE_PRESSURE: 'control-valve-failure-pressure-data',
   LIQUID_OVERFILL_FLOW: 'liquid-overfill-flow-data',
   LIQUID_OVERFILL_PRESSURE: 'liquid-overfill-pressure-data',
+  BLOCKED_OUTLET_FLOW: 'blocked-outlet-flow-data',
+  BLOCKED_OUTLET_PRESSURE: 'blocked-outlet-pressure-data',
 } as const
 

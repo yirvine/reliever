@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 
 // Import CaseId type from context for type safety
-type CaseId = 'external-fire' | 'control-valve-failure' | 'liquid-overfill' | 'additional-cases'
+type CaseId = 'external-fire' | 'control-valve-failure' | 'liquid-overfill' | 'blocked-outlet'
 
 interface UseCaseCalculationOptions<T = any> {
   caseId: CaseId

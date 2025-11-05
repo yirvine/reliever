@@ -226,10 +226,6 @@ const ReportPDF = ({ data }: ReportPDFProps) => {
             </View>
             <View style={styles.column}>
               <View style={styles.parameterRow}>
-                <Text style={styles.label}>Working Fluid</Text>
-                <Text style={styles.value}>{vesselData.workingFluid || 'N/A'}</Text>
-              </View>
-              <View style={styles.parameterRow}>
                 <Text style={styles.label}>ASME Set Pressure</Text>
                 <Text style={styles.value}>{formatValue(vesselData.asmeSetPressure, 'psig')}</Text>
               </View>
