@@ -132,3 +132,41 @@ Enhanced global vessel properties implementation with in-place editing, improved
 
 ---
 
+## November 2, 2025 (Evening Session)
+
+### Summary
+Implemented vessel properties validation, report generation safeguards, fixed data consistency issues, and enhanced user experience with warning modals and field organization.
+
+### Vessel Properties Enhancements
+- **Vessel Name field**: Replaced "Vessel Construction Code" (fixed "ASME VIII" display) with optional user-inputtable "Vessel Name" field, positioned as second field after Vessel Tag
+- **Vessel properties validation**: Added comprehensive validation requiring all vessel properties fields (except optional vessel name) to be completed before generating report
+- **Validation feedback**: Added warning message below Generate Report button when vessel properties are incomplete, styled with amber background matching other warning sections
+- **Incomplete data handling**: Fixed max allowed venting pressure and max allowable backpressure to display "—" (em dash) instead of "0.0" when vessel MAWP is 0 or blank, indicating incomplete data
+
+### Report Generation Safeguards
+- **ASME compliance warning**: Created `ASMEWarningModal` component that warns users when ASME set pressure exceeds vessel MAWP before generating report
+- **Modal integration**: Modal appears when user clicks "Generate Report" if set pressure > MAWP, with Cancel/Proceed buttons
+- **Validation flow**: Report generation now checks vessel properties completeness first, then ASME compliance, before proceeding
+
+### Case-Specific Fixes
+- **Liquid overfill pressure settings**: Fixed to auto-calculate at 110% MAWP (matching control valve failure case) per ASME Section VIII requirements for liquid relief
+- **External fire fluid selection**: Fixed heat of vaporization not clearing when fluid selection is changed back to "Select fluid..." - now clears correctly like molecular weight
+- **API 521 Environmental Factor layout**: Reorganized fields so "Bottom Head Protected by Skirt" and "Fire Source Elevation" appear on same row as "Storage Type" and "Fire-rated Insulation?" in 4-column grid
+
+### Technical Notes
+- **Vessel properties validation**: Uses `useMemo` to compute validation state based on vessel data, ensuring checks are ready before user clicks
+- **Missing fields detection**: `getMissingFields()` function provides detailed list of incomplete fields for user feedback
+- **ASME warning modal**: Matches style of `EditWarningModal` component for consistency, with warning icon and amber color scheme
+- **Pressure settings auto-calculation**: Liquid overfill case now uses `isAutoCalculated={true}` and `mawpPercent={110}` to fix percentage at 110% per ASME requirements
+
+### Files Modified
+- `frontend/src/app/components/VesselProperties.tsx` - Replaced construction code field with optional vessel name field
+- `frontend/src/app/components/CasePressureSettings.tsx` - Added validation to show "—" when MAWP is invalid instead of "0.0"
+- `frontend/src/app/components/ASMEWarningModal.tsx` - New component for ASME compliance warning
+- `frontend/src/app/context/VesselContext.tsx` - Added `vesselName` field to VesselData interface and default values
+- `frontend/src/app/cases/page.tsx` - Added vessel properties validation, ASME warning modal integration, warning message display
+- `frontend/src/app/cases/liquid-overfill/page.tsx` - Fixed to auto-calculate at 110% MAWP, fixed heat of vaporization clearing
+- `frontend/src/app/cases/external-fire/page.tsx` - Fixed heat of vaporization clearing, reorganized API 521 Environmental Factor fields
+
+---
+
