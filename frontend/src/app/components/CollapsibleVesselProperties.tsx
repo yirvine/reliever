@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useVessel } from '../context/VesselContext'
 import VesselProperties from './VesselProperties'
 import EditWarningModal, { shouldShowEditWarning } from './EditWarningModal'
@@ -17,18 +17,16 @@ export default function CollapsibleVesselProperties({ defaultExpanded = false, s
   // Use different localStorage keys for main page vs case pages
   const collapseKey = showEditButton ? CASE_PAGE_COLLAPSE_KEY : MAIN_PAGE_COLLAPSE_KEY
 
-  // Initialize state from localStorage immediately to avoid flash
-  const getInitialExpandedState = () => {
-    if (typeof window !== 'undefined') {
-      const savedState = localStorage.getItem(collapseKey)
-      if (savedState !== null) {
-        return savedState !== 'true' // 'true' means collapsed, so expanded = false
-      }
-    }
-    return defaultExpanded
-  }
+  // Initialize with defaultExpanded to match server render, then update from localStorage after hydration
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded)
 
-  const [isExpanded, setIsExpanded] = useState(getInitialExpandedState)
+  // Update state from localStorage after hydration to avoid mismatch
+  useEffect(() => {
+    const savedState = localStorage.getItem(collapseKey)
+    if (savedState !== null) {
+      setIsExpanded(savedState !== 'true') // 'true' means collapsed, so expanded = false
+    }
+  }, [collapseKey])
   const [showModal, setShowModal] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const { vesselData, updateVesselData } = useVessel()

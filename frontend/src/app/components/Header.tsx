@@ -38,7 +38,8 @@ export default function Header() {
                 { label: 'Control Valve Failure', href: '/cases/control-valve-failure' },
                 { label: 'Liquid Overfill', href: '/cases/liquid-overfill' },
                 { label: 'Blocked Outlet', href: '/cases/blocked-outlet' },
-                { label: 'Cooling/Reflux Failure', href: '/cases/cooling-reflux-failure' }
+                { label: 'Cooling/Reflux Failure', href: '/cases/cooling-reflux-failure' },
+                { label: 'Hydraulic Expansion', href: '/cases/hydraulic-expansion' }
               ]} 
             />
             {/* Temporarily hidden About button - keeping logic for future use */}

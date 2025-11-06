@@ -291,6 +291,60 @@ const extractCoolingRefluxFailureData = () => {
   }
 }
 
+const extractHydraulicExpansionData = () => {
+  const flowDataStr = localStorage.getItem('hydraulic-expansion-flow-data')
+  const pressureDataStr = localStorage.getItem('hydraulic-expansion-pressure-data')
+  
+  if (!flowDataStr) return null
+  
+  const flow = JSON.parse(flowDataStr)
+  const pressure = pressureDataStr ? JSON.parse(pressureDataStr) : {}
+  
+  // Format scenario type for display
+  const scenarioTypeMap: Record<string, string> = {
+    'cold-fluid-shutin': 'Cold-Fluid Shut-In',
+    'exchanger-blocked-in': 'Exchanger Blocked-In',
+    'solar-heating': 'Solar Heating',
+    'heat-tracing': 'Heat Tracing',
+    'other': 'Other'
+  }
+  
+  const scenarioTypeDisplay = scenarioTypeMap[flow.scenarioType as string] || 'N/A'
+  
+  const inputData: Record<string, string> = {
+    'Working Fluid': flow.workingFluid || 'N/A',
+    'Scenario Type': scenarioTypeDisplay,
+    'Heat Input Rate (Btu/h)': typeof flow.heatInputRate === 'number' ? flow.heatInputRate.toLocaleString() : 'N/A',
+    'Cubic Expansion Coefficient (1/°F)': typeof flow.cubicExpansionCoefficient === 'number' ? flow.cubicExpansionCoefficient.toFixed(4) : 'N/A',
+    'Specific Heat Capacity (Btu/lb·°F)': typeof flow.specificHeatCapacity === 'number' ? flow.specificHeatCapacity.toFixed(2) : 'N/A',
+    'Relative Density': typeof flow.relativeDensity === 'number' ? flow.relativeDensity.toFixed(2) : 'N/A',
+  }
+  
+  // Add trapped volume if specified
+  if (flow.trappedVolume && flow.trappedVolume > 0) {
+    inputData['Trapped Volume (gal)'] = typeof flow.trappedVolume === 'number' ? flow.trappedVolume.toLocaleString() : 'N/A'
+  }
+  
+  const outputData: Record<string, string> = {
+    'Calculation Method': 'API-521 Equation (2), Section 4.4.12.3 - Liquid relief with +10% accumulation per ASME VIII',
+    'Volumetric Flow Rate (gpm)': typeof flow.volumetricFlowRate === 'number' ? flow.volumetricFlowRate.toFixed(2) : 'N/A',
+    'Mass Flow Rate (lb/hr)': typeof flow.massFlowRate === 'number' ? Math.round(flow.massFlowRate).toLocaleString() : 'N/A',
+    'ASME VIII Design Flow (lb/hr)': typeof flow.asmeVIIIDesignFlow === 'number' ? flow.asmeVIIIDesignFlow.toLocaleString() : 'N/A',
+    'Max Allowed Venting Pressure (psig)': typeof pressure.maxAllowedVentingPressure === 'number' ? pressure.maxAllowedVentingPressure.toFixed(2) : 'N/A',
+    'Max Allowable Backpressure (psig)': typeof pressure.maxAllowableBackpressure === 'number' ? pressure.maxAllowableBackpressure.toFixed(2) : 'N/A',
+  }
+  
+  // Add relief time estimate if trapped volume was specified
+  if (flow.reliefTimeEstimate && flow.reliefTimeEstimate > 0) {
+    outputData['Relief Time Estimate (min)'] = typeof flow.reliefTimeEstimate === 'number' ? flow.reliefTimeEstimate.toFixed(1) : 'N/A'
+  }
+  
+  return {
+    inputData,
+    outputData,
+  }
+}
+
 export const useReportGenerator = () => {
   const { vesselData } = useVessel()
   const { selectedCases, caseResults, getDesignBasisFlow } = useCase()
@@ -362,6 +416,17 @@ export const useReportGenerator = () => {
           selectedCaseResults.push({
             caseId: 'cooling-reflux-failure',
             caseName: 'Cooling/Reflux Failure',
+            ...data,
+          })
+        }
+      }
+      
+      if (selectedCases['hydraulic-expansion'] && caseResults['hydraulic-expansion'].isCalculated) {
+        const data = extractHydraulicExpansionData()
+        if (data) {
+          selectedCaseResults.push({
+            caseId: 'hydraulic-expansion',
+            caseName: 'Hydraulic Expansion',
             ...data,
           })
         }

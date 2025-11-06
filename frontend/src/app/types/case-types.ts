@@ -27,5 +27,7 @@ export const STORAGE_KEYS = {
   BLOCKED_OUTLET_PRESSURE: 'blocked-outlet-pressure-data',
   COOLING_REFLUX_FAILURE_FLOW: 'cooling-reflux-failure-flow-data',
   COOLING_REFLUX_FAILURE_PRESSURE: 'cooling-reflux-failure-pressure-data',
+  HYDRAULIC_EXPANSION_FLOW: 'hydraulic-expansion-flow-data',
+  HYDRAULIC_EXPANSION_PRESSURE: 'hydraulic-expansion-pressure-data',
 } as const
 

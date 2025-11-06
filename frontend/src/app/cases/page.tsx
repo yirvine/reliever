@@ -142,6 +142,16 @@ export default function Calculator() {
           return ''
         }
       }
+    } else if (caseId === 'hydraulic-expansion') {
+      const flowData = localStorage.getItem('hydraulic-expansion-flow-data')
+      if (flowData) {
+        try {
+          const parsed = JSON.parse(flowData)
+          return parsed.workingFluid || ''
+        } catch {
+          return ''
+        }
+      }
     }
     return ''
   }
@@ -218,7 +228,7 @@ export default function Calculator() {
               <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">Included in Calculation</span>
             </div>
             <div className="text-sm text-gray-500">
-              {selectedCount} of 4 selected
+              {selectedCount} of 6 selected
             </div>
           </div>
           
@@ -466,6 +476,56 @@ export default function Calculator() {
                       </p>
                     </div>
                     {selectedCases['cooling-reflux-failure'] && (
+                      <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    )}
+                  </div>
+                </Link>
+              </div>
+            </div>
+
+            {/* Hydraulic Expansion Case */}
+            <div className={`
+              p-4 border rounded-lg transition-all duration-200
+              ${selectedCases['hydraulic-expansion'] 
+                ? 'border-gray-300 bg-white hover:border-blue-400 hover:shadow-md' 
+                : 'border-gray-200 bg-gray-50 opacity-60'
+              }
+            `}>
+              <div className="flex items-center gap-4">
+                <input
+                  type="checkbox"
+                  checked={selectedCases['hydraulic-expansion']}
+                  onChange={() => toggleCase('hydraulic-expansion')}
+                  className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                />
+                
+                <Link href="/cases/hydraulic-expansion" className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <h4 className={`text-base font-semibold ${selectedCases['hydraulic-expansion'] ? 'text-gray-900' : 'text-gray-500'}`}>
+                          Hydraulic Expansion (Thermal Expansion)
+                        </h4>
+                        {selectedCases['hydraulic-expansion'] && (
+                          <>
+                            {caseResults['hydraulic-expansion'].isCalculated && caseResults['hydraulic-expansion'].asmeVIIIDesignFlow ? (
+                              <span className="text-sm font-medium text-blue-600">
+                                {caseResults['hydraulic-expansion'].asmeVIIIDesignFlow.toLocaleString()} lb/hr
+                                {getFluidName('hydraulic-expansion') && ` ${getFluidName('hydraulic-expansion')}`}
+                              </span>
+                            ) : (
+                              <span className="text-sm text-amber-600 font-medium">Incomplete</span>
+                            )}
+                          </>
+                        )}
+                      </div>
+                      <p className={`text-sm mt-1 ${selectedCases['hydraulic-expansion'] ? 'text-gray-600' : 'text-gray-400'}`}>
+                        Blocked-in liquid heated by heat tracing, exchangers, or solar radiation.
+                      </p>
+                    </div>
+                    {selectedCases['hydraulic-expansion'] && (
                       <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>

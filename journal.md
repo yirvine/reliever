@@ -236,3 +236,113 @@ Implemented comprehensive case page refactoring, created reusable components and
 
 ---
 
+## November [Date], 2025
+
+### Summary
+Implemented Cooling/Reflux Failure case per API-521 Section 4.4.3 and established standards reference document workflow for all cases.
+
+### Cooling/Reflux Failure Case Implementation
+- **API-521 Section 4.4.3**: Implemented Cooling or Reflux Failure scenario with four failure modes
+- **Failure modes supported**: Total condensing, partial condensing, air cooler fan failure, pump-around circuit failure
+- **Calculations**: Mode-specific relief rate calculations based on API-521 guidance
+- **Navigation integration**: Added to Header dropdown, Sidebar menu, and Cases page listing
+- **Report generation**: Integrated with PDF report system
+
+### Standards Reference Documentation Workflow
+- **Created reference documents**: Added API-521 and/or NFPA-30 reference markdown files in each case folder
+- **External Fire**: Added both API-521-Reference.md and NFPA-30-Reference.md (Section 22.7 Emergency Relief Venting)
+- **All other cases**: Created API-521-Reference.md with relevant sections copy-pasted from standards
+- **Documentation standards**: Established pattern of copy-pasting exact code sections without commentary for audit trail
+- **Workflow update**: Added Section 5 to ADD_NEW_CASE.md guide requiring standards reference documents for all new cases
+
+### Files Modified
+- `frontend/src/app/cases/cooling-reflux-failure/page.tsx` - New case implementation
+- `frontend/src/app/cases/cooling-reflux-failure/API-521-Reference.md` - Standards reference
+- `frontend/src/app/cases/external-fire/NFPA-30-Reference.md` - NFPA 30 reference
+- `frontend/src/app/cases/external-fire/API-521-Reference.md` - API-521 reference
+- `frontend/src/app/cases/control-valve-failure/API-521-Reference.md` - Standards reference
+- `frontend/src/app/cases/liquid-overfill/API-521-Reference.md` - Standards reference
+- `frontend/src/app/cases/blocked-outlet/API-521-Reference.md` - Standards reference
+- `frontend/src/app/types/case-types.ts` - Added COOLING_REFLUX_FAILURE storage keys
+- `frontend/src/app/context/CaseContext.tsx` - Added 'cooling-reflux-failure' to CaseId type
+- `frontend/src/app/hooks/useCaseCalculation.ts` - Added case ID to type
+- `frontend/src/app/components/Header.tsx` - Added navigation link
+- `frontend/src/app/components/Sidebar.tsx` - Added navigation link
+- `frontend/src/app/cases/page.tsx` - Added case listing and fluid name function
+- `frontend/src/app/hooks/useReportGenerator.ts` - Added extraction function
+- `other/summaries/ADD_NEW_CASE.md` - Added Section 5 for standards reference documentation
+
+### API Compliance References
+- **API-521 Section 4.4.3**: Cooling or Reflux Failure - four calculation methods (4.4.3.2.2 through 4.4.3.2.7)
+- **NFPA 30 Section 22.7**: Emergency Relief Venting for Fire Exposure for Aboveground Storage Tanks
+- **API-521 Section 4.4.2**: Closed Outlets (Blocked Outlet case)
+- **API-521 Section 4.4.7**: Overfilling (Liquid Overfill case)
+- **API-521 Section 4.4.8**: Failure of Automatic Controls (Control Valve Failure case)
+
+---
+
+## November [Date], 2025
+
+### Summary
+Implemented Hydraulic Expansion (Thermal Expansion) case per API-521 Section 4.4.12 and fixed hydration error in CollapsibleVesselProperties component.
+
+### Hydraulic Expansion Case Implementation
+- **API-521 Section 4.4.12**: Implemented Hydraulic Expansion scenario with API-521 Equation (2) for USC units
+- **Calculation method**: Uses equation `q = (αᵥ × φ) / (d × c × 500)` where:
+  - q = volumetric flow rate (gpm)
+  - αᵥ = cubic expansion coefficient (1/°F)
+  - φ = heat input rate (Btu/h)
+  - d = relative density (dimensionless)
+  - c = specific heat capacity (Btu/lb·°F)
+- **Scenario types supported**: Cold-fluid shut-in, exchanger blocked-in, solar heating, heat tracing, and other
+- **Input fields**: Working fluid, scenario type, heat input rate, cubic expansion coefficient, specific heat capacity, relative density, and optional trapped volume
+- **Calculations**: Volumetric flow rate (gpm), mass flow rate (lb/hr), ASME VIII design flow (lb/hr), and optional relief time estimate
+- **Typical values provided**: Default values for hydrocarbons (αᵥ = 0.0005, c = 0.5, d = 0.7) with comprehensive tooltips
+- **Important warnings**: Prominent warning panel highlighting hydraulic expansion's potential to rapidly generate extremely high pressures
+- **Navigation integration**: Added to Header dropdown, Sidebar menu, and Cases page listing (updated count from 4 to 6 cases)
+- **Report generation**: Integrated with PDF report system including all input/output data and optional trapped volume/time estimate
+
+### Standards Reference Documentation
+- **Created API-521-Reference.md**: Comprehensive reference document with:
+  - Table 4-2 excerpt showing hydraulic expansion scenarios
+  - Complete Section 4.4.12 text including causes, relieving rate calculation, and piping considerations
+  - Table 2 with typical cubic expansion coefficients for light/medium/heavy hydrocarbons and water
+  - Equation (1) for SI units and Equation (2) for USC units
+  - Key takeaways and administrative controls guidance
+
+### Bug Fix: Hydration Error
+- **Issue**: React hydration error in `CollapsibleVesselProperties` component due to server/client state mismatch
+- **Root cause**: Component was checking `localStorage` during initial state, causing different values on server vs client
+- **Solution**: Initialized state with `defaultExpanded` prop to match server render, then updated from `localStorage` in `useEffect` after hydration
+- **Result**: Eliminated hydration mismatch warning while maintaining localStorage persistence for collapse state
+
+### Technical Notes
+- **Calculation implementation**: Converts volumetric flow to mass flow using fluid density (8.34 lb/gal × relative density × 60 min/hr)
+- **ASME VIII design flow**: Mass flow ÷ 0.9 per ASME Section VIII for liquid relief sizing (110% accumulation allowance)
+- **Optional trapped volume**: Users can specify trapped liquid volume to get relief time estimate (reference only, doesn't affect required flow rate)
+- **Typical values guidance**: Tooltips provide typical ranges for cubic expansion coefficients (0.0003 to 0.0010 for hydrocarbons), specific heat (0.4 to 0.6), and relative density (0.5 to 0.9)
+- **Administrative controls**: About section mentions that relief devices may not be required in certain installations (e.g., cooling circuits with locked-open valves) if proper procedures are in place
+- **PRD set pressure guidance**: Emphasized that thermal-relief pressure setting should never exceed maximum pressure permitted by weakest component in system
+
+### Files Modified
+- `frontend/src/app/cases/hydraulic-expansion/page.tsx` - New case implementation with API-521 Equation (2)
+- `frontend/src/app/cases/hydraulic-expansion/API-521-Reference.md` - Standards reference document
+- `frontend/src/app/types/case-types.ts` - Added HYDRAULIC_EXPANSION storage keys
+- `frontend/src/app/context/CaseContext.tsx` - Added 'hydraulic-expansion' to CaseId type and defaults
+- `frontend/src/app/hooks/useCaseCalculation.ts` - Added case ID to type
+- `frontend/src/app/components/Header.tsx` - Added navigation link
+- `frontend/src/app/components/Sidebar.tsx` - Added navigation link
+- `frontend/src/app/cases/page.tsx` - Added case listing, fluid name function, updated count from 4 to 6
+- `frontend/src/app/hooks/useReportGenerator.ts` - Added `extractHydraulicExpansionData()` function
+- `frontend/src/app/components/CollapsibleVesselProperties.tsx` - Fixed hydration error by initializing state with prop, updating from localStorage in useEffect
+
+### API Compliance References
+- **API-521 Section 4.4.12**: Hydraulic Expansion - causes, relieving rate calculation (Equation 2), and piping considerations
+- **API-521 Section 4.4.12.1**: Common causes (cold-fluid shut-in, blocked-in exchanger, solar heating)
+- **API-521 Section 4.4.12.3**: Relieving rate calculation using Equation (2) for USC units
+- **API-521 Table 2**: Typical values of cubic expansion coefficient for hydrocarbon liquids and water
+- **API-521 Section 4.4.12.4**: Piping considerations and alternatives to PRDs (administrative controls, vapor pockets, etc.)
+- **ASME Section VIII**: 0.9 factor for liquid relief sizing (110% accumulation allowance)
+
+---
+

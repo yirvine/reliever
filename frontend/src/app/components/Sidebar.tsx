@@ -33,6 +33,11 @@ export default function Sidebar() {
       id: 'cooling-reflux-failure' as const,
       name: 'Cooling/Reflux Failure',
       href: '/cases/cooling-reflux-failure',
+    },
+    {
+      id: 'hydraulic-expansion' as const,
+      name: 'Hydraulic Expansion',
+      href: '/cases/hydraulic-expansion',
     }
   ]
 
