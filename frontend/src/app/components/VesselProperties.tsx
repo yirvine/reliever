@@ -30,7 +30,7 @@ interface VesselPropertiesProps {
   hideHeading?: boolean // Hide the "Vessel Properties" heading
 }
 
-export default function VesselProperties({ vesselData, onChange, onFluidPropertiesFound, hideWorkingFluid = false, disabled = false, applicableFireCode, hideHeading = false }: VesselPropertiesProps) {
+export default function VesselProperties({ vesselData, onChange, onFluidPropertiesFound, hideWorkingFluid = false, disabled = false, hideHeading = false }: VesselPropertiesProps) {
   const [fluidNames] = useState(() => getFluidNames())
   const [standardDiameters] = useState(() => getStandardDiameters())
 

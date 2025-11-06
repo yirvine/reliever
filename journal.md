@@ -357,3 +357,72 @@ Implemented Hydraulic Expansion (Thermal Expansion) case per API-521 Section 4.4
 
 ---
 
+## November 7, 2025
+
+### Summary
+Implemented Heat Exchanger Tube Rupture case per API-521 Section 4.4.14, covering shell-and-tube, double-pipe, and plate-and-frame exchangers with support for liquid, gas, and flashing liquid flow calculations.
+
+### Heat Exchanger Tube Rupture Case Implementation
+- **API-521 Section 4.4.14**: Implemented Heat Transfer Equipment Failure scenario with three exchanger types
+- **Exchanger types supported**: Shell-and-tube (primary), double-pipe, and plate-and-frame exchangers
+- **Fluid states supported**: Liquid (non-flashing), gas/vapor, and flashing liquid with appropriate flow calculation methods
+- **Pressure criteria**: Automatic relief requirement assessment based on high-pressure side vs low-pressure side design pressure
+- **Flow calculations**: 
+  - Liquid: Incompressible flow through orifice (Bernoulli equation with C=0.6)
+  - Gas: Compressible flow with choked/non-choked conditions based on critical pressure ratio
+  - Flashing liquid: Simplified approach with note recommending detailed HEM analysis
+- **Tube properties**: Configurable tube inner diameter, number of tubes failed (typically 1), and flow area calculation
+- **Dynamic analysis warning**: Prominent warning for pressure differentials >1000 psi recommending additional dynamic analysis per API-521
+- **Navigation integration**: Added to Header dropdown, Sidebar menu, and Cases page listing (updated count from 6 to 7 cases)
+- **Report generation**: Integrated with PDF report system including all input/output data and fluid-specific properties
+
+### Standards Reference Documentation
+- **Created API-521-Reference.md**: Comprehensive reference document with:
+  - Table 4-2 excerpt showing heat exchanger tube rupture scenarios
+  - Complete Section 4.4.14 text including all subsections (4.4.14.1 through 4.4.14.4)
+  - Shell-and-tube exchanger guidance (pressure considerations, flow rate determination, device location, piping influence)
+  - Double-pipe and plate-and-frame exchanger considerations
+  - Key takeaways including relief criteria, design basis, flow methods, and device location requirements
+
+### Technical Notes
+- **Flow calculation methods**: 
+  - Liquid flow uses simplified orifice equation: Q = C × A × √(2gΔP/ρ) where C ≈ 0.6
+  - Gas flow uses compressible flow equations accounting for critical pressure ratio (k-dependent)
+  - Flashing liquid uses liquid equation as conservative estimate; note added for users to consider DIERS HEM methodology
+- **Default values**: Tube ID 0.75" (3/4" - very common), single tube failure (most conservative), liquid density 62.4 lb/ft³ (water), gas MW=28, k=1.4 (air/nitrogen)
+- **Relief criteria**: Relief required if high-pressure side exceeds low-pressure side MAWP; 110% accumulation for liquid relief (standard ASME VIII)
+- **High pressure differential warning**: Added prominent warning for ΔP >1000 psi per API-521 Section 4.4.14.2.2 recommendation for dynamic analysis
+- **Two-phase flow note**: Added warning panel for flashing liquids recommending detailed two-phase analysis using DIERS methodology
+- **Design basis**: Assumes complete rupture of one tube (guillotine break at tubesheet) per API-521 Section 4.4.14.2.2 unless detailed analysis justifies smaller leak
+
+### Key Assumptions Made
+1. **Discharge coefficient**: Used C = 0.6 for sharp-edged orifice (typical value for heat exchanger tube rupture scenarios)
+2. **Tube rupture location**: Assumed guillotine break at back side of tubesheet per API-521 guidance (most conservative)
+3. **Single tube failure**: Default to 1 tube failed unless user specifies otherwise (per API-521 typical assumption)
+4. **Simplified flashing liquid**: For flashing liquids, used liquid flow equation as conservative estimate with explicit note that detailed HEM analysis may be required
+5. **Steady-state approach**: Implemented steady-state calculations; dynamic analysis recommended separately for high pressure differentials (>1000 psi) or liquid-filled low-pressure sides
+6. **Fluid properties**: Default values provided for common scenarios (water density, air properties) but users can override
+
+### Files Modified
+- `frontend/src/app/cases/heat-exchanger-tube-rupture/page.tsx` - New case implementation with exchanger type selection, fluid state handling, and flow calculations
+- `frontend/src/app/cases/heat-exchanger-tube-rupture/API-521-Reference.md` - Complete standards reference document
+- `frontend/src/app/types/case-types.ts` - Added HEAT_EXCHANGER_TUBE_RUPTURE storage keys
+- `frontend/src/app/context/CaseContext.tsx` - Added 'heat-exchanger-tube-rupture' to CaseId type and defaults
+- `frontend/src/app/hooks/useCaseCalculation.ts` - Added case ID to type
+- `frontend/src/app/components/Header.tsx` - Added navigation link
+- `frontend/src/app/components/Sidebar.tsx` - Added navigation link
+- `frontend/src/app/cases/page.tsx` - Added case listing, fluid name function, updated count from 6 to 7
+- `frontend/src/app/hooks/useReportGenerator.ts` - Added `extractHeatExchangerTubeRuptureData()` function with exchanger type and fluid state formatting
+
+### API Compliance References
+- **API-521 Section 4.4.14**: Heat Transfer Equipment Failure - requirements and design basis
+- **API-521 Section 4.4.14.2**: Shell-and-tube Heat Exchangers - pressure considerations, flow rate determination, device location, piping influence
+- **API-521 Section 4.4.14.2.1**: Pressure criteria for relief requirement (high-pressure side vs low-pressure side design pressure)
+- **API-521 Section 4.4.14.2.2**: Flow rate determination - assumes complete rupture of one tube at tubesheet, liquid/gas/flashing liquid methods
+- **API-521 Section 4.4.14.2.3**: Relief device location critical for liquid-filled systems
+- **API-521 Section 4.4.14.3**: Double-pipe Exchangers - schedule pipe considerations
+- **API-521 Section 4.4.14.4**: Plate-and-frame Exchangers - corrosion and gasket failure considerations
+- **ASME Section VIII**: 0.9 factor for liquid relief sizing (110% accumulation allowance)
+
+---
+

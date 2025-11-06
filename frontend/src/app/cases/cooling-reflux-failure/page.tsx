@@ -204,7 +204,7 @@ export default function CoolingRefluxFailurePage() {
                     Select the failure mode that matches your system configuration. <strong className="text-amber-700">All vapor rates must be determined at relieving conditions (relief pressure and temperature), not at normal operating conditions.</strong> This typically requires process simulation software (HYSYS, PRO/II, UniSim) or rigorous heat/material balance calculations with vapor-liquid equilibrium (VLE) to account for composition and property changes at the higher pressure.
                   </p>
                   <p className="text-sm text-gray-700">
-                    <strong>Note:</strong> Per API-521 Section 4.4.3.2.1, vapor rates must be "recalculated at a temperature that corresponds to the new vapor composition at relieving conditions." This calculator performs the final flow rate determination once you have determined the vapor rates at relieving conditions from your process simulation or hand calculations.
+                    <strong>Note:</strong> Per API-521 Section 4.4.3.2.1, vapor rates must be &quot;recalculated at a temperature that corresponds to the new vapor composition at relieving conditions.&quot; This calculator performs the final flow rate determination once you have determined the vapor rates at relieving conditions from your process simulation or hand calculations.
                   </p>
                 </div>
                 

@@ -38,6 +38,11 @@ export default function Sidebar() {
       id: 'hydraulic-expansion' as const,
       name: 'Hydraulic Expansion',
       href: '/cases/hydraulic-expansion',
+    },
+    {
+      id: 'heat-exchanger-tube-rupture' as const,
+      name: 'Heat Exchanger Tube Rupture',
+      href: '/cases/heat-exchanger-tube-rupture',
     }
   ]
 

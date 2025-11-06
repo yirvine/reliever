@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 
 // Import CaseId type from context for type safety
-type CaseId = 'external-fire' | 'control-valve-failure' | 'liquid-overfill' | 'blocked-outlet' | 'cooling-reflux-failure' | 'hydraulic-expansion'
+type CaseId = 'external-fire' | 'control-valve-failure' | 'liquid-overfill' | 'blocked-outlet' | 'cooling-reflux-failure' | 'hydraulic-expansion' | 'heat-exchanger-tube-rupture'
 
 interface CaseResult {
   asmeVIIIDesignFlow?: number
@@ -131,6 +131,7 @@ export function useCaseCalculation<T = Record<string, unknown>>({
         isCalculated: false
       })
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     caseId,
     previewValues.calculatedRelievingFlow,

@@ -29,5 +29,7 @@ export const STORAGE_KEYS = {
   COOLING_REFLUX_FAILURE_PRESSURE: 'cooling-reflux-failure-pressure-data',
   HYDRAULIC_EXPANSION_FLOW: 'hydraulic-expansion-flow-data',
   HYDRAULIC_EXPANSION_PRESSURE: 'hydraulic-expansion-pressure-data',
+  HEAT_EXCHANGER_TUBE_RUPTURE_FLOW: 'heat-exchanger-tube-rupture-flow-data',
+  HEAT_EXCHANGER_TUBE_RUPTURE_PRESSURE: 'heat-exchanger-tube-rupture-pressure-data',
 } as const
 

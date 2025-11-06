@@ -345,6 +345,67 @@ const extractHydraulicExpansionData = () => {
   }
 }
 
+const extractHeatExchangerTubeRuptureData = () => {
+  const flowDataStr = localStorage.getItem('heat-exchanger-tube-rupture-flow-data')
+  const pressureDataStr = localStorage.getItem('heat-exchanger-tube-rupture-pressure-data')
+  
+  if (!flowDataStr) return null
+  
+  const flow = JSON.parse(flowDataStr)
+  const pressure = pressureDataStr ? JSON.parse(pressureDataStr) : {}
+  
+  // Format exchanger type for display
+  const exchangerTypeMap: Record<string, string> = {
+    'shell-and-tube': 'Shell-and-Tube',
+    'double-pipe': 'Double-Pipe',
+    'plate-and-frame': 'Plate-and-Frame'
+  }
+  
+  // Format fluid state for display
+  const fluidStateMap: Record<string, string> = {
+    'liquid': 'Liquid (Non-flashing)',
+    'gas': 'Gas/Vapor',
+    'flashing-liquid': 'Flashing Liquid'
+  }
+  
+  const exchangerTypeDisplay = exchangerTypeMap[flow.exchangerType as string] || 'N/A'
+  const fluidStateDisplay = fluidStateMap[flow.fluidState as string] || 'N/A'
+  
+  const inputData: Record<string, string> = {
+    'Working Fluid': flow.workingFluid || 'N/A',
+    'Exchanger Type': exchangerTypeDisplay,
+    'Fluid State': fluidStateDisplay,
+    'High-Pressure Side (psig)': typeof flow.highPressureSide === 'number' ? flow.highPressureSide.toLocaleString() : 'N/A',
+    'Temperature (°F)': typeof flow.temperatureF === 'number' ? flow.temperatureF : 'N/A',
+    'Tube Inner Diameter (in)': typeof flow.tubeInnerDiameter === 'number' ? flow.tubeInnerDiameter.toFixed(3) : 'N/A',
+    'Number of Tubes Failed': typeof flow.numberOfTubes === 'number' ? flow.numberOfTubes : 'N/A',
+  }
+  
+  // Add fluid-specific properties
+  if (flow.fluidState === 'liquid' || flow.fluidState === 'flashing-liquid') {
+    inputData['Fluid Density (lb/ft³)'] = typeof flow.fluidDensity === 'number' ? flow.fluidDensity.toFixed(2) : 'N/A'
+  }
+  
+  if (flow.fluidState === 'gas') {
+    inputData['Molecular Weight'] = typeof flow.molecularWeight === 'number' ? flow.molecularWeight.toFixed(2) : 'N/A'
+    inputData['Specific Heat Ratio (k)'] = typeof flow.specificHeatRatio === 'number' ? flow.specificHeatRatio.toFixed(2) : 'N/A'
+  }
+  
+  const outputData: Record<string, string> = {
+    'Single Tube Flow (lb/hr)': typeof flow.singleTubeFlow === 'number' ? Math.round(flow.singleTubeFlow).toLocaleString() : 'N/A',
+    'Total Flow (lb/hr)': typeof flow.totalTubeFlow === 'number' ? Math.round(flow.totalTubeFlow).toLocaleString() : 'N/A',
+    'Net Relieving Flow (lb/hr)': typeof flow.calculatedRelievingFlow === 'number' ? Math.round(flow.calculatedRelievingFlow).toLocaleString() : 'N/A',
+    'ASME VIII Design Flow (lb/hr)': typeof flow.asmeVIIIDesignFlow === 'number' ? flow.asmeVIIIDesignFlow.toLocaleString() : 'N/A',
+    'Max Allowed Venting Pressure (psig)': typeof pressure.maxAllowedVentingPressure === 'number' ? pressure.maxAllowedVentingPressure.toFixed(2) : 'N/A',
+    'Max Allowable Backpressure (psig)': typeof pressure.maxAllowableBackpressure === 'number' ? pressure.maxAllowableBackpressure.toFixed(2) : 'N/A',
+  }
+  
+  return {
+    inputData,
+    outputData,
+  }
+}
+
 export const useReportGenerator = () => {
   const { vesselData } = useVessel()
   const { selectedCases, caseResults, getDesignBasisFlow } = useCase()
@@ -427,6 +488,17 @@ export const useReportGenerator = () => {
           selectedCaseResults.push({
             caseId: 'hydraulic-expansion',
             caseName: 'Hydraulic Expansion',
+            ...data,
+          })
+        }
+      }
+      
+      if (selectedCases['heat-exchanger-tube-rupture'] && caseResults['heat-exchanger-tube-rupture'].isCalculated) {
+        const data = extractHeatExchangerTubeRuptureData()
+        if (data) {
+          selectedCaseResults.push({
+            caseId: 'heat-exchanger-tube-rupture',
+            caseName: 'Heat Exchanger Tube Rupture',
             ...data,
           })
         }
