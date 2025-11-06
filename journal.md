@@ -236,15 +236,19 @@ Implemented comprehensive case page refactoring, created reusable components and
 
 ---
 
-## November [Date], 2025
+## November 6, 2025
 
 ### Summary
-Implemented Cooling/Reflux Failure case per API-521 Section 4.4.3 and established standards reference document workflow for all cases.
+Implemented Cooling/Reflux Failure case per API-521 Section 4.4.3, established standards reference document workflow for all cases, and clarified VLE calculation requirements.
 
 ### Cooling/Reflux Failure Case Implementation
 - **API-521 Section 4.4.3**: Implemented Cooling or Reflux Failure scenario with four failure modes
 - **Failure modes supported**: Total condensing, partial condensing, air cooler fan failure, pump-around circuit failure
 - **Calculations**: Mode-specific relief rate calculations based on API-521 guidance
+- **VLE requirement clarification**: Updated field labels and tooltips to explicitly state that vapor rates must be determined at relieving conditions (not operating conditions)
+- **Field label updates**: Changed "Incoming Vapor Rate" to "Incoming Vapor Rate at Relief", "Operating Temperature" to "Relief Temperature", "Outgoing Vapor Rate" to "Outgoing Vapor Rate at Relief", "Latent Heat" to "Latent Heat at Relief"
+- **Enhanced tooltips**: Added guidance that VLE calculations typically require process simulation software (HYSYS, PRO/II, UniSim) or rigorous heat/material balance
+- **About section warning**: Added prominent note (amber text) that all vapor rates must be at relieving conditions per API-521 Section 4.4.3.2.1
 - **Navigation integration**: Added to Header dropdown, Sidebar menu, and Cases page listing
 - **Report generation**: Integrated with PDF report system
 
@@ -255,8 +259,15 @@ Implemented Cooling/Reflux Failure case per API-521 Section 4.4.3 and establishe
 - **Documentation standards**: Established pattern of copy-pasting exact code sections without commentary for audit trail
 - **Workflow update**: Added Section 5 to ADD_NEW_CASE.md guide requiring standards reference documents for all new cases
 
+### Technical Notes
+- **VLE calculation requirement**: Per API-521 Section 4.4.3.2.2, vapor rates must be "recalculated at a temperature that corresponds to the new vapor composition at relieving conditions." This requires vapor-liquid equilibrium calculations that account for composition changes at elevated pressure.
+- **Process simulation dependency**: Rigorous determination of vapor rates at relief conditions typically requires process simulation software (HYSYS, PRO/II, UniSim) with appropriate thermodynamic property packages (Peng-Robinson, SRK, etc.)
+- **Calculator role**: This calculator performs the final flow rate determination and applies ASME VIII design factors once the user has determined vapor rates at relieving conditions from external simulations
+- **Industry practice**: Standard industry practice is to use process simulation for distillation/condensing systems where composition and properties change significantly with pressure
+- **Simplified approach**: For simple systems or screening calculations, engineers may use approximate methods, but rigorous VLE is recommended for final sizing
+
 ### Files Modified
-- `frontend/src/app/cases/cooling-reflux-failure/page.tsx` - New case implementation
+- `frontend/src/app/cases/cooling-reflux-failure/page.tsx` - New case implementation with VLE clarifications
 - `frontend/src/app/cases/cooling-reflux-failure/API-521-Reference.md` - Standards reference
 - `frontend/src/app/cases/external-fire/NFPA-30-Reference.md` - NFPA 30 reference
 - `frontend/src/app/cases/external-fire/API-521-Reference.md` - API-521 reference

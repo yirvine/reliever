@@ -97,13 +97,14 @@ export default function CoolingRefluxFailurePage() {
     switch (flowData.failureMode) {
       case 'total-condensing':
         // API-521 4.4.3.2.2: Total incoming vapor rate at relieving conditions
-        // For simplification, we assume vapor rate increases proportionally with temperature
-        // In practice, this would require detailed heat/material balance at relief pressure
+        // User must input vapor rate already calculated at relief pressure/temperature
+        // (requires process simulation or VLE calculations)
         calculatedRelievingFlow = flowData.incomingVaporRate
         break
 
       case 'partial-condensing':
-        // API-521 4.4.3.2.3: Difference between incoming and outgoing vapor
+        // API-521 4.4.3.2.3: Difference between incoming and outgoing vapor at relief conditions
+        // Both rates must be determined at relief pressure/temperature by user
         if (flowData.outgoingVaporRate >= 0) {
           calculatedRelievingFlow = Math.max(0, flowData.incomingVaporRate - flowData.outgoingVaporRate)
         }
@@ -111,7 +112,8 @@ export default function CoolingRefluxFailurePage() {
 
       case 'air-cooler-fan':
         // API-521 4.4.3.2.4: Credit for 20-30% natural convection
-        // Relief based on 70-80% of duty
+        // Relief based on 70-80% of duty (remaining after natural convection credit)
+        // User must input vapor rate at relief conditions
         const convectionCredit = Math.max(0, Math.min(100, flowData.naturalConvectionCredit))
         const reliefPercentage = 100 - convectionCredit
         calculatedRelievingFlow = flowData.incomingVaporRate * (reliefPercentage / 100)
@@ -199,10 +201,10 @@ export default function CoolingRefluxFailurePage() {
                 <div className="border-t border-blue-300 pt-3 space-y-2">
                   <p className="font-semibold text-gray-800">Calculation Method</p>
                   <p>
-                    Select the failure mode that matches your system configuration. The relieving rate should be determined at conditions corresponding to relieving pressure, not normal operating conditions. For distillation systems, consider whether reflux will be maintained during the failure scenario.
+                    Select the failure mode that matches your system configuration. <strong className="text-amber-700">All vapor rates must be determined at relieving conditions (relief pressure and temperature), not at normal operating conditions.</strong> This typically requires process simulation software (HYSYS, PRO/II, UniSim) or rigorous heat/material balance calculations with vapor-liquid equilibrium (VLE) to account for composition and property changes at the higher pressure.
                   </p>
                   <p className="text-sm text-gray-700">
-                    <strong>Note:</strong> These calculations provide simplified estimates. Detailed heat and material balances at relieving conditions are recommended for critical applications, especially when composition changes significantly affect vapor properties.
+                    <strong>Note:</strong> Per API-521 Section 4.4.3.2.1, vapor rates must be "recalculated at a temperature that corresponds to the new vapor composition at relieving conditions." This calculator performs the final flow rate determination once you have determined the vapor rates at relieving conditions from your process simulation or hand calculations.
                   </p>
                 </div>
                 
@@ -299,11 +301,16 @@ export default function CoolingRefluxFailurePage() {
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <label className="block text-sm font-medium text-gray-700">
-                      Incoming Vapor Rate (lb/hr)
+                      Incoming Vapor Rate at Relief (lb/hr)
                     </label>
                     <Tooltip 
                       className="w-96"
-                      content="Normal vapor rate entering the condenser or cooling system at operating conditions. For distillation columns, this is the overhead vapor rate from the column."
+                      content={
+                        <div>
+                          <p className="mb-2">Vapor rate entering the condenser at <strong>relieving conditions</strong> (relief pressure and temperature).</p>
+                          <p className="text-sm">Per API-521 Section 4.4.3.2.2, this must be recalculated at the new vapor composition and temperature corresponding to the relief pressure. This typically requires process simulation (HYSYS, PRO/II, UniSim) or rigorous heat/material balance with VLE calculations.</p>
+                        </div>
+                      }
                     />
                   </div>
                   <input
@@ -325,11 +332,11 @@ export default function CoolingRefluxFailurePage() {
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <label className="block text-sm font-medium text-gray-700">
-                      Operating Temperature (°F)
+                      Relief Temperature (°F)
                     </label>
                     <Tooltip 
                       className="w-80"
-                      content="Normal operating temperature of the vapor at condenser inlet"
+                      content="Temperature at relief conditions (corresponding to relief pressure). Used for documentation and reference only."
                     />
                   </div>
                   <input
@@ -354,11 +361,16 @@ export default function CoolingRefluxFailurePage() {
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <label className="block text-sm font-medium text-gray-700">
-                        Outgoing Vapor Rate (lb/hr)
+                        Outgoing Vapor Rate at Relief (lb/hr)
                       </label>
                       <Tooltip 
                         className="w-96"
-                        content="Vapor rate leaving the condenser (not condensed) at relieving conditions. The relief load is the difference between incoming and outgoing vapor."
+                        content={
+                          <div>
+                            <p className="mb-2">Vapor rate leaving the condenser (not condensed) at <strong>relieving conditions</strong>.</p>
+                            <p className="text-sm">Per API-521 Section 4.4.3.2.3, the required relieving rate is the difference between incoming and outgoing vapor rates at relieving conditions. Both rates must be determined at relief pressure/temperature.</p>
+                          </div>
+                        }
                       />
                     </div>
                     <input
@@ -444,11 +456,16 @@ export default function CoolingRefluxFailurePage() {
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <label className="block text-sm font-medium text-gray-700">
-                        Latent Heat (BTU/lb)
+                        Latent Heat at Relief (BTU/lb)
                       </label>
                       <Tooltip 
                         className="w-96"
-                        content="Latent heat of vaporization at relieving conditions (temperature and pressure at PRD set point). Used to convert heat duty to vapor flow rate."
+                        content={
+                          <div>
+                            <p className="mb-2">Latent heat of vaporization at <strong>relieving conditions</strong> (temperature and pressure at PRD set point).</p>
+                            <p className="text-sm">Per API-521 Section 4.4.3.2.7, the latent heat corresponds to conditions at the point of relief. Used to convert heat duty to vapor flow rate: Flow (lb/hr) = Heat Duty (BTU/hr) / Latent Heat (BTU/lb).</p>
+                          </div>
+                        }
                       />
                     </div>
                     <input
