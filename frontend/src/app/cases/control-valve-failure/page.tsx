@@ -149,8 +149,8 @@ export default function ControlValveFailureCase() {
   // Reset all case-specific fields to defaults
   const handleResetFields = () => {
     // Clear localStorage completely
-    localStorage.removeItem(STORAGE_KEYS.CONTROL_VALVE_FAILURE_FLOW)
-    localStorage.removeItem(STORAGE_KEYS.CONTROL_VALVE_FAILURE_PRESSURE)
+    localStorage.removeItem(STORAGE_KEYS.CONTROL_VALVE_FLOW)
+    localStorage.removeItem(STORAGE_KEYS.CONTROL_VALVE_PRESSURE)
     
     // Reset state to defaults
     setFlowData({
