@@ -17,16 +17,16 @@ export default function CollapsibleVesselProperties({ defaultExpanded = false, s
   // Use different localStorage keys for main page vs case pages
   const collapseKey = showEditButton ? CASE_PAGE_COLLAPSE_KEY : MAIN_PAGE_COLLAPSE_KEY
 
-  // Initialize with defaultExpanded to match server render, then update from localStorage after hydration
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded)
-
-  // Update state from localStorage after hydration to avoid mismatch
-  useEffect(() => {
+  // Initialize state from localStorage immediately to prevent flash
+  const [isExpanded, setIsExpanded] = useState(() => {
+    if (typeof window === 'undefined') return defaultExpanded // SSR
     const savedState = localStorage.getItem(collapseKey)
     if (savedState !== null) {
-      setIsExpanded(savedState !== 'true') // 'true' means collapsed, so expanded = false
+      return savedState !== 'true' // 'true' means collapsed, so expanded = false
     }
-  }, [collapseKey])
+    return defaultExpanded
+  })
+
   const [showModal, setShowModal] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const { vesselData, updateVesselData } = useVessel()

@@ -8,6 +8,7 @@ import PageTransition from '../../components/PageTransition'
 import Tooltip from '../../components/Tooltip'
 import DesignBasisFlowBanner from '../../components/DesignBasisFlowBanner'
 import CasePageHeader from '../../components/CasePageHeader'
+import ResetCaseFields from '../../components/ResetCaseFields'
 import { useVessel } from '../../context/VesselContext'
 import { useCase } from '../../context/CaseContext'
 import { calculateHeatInput, calculateEnvironmentalFactor, getInsulationMaterials, getFluidNames, getFluidProperties } from '../../../../lib/database'
@@ -163,6 +164,32 @@ export default function ExternalFireCase() {
     setPressureData(prev => ({ ...prev, [field]: value }))
   }
 
+  // Reset all case-specific fields to defaults
+  const handleResetFields = () => {
+    // Clear localStorage completely
+    localStorage.removeItem(STORAGE_KEYS.EXTERNAL_FIRE_FLOW)
+    localStorage.removeItem(STORAGE_KEYS.EXTERNAL_FIRE_PRESSURE)
+    
+    // Reset state to defaults
+    setFlowData({
+      workingFluid: '',
+      applicableFireCode: 'NFPA 30',
+      heatOfVaporization: 0,
+      hasAdequateDrainageFirefighting: undefined,
+      nfpaReductionFactor: 1.0,
+      storageType: 'above-grade',
+      hasInsulation: false,
+      insulationMaterial: undefined,
+      insulationThickness: undefined,
+      processTemperature: undefined
+    })
+    setPressureData({
+      maxAllowedVentingPressure: 0,
+      maxAllowableBackpressure: 0,
+      maxAllowedVentingPressurePercent: 0
+    })
+  }
+
   // Auto-update case results when calculations change (using standardized hook)
   useCaseCalculation({
     caseId: 'external-fire',
@@ -213,41 +240,12 @@ export default function ExternalFireCase() {
               </>
             }
             rightControls={
-              /* Applicable Code Dropdown - Case-Specific Control */
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                  Applicable Code
-                </label>
-                <Tooltip 
-                  className="w-72"
-                  content={
-                    <div className="text-sm">
-                      Select the applicable code for heat input calculation. NFPA 30 is typically used for flammable liquids (more conservative), while API 521 offers advanced fire protection credits. See the <strong>About this scenario</strong> section above for detailed guidance on code selection.
-                    </div>
-                  }
-                />
-                <select
-                  value={flowData.applicableFireCode}
-                  onChange={(e) => {
-                    const newCode = e.target.value
-                    handleFlowDataChange('applicableFireCode', newCode)
-                    
-                    // Smart defaulting for API 521
-                    if (newCode === 'API 521' && flowData.hasAdequateDrainageFirefighting === undefined) {
-                      handleFlowDataChange('hasAdequateDrainageFirefighting', false) // Default to "No"
-                    }
-                  }}
-                  disabled={!isSelected}
-                  className={`h-10 px-3 py-2 border rounded-md text-gray-900 bg-white ${
-                    !isSelected 
-                      ? 'border-gray-200 bg-gray-50 text-gray-500' 
-                      : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-                  }`}
-                >
-                  <option value="NFPA 30">NFPA 30</option>
-                  <option value="API 521">API 521</option>
-                </select>
-              </div>
+              /* Reset button on the right side below Include toggle */
+              <ResetCaseFields 
+                onReset={handleResetFields}
+                caseName="External Fire"
+                disabled={!isSelected}
+              />
             }
           />
 
@@ -270,9 +268,42 @@ export default function ExternalFireCase() {
           {/* Flow Calculations */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Flow Calculations</h2>
-            <p className="text-sm text-gray-600 mb-4">
-              Configure calculation parameters - flow values are calculated automatically
-            </p>
+            
+            {/* Applicable Code Dropdown */}
+            <div className="flex items-center gap-2 mb-6">
+              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                Applicable Code
+              </label>
+              <Tooltip 
+                className="w-72"
+                content={
+                  <div className="text-sm">
+                    Select the applicable code for heat input calculation. NFPA 30 is typically used for flammable liquids (more conservative), while API 521 offers advanced fire protection credits. See the <strong>About this scenario</strong> section above for detailed guidance on code selection.
+                  </div>
+                }
+              />
+              <select
+                value={flowData.applicableFireCode}
+                onChange={(e) => {
+                  const newCode = e.target.value
+                  handleFlowDataChange('applicableFireCode', newCode)
+                  
+                  // Smart defaulting for API 521
+                  if (newCode === 'API 521' && flowData.hasAdequateDrainageFirefighting === undefined) {
+                    handleFlowDataChange('hasAdequateDrainageFirefighting', false) // Default to "No"
+                  }
+                }}
+                disabled={!isSelected}
+                className={`h-10 px-3 py-2 border rounded-md text-gray-900 bg-white ${
+                  !isSelected 
+                    ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                }`}
+              >
+                <option value="NFPA 30">NFPA 30</option>
+                <option value="API 521">API 521</option>
+              </select>
+            </div>
             
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div>

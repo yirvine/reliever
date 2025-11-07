@@ -8,6 +8,7 @@ import PageTransition from '../../components/PageTransition'
 import Tooltip from '../../components/Tooltip'
 import DesignBasisFlowBanner from '../../components/DesignBasisFlowBanner'
 import CasePageHeader from '../../components/CasePageHeader'
+import ResetCaseFields from '../../components/ResetCaseFields'
 import { useVessel } from '../../context/VesselContext'
 import { useCase } from '../../context/CaseContext'
 import { useScrollPosition } from '../../hooks/useScrollPosition'
@@ -145,6 +146,42 @@ export default function ControlValveFailureCase() {
     setPressureData(prev => ({ ...prev, [field]: value }))
   }
 
+  // Reset all case-specific fields to defaults
+  const handleResetFields = () => {
+    // Clear localStorage completely
+    localStorage.removeItem(STORAGE_KEYS.CONTROL_VALVE_FAILURE_FLOW)
+    localStorage.removeItem(STORAGE_KEYS.CONTROL_VALVE_FAILURE_PRESSURE)
+    
+    // Reset state to defaults
+    setFlowData({
+      isManualFlowInput: false,
+      manualFlowRate: 0,
+      manualFlowRateRaw: 0,
+      manualFlowUnit: 'lb/hr',
+      totalCv: 0,
+      bypassCv: 0,
+      considerBypass: false,
+      inletPressure: 0,
+      outletPressure: 0,
+      temperatureF: 80,
+      compressibilityZ: 1.0,
+      xt: 0.7,
+      gasProperties: DEFAULT_GAS_PROPERTIES,
+      outletFlowCredit: 0,
+      creditOutletFlow: false,
+      selectedGas: '',
+      customGasProps: COMMON_GASES.custom
+    })
+    setPressureData({
+      maxAllowedVentingPressure: 0,
+      maxAllowableBackpressure: 0,
+      maxAllowedVentingPressurePercent: 0,
+      asmeSetPressure: 0,
+      manufacturingRangeOverpressure: 0,
+      burstToleranceOverpressure: 0
+    })
+  }
+
   // Memoized calculations for performance
   const previewValues = useMemo(() => {
     const calculationResult = calculateNitrogenFlow(flowData)
@@ -214,6 +251,13 @@ export default function ControlValveFailureCase() {
             title="Control Valve Failure (Gas Service)"
             isSelected={isSelected}
             onToggle={() => toggleCase('control-valve-failure')}
+            rightControls={
+              <ResetCaseFields 
+                onReset={handleResetFields}
+                caseName="Control Valve Failure"
+                disabled={!isSelected}
+              />
+            }
             aboutContent={
               <>
                 <div className="space-y-2">

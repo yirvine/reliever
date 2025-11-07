@@ -8,6 +8,7 @@ import PageTransition from '../../components/PageTransition'
 import Tooltip from '../../components/Tooltip'
 import DesignBasisFlowBanner from '../../components/DesignBasisFlowBanner'
 import CasePageHeader from '../../components/CasePageHeader'
+import ResetCaseFields from '../../components/ResetCaseFields'
 import { useVessel } from '../../context/VesselContext'
 import { useCase } from '../../context/CaseContext'
 import { useScrollPosition } from '../../hooks/useScrollPosition'
@@ -51,6 +52,26 @@ export default function LiquidOverfillCase() {
 
   const updateCasePressureData = (field: keyof CasePressureData, value: number) => {
     setCasePressureData(prev => ({ ...prev, [field]: value }))
+  }
+
+  // Reset all case-specific fields to defaults
+  const handleResetFields = () => {
+    // Clear localStorage completely
+    localStorage.removeItem(STORAGE_KEYS.LIQUID_OVERFILL_FLOW)
+    localStorage.removeItem(STORAGE_KEYS.LIQUID_OVERFILL_PRESSURE)
+    
+    // Reset state to defaults
+    setFlowData({
+      workingFluid: '',
+      manualFlowRate: 0,
+      outletFlowCredit: 0,
+      creditOutletFlow: false
+    })
+    setCasePressureData({
+      maxAllowedVentingPressure: 0,
+      maxAllowableBackpressure: 0,
+      maxAllowedVentingPressurePercent: 110
+    })
   }
 
   // Calculate preview values (like other cases)
@@ -133,6 +154,13 @@ export default function LiquidOverfillCase() {
                   <strong>Note:</strong> The ASME VIII design flow includes a 1/0.9 multiplier per ASME Section VIII requirements for liquid relief sizing, accounting for the 110% accumulation allowance.
                 </p>
               </>
+            }
+            rightControls={
+              <ResetCaseFields 
+                onReset={handleResetFields}
+                caseName="Liquid Overfill"
+                disabled={!isSelected}
+              />
             }
           />
 

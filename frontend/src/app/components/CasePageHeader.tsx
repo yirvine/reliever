@@ -11,13 +11,14 @@ interface CasePageHeaderProps {
   isSelected: boolean
   onToggle: () => void
   aboutContent: React.ReactNode
-  rightControls?: React.ReactNode // For case-specific controls like "Applicable Code" dropdown
+  leftControls?: React.ReactNode // For controls that appear below "About" section (e.g., Applicable Code dropdown)
+  rightControls?: React.ReactNode // For case-specific controls next to the Include toggle (e.g., Reset button)
 }
 
 /**
  * Reusable header section for case pages
  * Includes breadcrumb, title, about section, and include toggle
- * Optionally accepts additional right-side controls
+ * Optionally accepts additional controls on both left and right sides
  */
 export default function CasePageHeader({ 
   caseName, 
@@ -25,6 +26,7 @@ export default function CasePageHeader({
   isSelected, 
   onToggle, 
   aboutContent,
+  leftControls,
   rightControls 
 }: CasePageHeaderProps) {
   return (
@@ -38,6 +40,13 @@ export default function CasePageHeader({
           <ScenarioAbout>
             {aboutContent}
           </ScenarioAbout>
+          
+          {/* Optional left-side controls (below About section) */}
+          {leftControls && (
+            <div className="mt-3">
+              {leftControls}
+            </div>
+          )}
         </div>
 
         {/* Right side controls */}

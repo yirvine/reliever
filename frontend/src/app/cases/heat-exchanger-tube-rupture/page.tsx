@@ -8,6 +8,7 @@ import PageTransition from '../../components/PageTransition'
 import Tooltip from '../../components/Tooltip'
 import DesignBasisFlowBanner from '../../components/DesignBasisFlowBanner'
 import CasePageHeader from '../../components/CasePageHeader'
+import ResetCaseFields from '../../components/ResetCaseFields'
 import { useVessel } from '../../context/VesselContext'
 import { useCase } from '../../context/CaseContext'
 import { useScrollPosition } from '../../hooks/useScrollPosition'
@@ -74,6 +75,33 @@ export default function HeatExchangerTubeRupturePage() {
 
   const updatePressureData = (field: keyof CasePressureData, value: number) => {
     setPressureData(prev => ({ ...prev, [field]: value }))
+  }
+
+  // Reset all case-specific fields to defaults
+  const handleResetFields = () => {
+    // Clear localStorage completely
+    localStorage.removeItem(STORAGE_KEYS.HEAT_EXCHANGER_TUBE_RUPTURE_FLOW)
+    localStorage.removeItem(STORAGE_KEYS.HEAT_EXCHANGER_TUBE_RUPTURE_PRESSURE)
+    
+    // Reset state to defaults
+    setFlowData({
+      workingFluid: '',
+      exchangerType: 'shell-and-tube',
+      fluidState: 'liquid',
+      highPressureSide: 0,
+      temperatureF: 80,
+      tubeInnerDiameter: 0.75,
+      numberOfTubes: 1,
+      fluidDensity: 62.4,
+      molecularWeight: 28,
+      specificHeatRatio: 1.4,
+      reliefRequired: true
+    })
+    setPressureData({
+      maxAllowedVentingPressure: 0,
+      maxAllowableBackpressure: 0,
+      maxAllowedVentingPressurePercent: 110
+    })
   }
 
   // Calculate preview values
@@ -267,6 +295,13 @@ export default function HeatExchangerTubeRupturePage() {
                   <strong>Note:</strong> This tool provides steady-state calculations. For high pressure differentials or liquid-filled systems, dynamic analysis is recommended per API-521 Section 4.4.14.2.2.
                 </p>
               </>
+            }
+            rightControls={
+              <ResetCaseFields 
+                onReset={handleResetFields}
+                caseName="Heat Exchanger Tube Rupture"
+                disabled={!isSelected}
+              />
             }
           />
 

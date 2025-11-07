@@ -1,11 +1,11 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import Link from 'next/link'
 import Header from '../components/Header'
 import PageTransition from '../components/PageTransition'
 import CollapsibleVesselProperties from '../components/CollapsibleVesselProperties'
 import ASMEWarningModal from '../components/ASMEWarningModal'
+import CaseCard from '../components/CaseCard'
 import { useCase } from '../context/CaseContext'
 import { useVessel } from '../context/VesselContext'
 import { useScrollPosition } from '../hooks/useScrollPosition'
@@ -90,8 +90,43 @@ export default function Calculator() {
     generateReport()
   }
   
+  // Check if a case has been started (has meaningful data, not just defaults)
+  const caseHasStarted = (caseId: string): boolean => {
+    if (typeof window === 'undefined') return false
+    
+    const flowData = localStorage.getItem(`${caseId}-flow-data`)
+    if (!flowData) return false
+    
+    try {
+      const parsed = JSON.parse(flowData)
+      
+      // Check if there's meaningful data based on case type
+      if (caseId === 'external-fire') {
+        return !!parsed.workingFluid && parsed.workingFluid !== ''
+      } else if (caseId === 'control-valve-failure') {
+        return parsed.totalCv > 0 || parsed.inletPressure > 0
+      } else if (caseId === 'liquid-overfill') {
+        return parsed.manualFlowRate > 0
+      } else if (caseId === 'blocked-outlet') {
+        return parsed.maxSourceFlowRate > 0 || parsed.maxSourcePressure > 0
+      } else if (caseId === 'cooling-reflux-failure') {
+        return parsed.incomingVaporRate > 0
+      } else if (caseId === 'hydraulic-expansion') {
+        return parsed.heatInputRate > 0 || parsed.trappedVolume > 0
+      } else if (caseId === 'heat-exchanger-tube-rupture') {
+        return parsed.highPressureSide > 0 || parsed.numberOfTubes > 1
+      }
+    } catch {
+      return false
+    }
+    
+    return false
+  }
+
   // Get fluid/gas name for each case
   const getFluidName = (caseId: string): string => {
+    if (typeof window === 'undefined') return ''
+    
     if (caseId === 'external-fire') {
       const flowData = localStorage.getItem('external-fire-flow-data')
       if (flowData) {
@@ -243,358 +278,97 @@ export default function Calculator() {
             Select scenarios to include in your relief load summary. Only completed calculations will appear in the generated report.
           </p>
           
-          <div className="space-y-3">
+          <div className="space-y-2">
             {/* External Fire Case */}
-            <div className={`
-              p-4 border rounded-lg transition-all duration-200
-              ${selectedCases['external-fire'] 
-                ? 'border-gray-300 bg-white hover:border-blue-400 hover:shadow-md' 
-                : 'border-gray-200 bg-gray-50 opacity-60'
-              }
-            `}>
-              <div className="flex items-center gap-4">
-                {/* Checkbox */}
-                <input
-                  type="checkbox"
-                  checked={selectedCases['external-fire']}
-                  onChange={() => toggleCase('external-fire')}
-                  className="w-5 h-5 accent-slate-600 rounded cursor-pointer"
-                />
-                
-                {/* Card Content */}
-                <Link href="/cases/external-fire" className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <h4 className={`text-base font-semibold ${selectedCases['external-fire'] ? 'text-gray-900' : 'text-gray-500'}`}>
-                          External Fire
-                        </h4>
-                        {selectedCases['external-fire'] && (
-                          <>
-                            {caseResults['external-fire'].isCalculated && caseResults['external-fire'].asmeVIIIDesignFlow ? (
-                              <span className="text-sm font-medium text-blue-600">
-                                {caseResults['external-fire'].asmeVIIIDesignFlow.toLocaleString()} lb/hr
-                                {getFluidName('external-fire') && ` ${getFluidName('external-fire')}`}
-                              </span>
-                            ) : (
-                              <span className="text-sm text-amber-600 font-medium">Incomplete</span>
-                            )}
-                          </>
-                        )}
-                      </div>
-                      <p className={`text-sm mt-1 ${selectedCases['external-fire'] ? 'text-gray-600' : 'text-gray-400'}`}>
-                        Relief from external fire exposure.
-                      </p>
-                    </div>
-                    {selectedCases['external-fire'] && (
-                      <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    )}
-                  </div>
-                </Link>
-              </div>
-            </div>
+            <CaseCard
+              caseId="external-fire"
+              title="External Fire"
+              description="Relief from external fire exposure."
+              href="/cases/external-fire"
+              isSelected={selectedCases['external-fire']}
+              caseResult={caseResults['external-fire']}
+              fluidName={getFluidName('external-fire')}
+              hasStarted={caseHasStarted('external-fire')}
+              onToggle={() => toggleCase('external-fire')}
+            />
 
             {/* Control Valve Failure Case */}
-            <div className={`
-              p-4 border rounded-lg transition-all duration-200
-              ${selectedCases['control-valve-failure'] 
-                ? 'border-gray-300 bg-white hover:border-blue-400 hover:shadow-md' 
-                : 'border-gray-200 bg-gray-50 opacity-60'
-              }
-            `}>
-              <div className="flex items-center gap-4">
-                <input
-                  type="checkbox"
-                  checked={selectedCases['control-valve-failure']}
-                  onChange={() => toggleCase('control-valve-failure')}
-                  className="w-5 h-5 accent-slate-600 rounded cursor-pointer"
-                />
-                
-                <Link href="/cases/control-valve-failure" className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <h4 className={`text-base font-semibold ${selectedCases['control-valve-failure'] ? 'text-gray-900' : 'text-gray-500'}`}>
-                          Control Valve Failure
-                        </h4>
-                        {selectedCases['control-valve-failure'] && (
-                          <>
-                            {caseResults['control-valve-failure'].isCalculated && caseResults['control-valve-failure'].asmeVIIIDesignFlow ? (
-                              <span className="text-sm font-medium text-blue-600">
-                                {caseResults['control-valve-failure'].asmeVIIIDesignFlow.toLocaleString()} lb/hr
-                                {getFluidName('control-valve-failure') && ` ${getFluidName('control-valve-failure')}`}
-                              </span>
-                            ) : (
-                              <span className="text-sm text-amber-600 font-medium">Incomplete</span>
-                            )}
-                          </>
-                        )}
-                      </div>
-                      <p className={`text-sm mt-1 ${selectedCases['control-valve-failure'] ? 'text-gray-600' : 'text-gray-400'}`}>
-                        Gas control valve stuck-open scenario.
-                      </p>
-                    </div>
-                    {selectedCases['control-valve-failure'] && (
-                      <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    )}
-                  </div>
-                </Link>
-              </div>
-            </div>
+            <CaseCard
+              caseId="control-valve-failure"
+              title="Control Valve Failure"
+              description="Gas control valve stuck-open scenario."
+              href="/cases/control-valve-failure"
+              isSelected={selectedCases['control-valve-failure']}
+              caseResult={caseResults['control-valve-failure']}
+              fluidName={getFluidName('control-valve-failure')}
+              hasStarted={caseHasStarted('control-valve-failure')}
+              onToggle={() => toggleCase('control-valve-failure')}
+            />
 
             {/* Liquid Overfill Case */}
-            <div className={`
-              p-4 border rounded-lg transition-all duration-200
-              ${selectedCases['liquid-overfill'] 
-                ? 'border-gray-300 bg-white hover:border-blue-400 hover:shadow-md' 
-                : 'border-gray-200 bg-gray-50 opacity-60'
-              }
-            `}>
-              <div className="flex items-center gap-4">
-                <input
-                  type="checkbox"
-                  checked={selectedCases['liquid-overfill']}
-                  onChange={() => toggleCase('liquid-overfill')}
-                  className="w-5 h-5 accent-slate-600 rounded cursor-pointer"
-                />
-                
-                <Link href="/cases/liquid-overfill" className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <h4 className={`text-base font-semibold ${selectedCases['liquid-overfill'] ? 'text-gray-900' : 'text-gray-500'}`}>
-                          Liquid Overfill
-                        </h4>
-                        {selectedCases['liquid-overfill'] && (
-                          <>
-                            {caseResults['liquid-overfill'].isCalculated && caseResults['liquid-overfill'].asmeVIIIDesignFlow ? (
-                              <span className="text-sm font-medium text-blue-600">
-                                {caseResults['liquid-overfill'].asmeVIIIDesignFlow.toLocaleString()} lb/hr
-                                {getFluidName('liquid-overfill') && ` ${getFluidName('liquid-overfill')}`}
-                              </span>
-                            ) : (
-                              <span className="text-sm text-amber-600 font-medium">Incomplete</span>
-                            )}
-                          </>
-                        )}
-                      </div>
-                      <p className={`text-sm mt-1 ${selectedCases['liquid-overfill'] ? 'text-gray-600' : 'text-gray-400'}`}>
-                        Vessel filling faster than liquid removal.
-                      </p>
-                    </div>
-                    {selectedCases['liquid-overfill'] && (
-                      <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    )}
-                  </div>
-                </Link>
-              </div>
-            </div>
+            <CaseCard
+              caseId="liquid-overfill"
+              title="Liquid Overfill"
+              description="Vessel filling faster than liquid removal."
+              href="/cases/liquid-overfill"
+              isSelected={selectedCases['liquid-overfill']}
+              caseResult={caseResults['liquid-overfill']}
+              fluidName={getFluidName('liquid-overfill')}
+              hasStarted={caseHasStarted('liquid-overfill')}
+              onToggle={() => toggleCase('liquid-overfill')}
+            />
 
             {/* Blocked Outlet Case */}
-            <div className={`
-              p-4 border rounded-lg transition-all duration-200
-              ${selectedCases['blocked-outlet'] 
-                ? 'border-gray-300 bg-white hover:border-blue-400 hover:shadow-md' 
-                : 'border-gray-200 bg-gray-50 opacity-60'
-              }
-            `}>
-              <div className="flex items-center gap-4">
-                <input
-                  type="checkbox"
-                  checked={selectedCases['blocked-outlet']}
-                  onChange={() => toggleCase('blocked-outlet')}
-                  className="w-5 h-5 accent-slate-600 rounded cursor-pointer"
-                />
-                
-                <Link href="/cases/blocked-outlet" className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <h4 className={`text-base font-semibold ${selectedCases['blocked-outlet'] ? 'text-gray-900' : 'text-gray-500'}`}>
-                          Blocked Outlet (Closed Outlet)
-                        </h4>
-                        {selectedCases['blocked-outlet'] && (
-                          <>
-                            {caseResults['blocked-outlet'].isCalculated && caseResults['blocked-outlet'].asmeVIIIDesignFlow ? (
-                              <span className="text-sm font-medium text-blue-600">
-                                {caseResults['blocked-outlet'].asmeVIIIDesignFlow.toLocaleString()} lb/hr
-                                {getFluidName('blocked-outlet') && ` ${getFluidName('blocked-outlet')}`}
-                              </span>
-                            ) : (
-                              <span className="text-sm text-amber-600 font-medium">Incomplete</span>
-                            )}
-                          </>
-                        )}
-                      </div>
-                      <p className={`text-sm mt-1 ${selectedCases['blocked-outlet'] ? 'text-gray-600' : 'text-gray-400'}`}>
-                        Inadvertent closure of outlet valve during operation.
-                      </p>
-                    </div>
-                    {selectedCases['blocked-outlet'] && (
-                      <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    )}
-                  </div>
-                </Link>
-              </div>
-            </div>
+            <CaseCard
+              caseId="blocked-outlet"
+              title="Blocked Outlet (Closed Outlet)"
+              description="Inadvertent closure of outlet valve during operation."
+              href="/cases/blocked-outlet"
+              isSelected={selectedCases['blocked-outlet']}
+              caseResult={caseResults['blocked-outlet']}
+              fluidName={getFluidName('blocked-outlet')}
+              hasStarted={caseHasStarted('blocked-outlet')}
+              onToggle={() => toggleCase('blocked-outlet')}
+            />
 
             {/* Cooling/Reflux Failure Case */}
-            <div className={`
-              p-4 border rounded-lg transition-all duration-200
-              ${selectedCases['cooling-reflux-failure'] 
-                ? 'border-gray-300 bg-white hover:border-blue-400 hover:shadow-md' 
-                : 'border-gray-200 bg-gray-50 opacity-60'
-              }
-            `}>
-              <div className="flex items-center gap-4">
-                <input
-                  type="checkbox"
-                  checked={selectedCases['cooling-reflux-failure']}
-                  onChange={() => toggleCase('cooling-reflux-failure')}
-                  className="w-5 h-5 accent-slate-600 rounded cursor-pointer"
-                />
-                
-                <Link href="/cases/cooling-reflux-failure" className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <h4 className={`text-base font-semibold ${selectedCases['cooling-reflux-failure'] ? 'text-gray-900' : 'text-gray-500'}`}>
-                          Cooling/Reflux Failure (Loss of Condenser)
-                        </h4>
-                        {selectedCases['cooling-reflux-failure'] && (
-                          <>
-                            {caseResults['cooling-reflux-failure'].isCalculated && caseResults['cooling-reflux-failure'].asmeVIIIDesignFlow ? (
-                              <span className="text-sm font-medium text-blue-600">
-                                {caseResults['cooling-reflux-failure'].asmeVIIIDesignFlow.toLocaleString()} lb/hr
-                                {getFluidName('cooling-reflux-failure') && ` ${getFluidName('cooling-reflux-failure')}`}
-                              </span>
-                            ) : (
-                              <span className="text-sm text-amber-600 font-medium">Incomplete</span>
-                            )}
-                          </>
-                        )}
-                      </div>
-                      <p className={`text-sm mt-1 ${selectedCases['cooling-reflux-failure'] ? 'text-gray-600' : 'text-gray-400'}`}>
-                        Failure of cooling or condensation systems.
-                      </p>
-                    </div>
-                    {selectedCases['cooling-reflux-failure'] && (
-                      <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    )}
-                  </div>
-                </Link>
-              </div>
-            </div>
+            <CaseCard
+              caseId="cooling-reflux-failure"
+              title="Cooling/Reflux Failure (Loss of Condenser)"
+              description="Failure of cooling or condensation systems."
+              href="/cases/cooling-reflux-failure"
+              isSelected={selectedCases['cooling-reflux-failure']}
+              caseResult={caseResults['cooling-reflux-failure']}
+              fluidName={getFluidName('cooling-reflux-failure')}
+              hasStarted={caseHasStarted('cooling-reflux-failure')}
+              onToggle={() => toggleCase('cooling-reflux-failure')}
+            />
 
             {/* Hydraulic Expansion Case */}
-            <div className={`
-              p-4 border rounded-lg transition-all duration-200
-              ${selectedCases['hydraulic-expansion'] 
-                ? 'border-gray-300 bg-white hover:border-blue-400 hover:shadow-md' 
-                : 'border-gray-200 bg-gray-50 opacity-60'
-              }
-            `}>
-              <div className="flex items-center gap-4">
-                <input
-                  type="checkbox"
-                  checked={selectedCases['hydraulic-expansion']}
-                  onChange={() => toggleCase('hydraulic-expansion')}
-                  className="w-5 h-5 accent-slate-600 rounded cursor-pointer"
-                />
-                
-                <Link href="/cases/hydraulic-expansion" className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <h4 className={`text-base font-semibold ${selectedCases['hydraulic-expansion'] ? 'text-gray-900' : 'text-gray-500'}`}>
-                          Hydraulic Expansion (Thermal Expansion)
-                        </h4>
-                        {selectedCases['hydraulic-expansion'] && (
-                          <>
-                            {caseResults['hydraulic-expansion'].isCalculated && caseResults['hydraulic-expansion'].asmeVIIIDesignFlow ? (
-                              <span className="text-sm font-medium text-blue-600">
-                                {caseResults['hydraulic-expansion'].asmeVIIIDesignFlow.toLocaleString()} lb/hr
-                                {getFluidName('hydraulic-expansion') && ` ${getFluidName('hydraulic-expansion')}`}
-                              </span>
-                            ) : (
-                              <span className="text-sm text-amber-600 font-medium">Incomplete</span>
-                            )}
-                          </>
-                        )}
-                      </div>
-                      <p className={`text-sm mt-1 ${selectedCases['hydraulic-expansion'] ? 'text-gray-600' : 'text-gray-400'}`}>
-                        Blocked-in liquid heated by heat tracing, exchangers, or solar radiation.
-                      </p>
-                    </div>
-                    {selectedCases['hydraulic-expansion'] && (
-                      <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    )}
-                  </div>
-                </Link>
-              </div>
-            </div>
+            <CaseCard
+              caseId="hydraulic-expansion"
+              title="Hydraulic Expansion (Thermal Expansion)"
+              description="Blocked-in liquid heated by heat tracing, exchangers, or solar radiation."
+              href="/cases/hydraulic-expansion"
+              isSelected={selectedCases['hydraulic-expansion']}
+              caseResult={caseResults['hydraulic-expansion']}
+              fluidName={getFluidName('hydraulic-expansion')}
+              hasStarted={caseHasStarted('hydraulic-expansion')}
+              onToggle={() => toggleCase('hydraulic-expansion')}
+            />
 
             {/* Heat Exchanger Tube Rupture Case */}
-            <div className={`
-              p-4 border rounded-lg transition-all duration-200
-              ${selectedCases['heat-exchanger-tube-rupture'] 
-                ? 'border-gray-300 bg-white hover:border-blue-400 hover:shadow-md' 
-                : 'border-gray-200 bg-gray-50 opacity-60'
-              }
-            `}>
-              <div className="flex items-center gap-4">
-                <input
-                  type="checkbox"
-                  checked={selectedCases['heat-exchanger-tube-rupture']}
-                  onChange={() => toggleCase('heat-exchanger-tube-rupture')}
-                  className="w-5 h-5 accent-slate-600 rounded cursor-pointer"
-                />
-                
-                <Link href="/cases/heat-exchanger-tube-rupture" className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <h4 className={`text-base font-semibold ${selectedCases['heat-exchanger-tube-rupture'] ? 'text-gray-900' : 'text-gray-500'}`}>
-                          Heat Exchanger Tube Rupture
-                        </h4>
-                        {selectedCases['heat-exchanger-tube-rupture'] && (
-                          <>
-                            {caseResults['heat-exchanger-tube-rupture'].isCalculated && caseResults['heat-exchanger-tube-rupture'].asmeVIIIDesignFlow ? (
-                              <span className="text-sm font-medium text-blue-600">
-                                {caseResults['heat-exchanger-tube-rupture'].asmeVIIIDesignFlow.toLocaleString()} lb/hr
-                                {getFluidName('heat-exchanger-tube-rupture') && ` (${getFluidName('heat-exchanger-tube-rupture')})`}
-                              </span>
-                            ) : (
-                              <span className="text-sm text-amber-600 font-medium">Incomplete</span>
-                            )}
-                          </>
-                        )}
-                      </div>
-                      <p className={`text-sm mt-1 ${selectedCases['heat-exchanger-tube-rupture'] ? 'text-gray-600' : 'text-gray-400'}`}>
-                        Internal tube failure allowing high-pressure fluid into low-pressure side.
-                      </p>
-                    </div>
-                    {selectedCases['heat-exchanger-tube-rupture'] && (
-                      <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    )}
-                  </div>
-                </Link>
-              </div>
-            </div>
+            <CaseCard
+              caseId="heat-exchanger-tube-rupture"
+              title="Heat Exchanger Tube Rupture"
+              description="Internal tube failure allowing high-pressure fluid into low-pressure side."
+              href="/cases/heat-exchanger-tube-rupture"
+              isSelected={selectedCases['heat-exchanger-tube-rupture']}
+              caseResult={caseResults['heat-exchanger-tube-rupture']}
+              fluidName={getFluidName('heat-exchanger-tube-rupture') ? `(${getFluidName('heat-exchanger-tube-rupture')})` : undefined}
+              hasStarted={caseHasStarted('heat-exchanger-tube-rupture')}
+              onToggle={() => toggleCase('heat-exchanger-tube-rupture')}
+            />
 
           </div>
         </div>

@@ -8,6 +8,7 @@ import PageTransition from '../../components/PageTransition'
 import Tooltip from '../../components/Tooltip'
 import DesignBasisFlowBanner from '../../components/DesignBasisFlowBanner'
 import CasePageHeader from '../../components/CasePageHeader'
+import ResetCaseFields from '../../components/ResetCaseFields'
 import { useVessel } from '../../context/VesselContext'
 import { useCase } from '../../context/CaseContext'
 import { useScrollPosition } from '../../hooks/useScrollPosition'
@@ -77,6 +78,33 @@ export default function CoolingRefluxFailurePage() {
 
   const updatePressureData = (field: keyof CasePressureData, value: number) => {
     setPressureData(prev => ({ ...prev, [field]: value }))
+  }
+
+  // Reset all case-specific fields to defaults
+  const handleResetFields = () => {
+    // Clear localStorage completely
+    localStorage.removeItem(STORAGE_KEYS.COOLING_REFLUX_FAILURE_FLOW)
+    localStorage.removeItem(STORAGE_KEYS.COOLING_REFLUX_FAILURE_PRESSURE)
+    
+    // Reset state to defaults
+    setFlowData({
+      workingFluid: '',
+      failureMode: 'total-condensing',
+      incomingVaporRate: 0,
+      operatingTemperature: 0,
+      operatingPressure: 0,
+      outgoingVaporRate: 0,
+      naturalConvectionCredit: 25,
+      pumpAroundHeatDuty: 0,
+      latentHeatOfVaporization: 0,
+      reliefTemperature: 0,
+      vaporDensityRelief: 0
+    })
+    setPressureData({
+      maxAllowedVentingPressure: 0,
+      maxAllowableBackpressure: 0,
+      maxAllowedVentingPressurePercent: 116
+    })
   }
 
   // Calculate preview values based on failure mode
@@ -212,6 +240,13 @@ export default function CoolingRefluxFailurePage() {
                   <strong>Note:</strong> The ASME VIII design flow includes appropriate safety factors per ASME Section VIII requirements for vapor/gas relief sizing. For systems with multiple cooling stages or complex reflux arrangements, evaluate each failure mode independently.
                 </p>
               </>
+            }
+            rightControls={
+              <ResetCaseFields 
+                onReset={handleResetFields}
+                caseName="Cooling/Reflux Failure"
+                disabled={!isSelected}
+              />
             }
           />
 

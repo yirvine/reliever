@@ -8,6 +8,7 @@ import PageTransition from '../../components/PageTransition'
 import Tooltip from '../../components/Tooltip'
 import DesignBasisFlowBanner from '../../components/DesignBasisFlowBanner'
 import CasePageHeader from '../../components/CasePageHeader'
+import ResetCaseFields from '../../components/ResetCaseFields'
 import { useVessel } from '../../context/VesselContext'
 import { useCase } from '../../context/CaseContext'
 import { useScrollPosition } from '../../hooks/useScrollPosition'
@@ -57,6 +58,29 @@ export default function HydraulicExpansionCase() {
 
   const updatePressureData = (field: keyof CasePressureData, value: number) => {
     setPressureData(prev => ({ ...prev, [field]: value }))
+  }
+
+  // Reset all case-specific fields to defaults
+  const handleResetFields = () => {
+    // Clear localStorage completely
+    localStorage.removeItem(STORAGE_KEYS.HYDRAULIC_EXPANSION_FLOW)
+    localStorage.removeItem(STORAGE_KEYS.HYDRAULIC_EXPANSION_PRESSURE)
+    
+    // Reset state to defaults
+    setFlowData({
+      workingFluid: '',
+      scenarioType: 'cold-fluid-shutin',
+      heatInputRate: 0,
+      cubicExpansionCoefficient: 0.0005,
+      specificHeatCapacity: 0.5,
+      relativeDensity: 0.7,
+      trappedVolume: 0
+    })
+    setPressureData({
+      maxAllowedVentingPressure: 0,
+      maxAllowableBackpressure: 0,
+      maxAllowedVentingPressurePercent: 110
+    })
   }
 
   // Calculate preview values using API-521 Equation (2) - USC units
@@ -200,6 +224,13 @@ export default function HydraulicExpansionCase() {
                   <strong>Note:</strong> The ASME VIII design flow includes a 1/0.9 multiplier per ASME Section VIII requirements for liquid relief sizing, accounting for the 110% accumulation allowance. For heat exchangers, the maximum exchanger duty during operation should be used. If fluid properties vary significantly with temperature, use worst-case values.
                 </p>
               </>
+            }
+            rightControls={
+              <ResetCaseFields 
+                onReset={handleResetFields}
+                caseName="Hydraulic Expansion"
+                disabled={!isSelected}
+              />
             }
           />
 

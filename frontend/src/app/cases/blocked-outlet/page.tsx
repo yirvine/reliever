@@ -8,6 +8,7 @@ import PageTransition from '../../components/PageTransition'
 import Tooltip from '../../components/Tooltip'
 import DesignBasisFlowBanner from '../../components/DesignBasisFlowBanner'
 import CasePageHeader from '../../components/CasePageHeader'
+import ResetCaseFields from '../../components/ResetCaseFields'
 import { useVessel } from '../../context/VesselContext'
 import { useCase } from '../../context/CaseContext'
 import { useScrollPosition } from '../../hooks/useScrollPosition'
@@ -55,6 +56,28 @@ export default function BlockedOutletCase() {
 
   const updatePressureData = (field: keyof CasePressureData, value: number) => {
     setPressureData(prev => ({ ...prev, [field]: value }))
+  }
+
+  // Reset all case-specific fields to defaults
+  const handleResetFields = () => {
+    // Clear localStorage completely
+    localStorage.removeItem(STORAGE_KEYS.BLOCKED_OUTLET_FLOW)
+    localStorage.removeItem(STORAGE_KEYS.BLOCKED_OUTLET_PRESSURE)
+    
+    // Reset state to defaults
+    setFlowData({
+      workingFluid: '',
+      sourceType: 'centrifugal-pump',
+      maxSourcePressure: 0,
+      maxSourceFlowRate: 0,
+      outletFlowCredit: 0,
+      creditOutletFlow: false
+    })
+    setPressureData({
+      maxAllowedVentingPressure: 0,
+      maxAllowableBackpressure: 0,
+      maxAllowedVentingPressurePercent: 110
+    })
   }
 
   // Calculate preview values
@@ -173,6 +196,13 @@ export default function BlockedOutletCase() {
                   <strong>Note:</strong> The ASME VIII design flow includes a 1/0.9 multiplier per ASME Section VIII requirements for liquid relief sizing, accounting for the 110% accumulation allowance.
                 </p>
               </>
+            }
+            rightControls={
+              <ResetCaseFields 
+                onReset={handleResetFields}
+                caseName="Blocked Outlet"
+                disabled={!isSelected}
+              />
             }
           />
 
