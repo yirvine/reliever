@@ -187,56 +187,54 @@ export default function Home() {
           isVisible ? 'opacity-100' : 'opacity-0'
         }`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+            <div className="text-left mb-8 sm:mb-12 lg:mb-16">
               <h2 className="text-3xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 font-inter">
                 How It Works
               </h2>
-              <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto font-inter">
-                ReliefGuard simplifies relief system design in three clear steps.
-              </p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-6 sm:gap-8 lg:gap-12">
               {/* Step 1 */}
-              <div className="text-center">
-                <div className="bg-slate-100 rounded-full w-16 h-16 items-center justify-center mx-auto mb-6 hidden sm:flex">
+              <div className="text-left">
+                <div className="bg-slate-100 rounded-full w-16 h-16 items-center justify-center mb-6 hidden sm:flex">
                   <span className="text-2xl font-bold text-slate-700 font-inter">1</span>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-4 font-inter">
+                <h3 className="text-xl font-semibold text-gray-900 mb-6 font-inter text-left">
                   <span className="sm:hidden">1. </span>Select Relevant Cases
                 </h3>
-                <p className="text-gray-600 font-inter">
-                Based on your system design and operating environment, choose applicable relief scenarios, such as
-                 external fire exposure, control-valve failure, or blocked discharge.
+                <p className="text-base sm:text-lg text-gray-900 font-inter text-left">
+                Based on your system design and operating environment, choose applicable overpressure scenarios, such as
+                 external fire exposure, control-valve failure, or blocked outlet discharge.
                 </p>
               </div>
 
               {/* Step 2 */}
-              <div className="text-center">
-                <div className="bg-slate-100 rounded-full w-16 h-16 items-center justify-center mx-auto mb-6 hidden sm:flex">
+              <div className="text-left">
+                <div className="bg-slate-100 rounded-full w-16 h-16 items-center justify-center mb-6 hidden sm:flex">
                   <span className="text-2xl font-bold text-slate-700 font-inter">2</span>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-4 font-inter">
-                  <span className="sm:hidden">2. </span>Calculate Design Flow
+                <h3 className="text-xl font-semibold text-gray-900 mb-6 font-inter text-left">
+                  <span className="sm:hidden">2. </span>Determine Design Flow
                 </h3>
-                <p className="text-gray-600 font-inter">
-                  Enter vessel properties, operating conditions, and fluid data. ReliefGuard applies
-                  NFPA 30, API 521, and ASME VIII methods to determine the required relieving flow rate.
+                <p className="text-base sm:text-lg text-gray-900 font-inter text-left">
+                  Enter vessel properties, operating conditions, and fluid data. 
+                  NFPA 30, API 521, and ASME VIII standards are applied to calculate
+                  the required relieving flow rate for each applicable overpressure scenario.
                 </p>
               </div>
 
               {/* Step 3 */}
-              <div className="text-center">
-                <div className="bg-slate-100 rounded-full w-16 h-16 items-center justify-center mx-auto mb-6 hidden sm:flex">
+              <div className="text-left">
+                <div className="bg-slate-100 rounded-full w-16 h-16 items-center justify-center mb-6 hidden sm:flex">
                   <span className="text-2xl font-bold text-slate-700 font-inter">3</span>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-4 font-inter">
-                  <span className="sm:hidden">3. </span>Document & Size
+                <h3 className="text-xl font-semibold text-gray-900 mb-6 font-inter text-left">
+                  <span className="sm:hidden">3. </span>Size & Document
                 </h3>
-                <p className="text-gray-600 font-inter">
-                  Use the calculated flow to size a relief valve or rupture disc in your preferred
-                  hydraulic tool (e.g., FluidFlow or Aspen HYSYS), then record the selected device in
-                  ReliefGuard to generate a standards-compliant report.
+                <p className="text-base sm:text-lg text-gray-900 font-inter text-left">
+                Use the design-basis flow identified by ReliefGuard (the most severe relieving case)
+                to size your relief device in your preferred hydraulic tool (e.g., FluidFlow or Aspen HYSYS).
+                Then record the selected valve or rupture disc to generate a standards-compliant report.
                 </p>
               </div>
             </div>
@@ -246,22 +244,22 @@ export default function Home() {
               <div className="flex flex-row gap-4 justify-center items-center">
                 <Link
                   href="/cases"
-                  className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 inline-flex items-center space-x-2"
+                  className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 inline-flex items-center space-x-2 text-lg"
                 >
-                  <span>Get Started</span>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
+                  <span>Get Started</span>
                 </Link>
 
                 <button
                   onClick={scrollToAbout}
-                  className="bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 px-6 py-3 rounded-xl font-semibold shadow-sm hover:shadow-md transition-all duration-300 inline-flex items-center space-x-2"
+                  className="bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 px-8 py-4 rounded-xl font-semibold shadow-sm hover:shadow-md transition-all duration-300 inline-flex items-center space-x-2 text-lg"
                 >
-                  <span>Learn More</span>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
+                  <span>Learn More</span>
                 </button>
               </div>
             </div>
@@ -273,14 +271,13 @@ export default function Home() {
           isVisible ? 'opacity-100' : 'opacity-0'
         }`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-4xl">
-              <div className="mb-12">
-                <h2 className="text-3xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 font-inter">
-                  More about ReliefGuard
-                </h2>
-              </div>
-              
-              <div className="prose prose-lg max-w-none text-black font-inter leading-relaxed">
+            <div className="mb-12">
+              <h2 className="text-3xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 font-inter">
+                More about ReliefGuard
+              </h2>
+            </div>
+            
+            <div className="prose prose-lg max-w-none text-black font-inter leading-relaxed">
                 <p className="text-xl mb-6">
                   ReliefGuard streamlines relief-rate determination and documentation for pressure vessels,
                   replacing legacy spreadsheet workflows and minimizing manual error.
@@ -299,9 +296,6 @@ export default function Home() {
                   with current industry standards.
                 </p>
               </div>
-
-
-            </div>
           </div>
         </section>
 

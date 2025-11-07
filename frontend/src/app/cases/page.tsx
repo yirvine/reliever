@@ -245,9 +245,9 @@ export default function Calculator() {
       {/* Hero Section */}
         <div className="mb-6 text-left">
           <h2 className="text-3xl font-bold text-gray-900 mb-3 font-inter">
-            Available Relief Scenarios
+            Available Overpressure Scenarios
           </h2>
-          <p className="text-base text-gray-600 mb-2 font-inter">
+          <p className="text-base text-gray-900 mb-2 font-inter">
             Calculate the required relieving rate for common overpressure scenarios in accordance with NFPA 30, API 521, and ASME VIII.
           </p>
         </div>
