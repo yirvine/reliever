@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useVessel } from '../context/VesselContext'
 import VesselProperties from './VesselProperties'
 import EditWarningModal, { shouldShowEditWarning } from './EditWarningModal'

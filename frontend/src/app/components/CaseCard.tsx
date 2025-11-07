@@ -20,7 +20,6 @@ interface CaseCardProps {
  * Used on the main cases page
  */
 export default function CaseCard({
-  caseId,
   title,
   description,
   href,
