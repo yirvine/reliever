@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 interface DropdownItem {
   label: string
   href: string
+  icon?: React.ReactNode // Optional icon
 }
 
 interface NavDropdownProps {
@@ -55,9 +56,10 @@ export default function NavDropdown({ title, items, href }: NavDropdownProps) {
           <Link
             key={index}
             href={item.href}
-            className="block px-4 py-3 text-base text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150 font-inter"
+            className="flex items-center gap-3 px-4 py-3 text-base text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150 font-inter"
           >
-            {item.label}
+            {item.icon && <span className="text-gray-400">{item.icon}</span>}
+            <span>{item.label}</span>
           </Link>
         ))}
       </div>

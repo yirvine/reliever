@@ -5,7 +5,7 @@ import Header from '../../components/Header'
 import PageTransition from '../../components/PageTransition'
 import { useScrollPosition } from '../../hooks/useScrollPosition'
 import { useCase } from '../../context/CaseContext'
-import { getStandardDiameters, getVesselHeadArea } from '../../../../lib/database'
+import { getStandardDiameters, getVesselHeadArea } from '@/lib/database'
 
 export default function VesselHeadAreasReferencePage() {
   useScrollPosition()

@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
-import { calculateFireExposedArea as dbCalculateArea, VesselOrientation } from '../../../lib/database'
+import { calculateFireExposedArea as dbCalculateArea, VesselOrientation } from '@/lib/database'
 
 /**
  * Vessel Data Interface

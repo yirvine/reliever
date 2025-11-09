@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { VesselProvider } from "./context/VesselContext";
 import { CaseProvider } from "./context/CaseContext";
+import { AuthProvider } from "./context/AuthContext";
 import { SidebarProvider } from "./components/SidebarLayout";
 import Sidebar from "./components/Sidebar";
 import MainContentWrapper from "./components/MainContentWrapper";
@@ -26,16 +27,18 @@ export default function RootLayout({
       <body
         className="font-inter antialiased"
       >
-        <CaseProvider>
-          <VesselProvider>
-            <SidebarProvider>
-              <Sidebar />
-              <MainContentWrapper>
-                {children}
-              </MainContentWrapper>
-            </SidebarProvider>
-          </VesselProvider>
-        </CaseProvider>
+        <AuthProvider>
+          <CaseProvider>
+            <VesselProvider>
+              <SidebarProvider>
+                <Sidebar />
+                <MainContentWrapper>
+                  {children}
+                </MainContentWrapper>
+              </SidebarProvider>
+            </VesselProvider>
+          </CaseProvider>
+        </AuthProvider>
       </body>
     </html>
   );

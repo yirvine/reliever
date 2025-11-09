@@ -4,11 +4,12 @@
 ReliefGuard is a web-based pressure relief sizing tool for chemical and process engineers. It helps calculate relief device requirements for pressure vessels under various overpressure scenarios according to API-521 and ASME Section VIII standards.
 
 ## Tech Stack
-- **Frontend**: Next.js 14 (React 18, TypeScript)
+- **Frontend**: Next.js 15 (React 19, TypeScript)
 - **Styling**: Tailwind CSS
 - **PDF Generation**: @react-pdf/renderer
-- **Reference Data**: Client-side (in-memory TypeScript objects in `lib/database.ts`)
-- **User Data**: localStorage (no backend needed for MVP)
+- **Authentication**: Supabase Auth (email + Google OAuth)
+- **Reference Data**: Client-side (in-memory TypeScript objects in `src/lib/database.ts`)
+- **User Data**: localStorage (transitioning to Supabase for saved vessels)
 
 ## Architecture Overview
 
@@ -75,9 +76,25 @@ reliever/
 │   ├── types/              # TypeScript types and constants
 │   └── datasets/           # Reference data pages (fluids, gas properties)
 ├── public/                 # Static assets
-├── lib/                    # Database utilities and reference data
+├── lib/                    # Supabase clients and reference data
 ├── database/               # Reference schemas (seed data for future DB if needed)
 └── docs/                   # API standards and development summaries
+
+## Authentication
+
+### Supabase Auth Setup
+The app uses Supabase for user authentication with:
+- **Email/password** sign up and sign in
+- **Google OAuth** for single-click sign in
+- **Session management** via HTTP-only cookies
+- **AuthContext** for client-side user state
+
+### Auth Flow
+1. Guest users can access all pages and cases (for now)
+2. Login button in header opens auth modal
+3. After login, user avatar appears with email and logout option
+4. Sessions persist across page reloads
+5. Future: Login gates for saving vessels and generating reports
 ```
 
 ## Standards Reference

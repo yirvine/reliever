@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { getFluidNames, getFluidProperties, getStandardDiameters, VesselOrientation } from '../../../lib/database'
+import { getFluidNames, getFluidProperties, getStandardDiameters, VesselOrientation } from '@/lib/database'
 import Tooltip from './Tooltip'
 
 interface VesselData {

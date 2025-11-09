@@ -67,3 +67,7 @@ docs/
 
 # Old frontend folder (to be removed)
 frontend/
+
+# TypeScript build info
+*.tsbuildinfo
+next-env.d.ts

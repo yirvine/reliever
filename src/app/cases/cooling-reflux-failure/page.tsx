@@ -15,7 +15,7 @@ import { useScrollPosition } from '../../hooks/useScrollPosition'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { useCaseCalculation } from '../../hooks/useCaseCalculation'
 import { CasePressureData, STORAGE_KEYS } from '../../types/case-types'
-import { getFluidNames } from '../../../../lib/database'
+import { getFluidNames } from '@/lib/database'
 
 interface FlowData {
   workingFluid: string
