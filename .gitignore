@@ -60,6 +60,10 @@ ENV/
 *.tmp
 *.temp
 
-other/  
+# Documentation and reference materials
+docs/
 **/API-521-Reference.md
 **/NFPA-30-Reference.md
+
+# Old frontend folder (to be removed)
+frontend/

@@ -7,7 +7,8 @@ ReliefGuard is a web-based pressure relief sizing tool for chemical and process 
 - **Frontend**: Next.js 14 (React 18, TypeScript)
 - **Styling**: Tailwind CSS
 - **PDF Generation**: @react-pdf/renderer
-- **Database**: SQLite (for reference datasets - fluids, gas properties, vessel head areas)
+- **Reference Data**: Client-side (in-memory TypeScript objects in `lib/database.ts`)
+- **User Data**: localStorage (no backend needed for MVP)
 
 ## Architecture Overview
 
@@ -53,7 +54,7 @@ Each overpressure scenario is a separate "case" (e.g., External Fire, Liquid Ove
 - The `useCaseCalculation` hook automatically merges inputs and outputs and saves to localStorage
 
 ### Adding New Cases
-- See `/other/summaries/ADD_NEW_CASE.md` for step-by-step instructions
+- See `/docs/summaries/ADD_NEW_CASE.md` for step-by-step instructions
 - Follow the established pattern: use reusable components, `useCaseCalculation` hook, and localStorage
 - Update `CaseContext.tsx`, `Header.tsx`, `Sidebar.tsx`, `cases/page.tsx`, and `useReportGenerator.ts`
 
@@ -65,18 +66,24 @@ Each overpressure scenario is a separate "case" (e.g., External Fire, Liquid Ove
 
 ## Project Structure
 ```
-frontend/src/app/
-├── cases/              # Case pages (external-fire, liquid-overfill, etc.)
-├── components/         # Reusable UI components
-├── context/            # React contexts (VesselContext, CaseContext)
-├── hooks/              # Custom hooks (useCaseCalculation, useReportGenerator, etc.)
-├── types/              # TypeScript types and constants
-└── datasets/           # Reference data pages (fluids, gas properties)
+reliever/
+├── src/app/
+│   ├── cases/              # Case pages (external-fire, liquid-overfill, etc.)
+│   ├── components/         # Reusable UI components
+│   ├── context/            # React contexts (VesselContext, CaseContext)
+│   ├── hooks/              # Custom hooks (useCaseCalculation, useReportGenerator, etc.)
+│   ├── types/              # TypeScript types and constants
+│   └── datasets/           # Reference data pages (fluids, gas properties)
+├── public/                 # Static assets
+├── lib/                    # Database utilities and reference data
+├── database/               # Reference schemas (seed data for future DB if needed)
+└── docs/                   # API standards and development summaries
 ```
 
 ## Standards Reference
-- **API-521**: Pressure-relieving and Depressuring Systems (see `/other/API.MD` for key sections)
+- **API-521**: Pressure-relieving and Depressuring Systems (see `/docs/API.MD` for key sections)
 - **ASME Section VIII**: Rules for pressure vessel design and overpressure protection
 - Each case implements specific sections of these standards (documented in case page comments)
+
 
 
