@@ -13,6 +13,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
+  sendEmailVerification,
 } from 'firebase/auth'
 import { auth } from '@/lib/firebase/config'
 
@@ -26,10 +27,19 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
 
   if (!isOpen) return null
+
+  const showSuccessAndClose = () => {
+    setSuccess(true)
+    setTimeout(() => {
+      setSuccess(false)
+      onClose()
+    }, 1200) // Show checkmark for 1.2 seconds
+  }
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,12 +50,22 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     try {
       if (mode === 'signin') {
         await signInWithEmailAndPassword(auth, email, password)
-        // Success - close modal (AuthContext will handle the rest)
-        onClose()
+        // Success - show checkmark and close
+        showSuccessAndClose()
       } else {
-        await createUserWithEmailAndPassword(auth, email, password)
-        // Success - user created and logged in
-        onClose()
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+        
+        // Send email verification
+        try {
+          await sendEmailVerification(userCredential.user)
+          setMessage('Verification email sent! Please check your inbox.')
+        } catch (verifyError) {
+          console.error('Failed to send verification email:', verifyError)
+          // Don't block login if verification email fails
+        }
+        
+        // Success - show checkmark and close
+        showSuccessAndClose()
       }
     } catch (err) {
       const firebaseError = err as { code?: string; message?: string }
@@ -78,8 +98,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     try {
       const provider = new GoogleAuthProvider()
       await signInWithPopup(auth, provider)
-      // Success - close modal (AuthContext will handle the rest)
-      onClose()
+      // Success - show checkmark and close
+      showSuccessAndClose()
     } catch (err) {
       const firebaseError = err as { code?: string; message?: string }
       
@@ -104,11 +124,27 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="relative w-full max-w-md rounded-xl bg-white p-8 shadow-2xl">
+        {/* Success Overlay */}
+        {success && (
+          <div className="absolute inset-0 z-10 bg-white rounded-xl flex items-center justify-center">
+            <div className="text-center">
+              <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4 animate-bounce">
+                <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <p className="text-lg font-semibold text-gray-900">Success!</p>
+              <p className="text-sm text-gray-600 mt-1">Signing you in...</p>
+            </div>
+          </div>
+        )}
+
         {/* Close button */}
         <button
           onClick={onClose}
           className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 transition-colors"
           aria-label="Close"
+          disabled={success}
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

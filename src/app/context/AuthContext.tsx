@@ -36,24 +36,42 @@ interface AuthUser extends FirebaseUser {
 interface AuthContextType {
   user: AuthUser | null
   loading: boolean
+  unverifiedUser: FirebaseUser | null
   signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  unverifiedUser: null,
   signOut: async () => {},
 })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
+  const [unverifiedUser, setUnverifiedUser] = useState<FirebaseUser | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     // Listen for Firebase auth state changes
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // User signed in - verify token and sync with Supabase
+        // Check if email is verified (OAuth users are automatically verified)
+        const isOAuthUser = firebaseUser.providerData.some(
+          provider => provider.providerId === 'google.com'
+        )
+        
+        if (!firebaseUser.emailVerified && !isOAuthUser) {
+          // Email not verified - don't allow access
+          console.log('User email not verified')
+          setUnverifiedUser(firebaseUser)
+          setUser(null)
+          setLoading(false)
+          return
+        }
+
+        // User signed in with verified email - verify token and sync with Supabase
+        setUnverifiedUser(null)
         try {
           const idToken = await firebaseUser.getIdToken()
           
@@ -84,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         // User signed out
         setUser(null)
+        setUnverifiedUser(null)
       }
       setLoading(false)
     })
@@ -94,10 +113,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await firebaseSignOut(auth)
     setUser(null)
+    setUnverifiedUser(null)
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signOut }}>
+    <AuthContext.Provider value={{ user, loading, unverifiedUser, signOut }}>
       {children}
     </AuthContext.Provider>
   )
