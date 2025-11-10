@@ -7,9 +7,10 @@ ReliefGuard is a web-based pressure relief sizing tool for chemical and process 
 - **Frontend**: Next.js 15 (React 19, TypeScript)
 - **Styling**: Tailwind CSS
 - **PDF Generation**: @react-pdf/renderer
-- **Authentication**: Supabase Auth (email + Google OAuth)
+- **Authentication**: Firebase Auth (email/password + Google OAuth)
+- **Database**: Supabase (PostgreSQL) - stores users, vessels, and cases
 - **Reference Data**: Client-side (in-memory TypeScript objects in `src/lib/database.ts`)
-- **User Data**: localStorage (transitioning to Supabase for saved vessels)
+- **Data Persistence**: Currently localStorage (migrating to Supabase)
 
 ## Architecture Overview
 
@@ -50,9 +51,11 @@ Each overpressure scenario is a separate "case" (e.g., External Fire, Liquid Ove
 - Used to determine the minimum relief device capacity required
 
 ### Data Persistence
-- All data persists in **localStorage** (no backend database for user data)
+- **Current**: All data persists in **localStorage** (no backend database yet)
+- **Future**: Migrating to Supabase database with proper user ownership
 - Each case has two storage keys: one for flow data, one for pressure data (see `STORAGE_KEYS` in `case-types.ts`)
 - The `useCaseCalculation` hook automatically merges inputs and outputs and saves to localStorage
+- Database schema is ready (`database/migrations/001_initial_schema.sql`)
 
 ### Adding New Cases
 - See `/docs/summaries/ADD_NEW_CASE.md` for step-by-step instructions
@@ -76,25 +79,46 @@ reliever/
 │   ├── types/              # TypeScript types and constants
 │   └── datasets/           # Reference data pages (fluids, gas properties)
 ├── public/                 # Static assets
-├── lib/                    # Supabase clients and reference data
-├── database/               # Reference schemas (seed data for future DB if needed)
-└── docs/                   # API standards and development summaries
+├── lib/
+│   ├── firebase/           # Firebase client and admin SDK config
+│   └── supabase/           # Supabase database client (non-auth)
+├── database/
+│   ├── migrations/         # SQL migration scripts
+│   └── schema.sql          # Reference schema (legacy)
+└── docs/                   # API standards, setup guides, and summaries
 
-## Authentication
+## Authentication & Database
 
-### Supabase Auth Setup
-The app uses Supabase for user authentication with:
-- **Email/password** sign up and sign in
-- **Google OAuth** for single-click sign in
-- **Session management** via HTTP-only cookies
-- **AuthContext** for client-side user state
+### Architecture
+ReliefGuard uses a **Firebase + Supabase** architecture:
+- **Firebase Auth**: Handles all user authentication (sign-in, session management)
+- **Supabase**: Stores all application data (users, vessels, cases) in PostgreSQL
+
+### Why This Setup?
+- **Firebase Auth**: Industry-leading auth with built-in Google OAuth, email/password, and session management
+- **Supabase**: Powerful PostgreSQL database with automatic REST API, real-time subscriptions, and Row Level Security
+- **Separation of Concerns**: Auth and data storage are independent, making the system more flexible
 
 ### Auth Flow
-1. Guest users can access all pages and cases (for now)
-2. Login button in header opens auth modal
-3. After login, user avatar appears with email and logout option
-4. Sessions persist across page reloads
-5. Future: Login gates for saving vessels and generating reports
+1. User signs in via Firebase (email/password or Google OAuth)
+2. Frontend obtains Firebase ID token
+3. Token sent to `/api/auth/verify-token` Next.js API route
+4. Backend verifies token with Firebase Admin SDK
+5. Backend upserts user record in Supabase `users` table (linked by `firebase_uid`)
+6. User's Supabase ID is returned and cached in `AuthContext`
+7. All subsequent data operations use Supabase ID for foreign keys
+
+### Database Schema
+See `database/migrations/001_initial_schema.sql` for the full schema.
+
+**Tables:**
+- `users` - Maps Firebase users to Supabase (via `firebase_uid`)
+- `vessels` - Stores vessel properties, linked to users
+- `cases` - Stores calculation cases, linked to vessels and users
+
+### Setup Guides
+- **Firebase Setup**: See `docs/FIREBASE_SETUP.md`
+- **Database Migration**: See `database/migrations/README.md`
 ```
 
 ## Standards Reference

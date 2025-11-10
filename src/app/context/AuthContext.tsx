@@ -1,63 +1,103 @@
 'use client'
 
 /**
- * AuthContext
+ * AuthContext - Firebase Authentication
  * 
- * Manages user authentication state across the application.
- * Provides current user info and auth state to all components.
+ * Manages user authentication state using Firebase Auth.
+ * After successful Firebase sign-in, verifies the token with our API
+ * and ensures the user exists in Supabase.
+ * 
+ * Provides:
+ * - user: Firebase user object with custom Supabase ID
+ * - loading: Auth state loading indicator
+ * - signOut: Firebase sign-out function
  */
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { User, Session } from '@supabase/supabase-js'
-import { createClient } from '@/lib/supabase/client'
+import { 
+  User as FirebaseUser,
+  onAuthStateChanged,
+  signOut as firebaseSignOut,
+} from 'firebase/auth'
+import { auth } from '@/lib/firebase/config'
+
+interface SupabaseUserData {
+  id: string
+  firebaseUid: string
+  email: string | null
+  name: string | null
+}
+
+interface AuthUser extends FirebaseUser {
+  supabaseId?: string
+  supabaseData?: SupabaseUserData
+}
 
 interface AuthContextType {
-  user: User | null
-  session: Session | null
+  user: AuthUser | null
   loading: boolean
   signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  session: null,
   loading: true,
   signOut: async () => {},
 })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
+  const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const supabase = createClient()
-
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
+    // Listen for Firebase auth state changes
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // User signed in - verify token and sync with Supabase
+        try {
+          const idToken = await firebaseUser.getIdToken()
+          
+          const response = await fetch('/api/auth/verify-token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ idToken }),
+          })
+
+          if (response.ok) {
+            const data = await response.json()
+            // Attach Supabase user data to Firebase user
+            const enrichedUser: AuthUser = Object.assign(firebaseUser, {
+              supabaseId: data.user.id,
+              supabaseData: data.user,
+            })
+            setUser(enrichedUser)
+          } else {
+            console.error('Failed to verify token with backend')
+            setUser(firebaseUser)
+          }
+        } catch (error) {
+          console.error('Error verifying token:', error)
+          setUser(firebaseUser)
+        }
+      } else {
+        // User signed out
+        setUser(null)
+      }
       setLoading(false)
     })
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [supabase.auth])
+    return () => unsubscribe()
+  }, [])
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    await firebaseSignOut(auth)
+    setUser(null)
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   )
@@ -70,4 +110,3 @@ export function useAuth() {
   }
   return context
 }
-

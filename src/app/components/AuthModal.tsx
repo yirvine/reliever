@@ -1,14 +1,20 @@
 'use client'
 
 /**
- * AuthModal
+ * AuthModal - Firebase Authentication
  * 
- * Beautiful authentication modal with email/password and Google OAuth.
+ * Beautiful authentication modal with email/password and Google OAuth via Firebase.
  * Handles both sign in and sign up flows with smooth transitions.
  */
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+} from 'firebase/auth'
+import { auth } from '@/lib/firebase/config'
 
 interface AuthModalProps {
   isOpen: boolean
@@ -23,8 +29,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
 
-  const supabase = createClient()
-
   if (!isOpen) return null
 
   const handleEmailAuth = async (e: React.FormEvent) => {
@@ -35,39 +39,33 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
     try {
       if (mode === 'signin') {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-        
-        if (error) throw error
-        
-        // Success - close modal
+        await signInWithEmailAndPassword(auth, email, password)
+        // Success - close modal (AuthContext will handle the rest)
         onClose()
       } else {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
-          }
-        })
-        
-        if (error) throw error
-        
-        // Check if email confirmation is disabled (auto-confirm enabled)
-        if (data.user && data.session) {
-          // User is auto-confirmed and logged in
-          onClose()
-        } else {
-          // Email confirmation required
-          setMessage('Check your email for a confirmation link!')
-          setEmail('')
-          setPassword('')
-        }
+        await createUserWithEmailAndPassword(auth, email, password)
+        // Success - user created and logged in
+        onClose()
       }
     } catch (err) {
-      setError((err as Error).message || 'An error occurred')
+      const firebaseError = err as { code?: string; message?: string }
+      
+      // Provide user-friendly error messages
+      let errorMessage = firebaseError.message || 'An error occurred'
+      
+      if (firebaseError.code === 'auth/email-already-in-use') {
+        errorMessage = 'This email is already registered. Try signing in instead.'
+      } else if (firebaseError.code === 'auth/weak-password') {
+        errorMessage = 'Password should be at least 6 characters.'
+      } else if (firebaseError.code === 'auth/invalid-email') {
+        errorMessage = 'Invalid email address.'
+      } else if (firebaseError.code === 'auth/user-not-found' || firebaseError.code === 'auth/wrong-password') {
+        errorMessage = 'Invalid email or password.'
+      } else if (firebaseError.code === 'auth/invalid-credential') {
+        errorMessage = 'Invalid email or password.'
+      }
+      
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -78,21 +76,21 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setError(null)
 
     try {
-      // Determine the correct redirect URL based on environment
-      const redirectTo = window.location.hostname === 'localhost'
-        ? 'http://localhost:3000/auth/callback'
-        : 'https://reliefguard.ca/auth/callback'
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo,
-        }
-      })
-      
-      if (error) throw error
+      const provider = new GoogleAuthProvider()
+      await signInWithPopup(auth, provider)
+      // Success - close modal (AuthContext will handle the rest)
+      onClose()
     } catch (err) {
-      setError((err as Error).message || 'An error occurred')
+      const firebaseError = err as { code?: string; message?: string }
+      
+      // Handle popup closed by user
+      if (firebaseError.code === 'auth/popup-closed-by-user' || firebaseError.code === 'auth/cancelled-popup-request') {
+        // Don't show error for user-cancelled popups
+        setLoading(false)
+        return
+      }
+      
+      setError(firebaseError.message || 'An error occurred')
       setLoading(false)
     }
   }
@@ -226,4 +224,3 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     </div>
   )
 }
-
