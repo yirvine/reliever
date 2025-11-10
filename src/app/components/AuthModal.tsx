@@ -57,18 +57,28 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         
         // Send email verification
         try {
-          console.log('Attempting to send verification email to:', userCredential.user.email)
-          await sendEmailVerification(userCredential.user)
-          console.log('✅ Verification email sent successfully to:', userCredential.user.email)
-          setMessage('Verification email sent! Please check your inbox (and spam folder).')
-        } catch (verifyError) {
-          console.error('❌ Failed to send verification email:', verifyError)
-          const firebaseError = verifyError as { code?: string; message?: string }
-          console.error('Error details:', {
-            code: firebaseError.code,
-            message: firebaseError.message,
+          console.log('🔄 Attempting to send verification email to:', userCredential.user.email)
+          console.log('📧 User object:', {
+            uid: userCredential.user.uid,
+            email: userCredential.user.email,
+            emailVerified: userCredential.user.emailVerified,
           })
-          setError(`Failed to send verification email: ${firebaseError.message || 'Unknown error'}`)
+          
+          await sendEmailVerification(userCredential.user)
+          
+          console.log('✅ sendEmailVerification() completed without error')
+          console.log('⚠️ Note: This does NOT guarantee email was delivered!')
+          setMessage('Account created! Verification email sent - check your inbox and spam folder.')
+        } catch (verifyError) {
+          console.error('❌ SEND EMAIL VERIFICATION FAILED:', verifyError)
+          const firebaseError = verifyError as { code?: string; message?: string }
+          console.error('Error code:', firebaseError.code)
+          console.error('Error message:', firebaseError.message)
+          
+          // Don't close modal if email fails - show error
+          setError(`Account created, but email failed: ${firebaseError.message || 'Unknown error'}`)
+          setLoading(false)
+          return // Don't close modal
         }
         
         // Success - show checkmark and close
