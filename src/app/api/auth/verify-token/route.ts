@@ -27,13 +27,24 @@ export async function POST(request: NextRequest) {
 
     // Verify the Firebase ID token
     const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const { uid: firebaseUid, email, name } = decodedToken
+    const { uid: firebaseUid, email, name, email_verified } = decodedToken
 
     if (!firebaseUid) {
       return NextResponse.json(
         { error: 'Invalid token: missing uid' },
         { status: 401 }
       )
+    }
+
+    // Get user record from Firebase Admin to check email verification status
+    // (decodedToken doesn't always have email_verified, so we fetch the full user)
+    let firebaseUser
+    try {
+      firebaseUser = await adminAuth.getUser(firebaseUid)
+    } catch (error) {
+      console.error('Failed to get Firebase user:', error)
+      // Fallback to decodedToken values
+      firebaseUser = { emailVerified: email_verified || false }
     }
 
     // Upsert user in Supabase
@@ -46,6 +57,7 @@ export async function POST(request: NextRequest) {
           firebase_uid: firebaseUid,
           email: email || null,
           name: name || email?.split('@')[0] || null,
+          email_verified: firebaseUser.emailVerified || false,
           updated_at: new Date().toISOString(),
         },
         {
@@ -71,6 +83,7 @@ export async function POST(request: NextRequest) {
         firebaseUid: user.firebase_uid,
         email: user.email,
         name: user.name,
+        emailVerified: user.email_verified,
       },
     })
   } catch (error) {

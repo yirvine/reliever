@@ -63,11 +63,12 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           setMessage('Verification email sent! Please check your inbox (and spam folder).')
         } catch (verifyError) {
           console.error('❌ Failed to send verification email:', verifyError)
+          const firebaseError = verifyError as { code?: string; message?: string }
           console.error('Error details:', {
-            code: (verifyError as any).code,
-            message: (verifyError as any).message,
+            code: firebaseError.code,
+            message: firebaseError.message,
           })
-          setError(`Failed to send verification email: ${(verifyError as Error).message}`)
+          setError(`Failed to send verification email: ${firebaseError.message || 'Unknown error'}`)
         }
         
         // Success - show checkmark and close
