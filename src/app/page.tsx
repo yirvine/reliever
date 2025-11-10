@@ -303,7 +303,16 @@ export default function Home() {
         <footer className={`bg-gray-50/80 py-12 transition-all duration-1000 ease-out delay-500 ${
           isVisible ? 'opacity-100' : 'opacity-0'
         }`}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-3">
+            <div className="flex justify-center gap-4 text-sm text-gray-600 font-inter">
+              <Link href="/privacy" className="hover:text-blue-600 transition-colors">
+                Privacy Policy
+              </Link>
+              <span>•</span>
+              <Link href="/terms" className="hover:text-blue-600 transition-colors">
+                Terms of Service
+              </Link>
+            </div>
             <p className="text-gray-500 font-inter">
               Prototype build ©2025 ReliefGuard
             </p>

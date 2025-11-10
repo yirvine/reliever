@@ -102,7 +102,16 @@ export default function Sidebar() {
 
         {/* Footer */}
         {isExpanded && (
-          <div className="p-2 border-t border-gray-200">
+          <div className="p-2 border-t border-gray-200 space-y-2">
+            <div className="flex gap-3 text-xs text-gray-500 font-inter">
+              <Link href="/privacy" className="hover:text-blue-600 transition-colors">
+                Privacy
+              </Link>
+              <span>•</span>
+              <Link href="/terms" className="hover:text-blue-600 transition-colors">
+                Terms
+              </Link>
+            </div>
             <div className="text-sm text-gray-500 font-inter whitespace-nowrap">
               linkedin.com/in/yene-irvine
             </div>
