@@ -55,13 +55,17 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       } else {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password)
         
-        // Send email verification
+        // Send email verification with proper action URL
         try {
-          await sendEmailVerification(userCredential.user)
+          await sendEmailVerification(userCredential.user, {
+            url: window.location.origin,
+            handleCodeInApp: false,
+          })
+          console.log('Verification email sent successfully')
           setMessage('Verification email sent! Please check your inbox.')
         } catch (verifyError) {
           console.error('Failed to send verification email:', verifyError)
-          // Don't block login if verification email fails
+          setError('Account created, but failed to send verification email. Please check your email settings.')
         }
         
         // Success - show checkmark and close
