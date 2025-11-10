@@ -17,7 +17,7 @@ export default function PrivacyPolicy() {
               <section>
                 <h2 className="text-2xl font-semibold text-gray-900 mb-3">1. Introduction</h2>
                 <p className="text-gray-700">
-                  ReliefGuard ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy 
+                  ReliefGuard (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is committed to protecting your privacy. This Privacy Policy 
                   explains how we collect, use, and safeguard your information when you use our pressure relief 
                   sizing application.
                 </p>
@@ -132,7 +132,7 @@ export default function PrivacyPolicy() {
               </section>
 
               <section>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-3">9. Children's Privacy</h2>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-3">9. Children&apos;s Privacy</h2>
                 <p className="text-gray-700">
                   ReliefGuard is intended for professional use by engineers and is not directed to children 
                   under 13. We do not knowingly collect information from children.
@@ -151,7 +151,7 @@ export default function PrivacyPolicy() {
                 <h2 className="text-2xl font-semibold text-gray-900 mb-3">11. Changes to This Policy</h2>
                 <p className="text-gray-700">
                   We may update this Privacy Policy from time to time. We will notify you of significant changes 
-                  by posting the new policy on this page and updating the "Last Updated" date.
+                  by posting the new policy on this page and updating the &quot;Last Updated&quot; date.
                 </p>
               </section>
 

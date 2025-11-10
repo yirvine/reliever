@@ -48,7 +48,7 @@ export default function TermsOfService() {
                     and approved by a licensed Professional Engineer (P.E.) or equivalent qualified professional.
                   </li>
                   <li>
-                    <strong>No Warranty:</strong> ReliefGuard is provided "as-is" without warranties of any kind. 
+                    <strong>No Warranty:</strong> ReliefGuard is provided &quot;as-is&quot; without warranties of any kind. 
                     We do not guarantee the accuracy, completeness, or reliability of any calculations.
                   </li>
                   <li>
@@ -169,7 +169,7 @@ export default function TermsOfService() {
                 <h2 className="text-2xl font-semibold text-gray-900 mb-3">12. Changes to Terms</h2>
                 <p className="text-gray-700">
                   We may modify these Terms of Service at any time. Significant changes will be posted on this 
-                  page with an updated "Last Updated" date. Continued use of ReliefGuard after changes constitutes 
+                  page with an updated &quot;Last Updated&quot; date. Continued use of ReliefGuard after changes constitutes 
                   acceptance of the new terms.
                 </p>
               </section>

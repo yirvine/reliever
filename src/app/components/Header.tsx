@@ -115,10 +115,13 @@ export default function Header() {
                 >
                   {/* Google Avatar (only show for OAuth) - fixed size */}
                   {user.photoURL && (
-                    <img 
+                    <Image 
                       src={user.photoURL} 
                       alt="Avatar"
+                      width={24}
+                      height={24}
                       className="w-6 h-6 rounded-full flex-shrink-0"
+                      unoptimized
                     />
                   )}
                   
@@ -149,10 +152,13 @@ export default function Header() {
                       <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
                         <div className="flex items-center gap-3">
                           {user.photoURL ? (
-                            <img 
+                            <Image 
                               src={user.photoURL} 
                               alt="Avatar"
+                              width={40}
+                              height={40}
                               className="w-10 h-10 rounded-full"
+                              unoptimized
                             />
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center text-white font-semibold">
