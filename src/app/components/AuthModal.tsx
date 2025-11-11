@@ -30,6 +30,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [verificationSent, setVerificationSent] = useState(false)
+  const [verificationEmail, setVerificationEmail] = useState<string>('')
 
   if (!isOpen) return null
 
@@ -55,34 +57,122 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       } else {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password)
         
-        // Send email verification
+        // Wait a moment for Firebase to fully initialize the user
+        // Then use auth.currentUser (as recommended by Firebase docs)
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
+        const currentUser = auth.currentUser
+        if (!currentUser) {
+          throw new Error('User was created but currentUser is null')
+        }
+        
+        // Send email verification using currentUser
         try {
-          console.log('🔄 Attempting to send verification email to:', userCredential.user.email)
-          console.log('📧 User object:', {
-            uid: userCredential.user.uid,
-            email: userCredential.user.email,
-            emailVerified: userCredential.user.emailVerified,
-          })
+          console.group('📧 ═══ SENDING EMAIL VERIFICATION ═══')
+          console.log('⏰ Timestamp:', new Date().toISOString())
+          console.log('👤 User email:', currentUser.email)
+          console.log('🆔 User UID:', currentUser.uid)
+          console.log('✓ User emailVerified (before send):', currentUser.emailVerified)
+          console.log('🔑 User providerData:', currentUser.providerData)
+          console.log('🌐 Auth domain:', auth.config.authDomain)
+          console.log('🔐 API key (first 10):', auth.config.apiKey?.substring(0, 10) + '...')
+          console.log('🏗️ Project ID:', auth.app.options.projectId)
           
-          await sendEmailVerification(userCredential.user)
+          // Configure redirect URL after email verification
+          // Note: The URL must be in Firebase's authorized domains
+          // If you get auth/unauthorized-continue-uri, add the domain in Firebase Console
+          const actionCodeSettings = {
+            url: typeof window !== 'undefined' 
+              ? `${window.location.origin}/?emailVerified=true`
+              : 'https://www.reliefguard.ca/?emailVerified=true',
+            handleCodeInApp: false, // Open link in browser, not in-app
+          }
           
-          console.log('✅ sendEmailVerification() completed without error')
-          console.log('⚠️ Note: This does NOT guarantee email was delivered!')
-          setMessage('Account created! Verification email sent - check your inbox and spam folder.')
+          console.log('🔗 ActionCodeSettings:', JSON.stringify(actionCodeSettings, null, 2))
+          console.log('📤 Calling Firebase sendEmailVerification()...')
+          
+          const startTime = performance.now()
+          await sendEmailVerification(currentUser, actionCodeSettings)
+          const endTime = performance.now()
+          const duration = Math.round(endTime - startTime)
+          
+          console.log(`✅ sendEmailVerification() completed successfully in ${duration}ms`)
+          console.log('')
+          console.warn('⚠️  CRITICAL: No error ≠ Email delivered!')
+          console.log('')
+          console.log('📊 NEXT STEP - Verify email was actually sent:')
+          console.log('   1. Open: https://console.firebase.google.com/')
+          console.log('   2. Select project: reliefguard-c1a3c')
+          console.log('   3. Click: Usage tab (or Usage and billing)')
+          console.log('   4. Look for: "Authentication" or "Email verifications"')
+          console.log('   5. Expected: Count should be 1+ (not 0)')
+          console.log('')
+          console.log('❌ IF USAGE SHOWS 0 EMAILS SENT:')
+          console.log('   → Firebase is NOT sending emails (config issue)')
+          console.log('   → Most likely causes:')
+          console.log('     • No payment method added (even on free tier)')
+          console.log('     • Email template "From email" is blank/wrong')
+          console.log('     • Gmail API disabled in Google Cloud Console')
+          console.log('   → See: docs/EMAIL_VERIFICATION_TROUBLESHOOT.md')
+          console.log('')
+          console.log('🌐 Network status:', navigator.onLine ? 'Online ✅' : 'Offline ❌')
+          console.log('🔌 Connection type:', (navigator as any).connection?.effectiveType || 'Unknown')
+          console.groupEnd()
+          
+          // Summary diagnostic
+          console.log('')
+          console.log('═══════════════════════════════════════════')
+          console.log('📋 DIAGNOSTIC SUMMARY')
+          console.log('═══════════════════════════════════════════')
+          console.log('✅ Code execution: Success (no errors thrown)')
+          console.log('✅ Auth domain: reliefguard-c1a3c.firebaseapp.com')
+          console.log('✅ User created: ' + currentUser.uid)
+          console.log('✅ Firebase call: sendEmailVerification() completed')
+          console.log('❓ Email delivery: UNKNOWN (check Usage tab)')
+          console.log('')
+          console.log('🎯 ACTION REQUIRED:')
+          console.log('   Go to Firebase Console → Usage tab')
+          console.log('   If count is 0: Firebase backend issue')
+          console.log('   If count is 1+: Email provider blocking')
+          console.log('═══════════════════════════════════════════')
+          console.log('')
+          
+          // Show verification screen instead of closing modal
+          setVerificationEmail(currentUser.email || email)
+          setVerificationSent(true)
+          setLoading(false)
         } catch (verifyError) {
-          console.error('❌ SEND EMAIL VERIFICATION FAILED:', verifyError)
-          const firebaseError = verifyError as { code?: string; message?: string }
+          console.group('❌ ═══ EMAIL VERIFICATION FAILED ═══')
+          console.error('Full error object:', verifyError)
+          
+          const firebaseError = verifyError as { 
+            code?: string
+            message?: string
+            name?: string
+            stack?: string
+            customData?: unknown
+          }
+          
           console.error('Error code:', firebaseError.code)
           console.error('Error message:', firebaseError.message)
+          console.error('Error name:', firebaseError.name)
+          console.error('Error customData:', firebaseError.customData)
+          
+          // Common error codes and what they mean:
+          console.log('')
+          console.log('🔍 Common error codes:')
+          console.log('  • auth/unauthorized-continue-uri → Domain not in authorized domains')
+          console.log('  • auth/invalid-continue-uri → Malformed redirect URL')
+          console.log('  • auth/missing-continue-uri → No redirect URL provided')
+          console.log('  • auth/quota-exceeded → Daily email limit reached')
+          console.log('  • auth/too-many-requests → Rate limited')
+          console.groupEnd()
           
           // Don't close modal if email fails - show error
           setError(`Account created, but email failed: ${firebaseError.message || 'Unknown error'}`)
           setLoading(false)
           return // Don't close modal
         }
-        
-        // Success - show checkmark and close
-        showSuccessAndClose()
       }
     } catch (err) {
       const firebaseError = err as { code?: string; message?: string }
@@ -136,6 +226,54 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setMode(mode === 'signin' ? 'signup' : 'signin')
     setError(null)
     setMessage(null)
+    setVerificationSent(false) // Reset verification screen
+  }
+
+  const handleResendVerification = async () => {
+    setLoading(true)
+    setError(null)
+    setMessage(null)
+
+    try {
+      const currentUser = auth.currentUser
+      if (!currentUser) {
+        setError('No user found. Please sign up again.')
+        setLoading(false)
+        return
+      }
+
+      console.group('🔄 ═══ RESENDING EMAIL VERIFICATION ═══')
+      console.log('⏰ Timestamp:', new Date().toISOString())
+      console.log('👤 User email:', currentUser.email)
+      console.log('🆔 User UID:', currentUser.uid)
+      console.log('🌐 Auth domain:', auth.config.authDomain)
+      
+      const actionCodeSettings = {
+        url: typeof window !== 'undefined' 
+          ? `${window.location.origin}/?emailVerified=true`
+          : 'https://www.reliefguard.ca/?emailVerified=true',
+        handleCodeInApp: false,
+      }
+
+      console.log('🔗 ActionCodeSettings:', JSON.stringify(actionCodeSettings, null, 2))
+      console.log('📤 Calling Firebase sendEmailVerification()...')
+      
+      const startTime = performance.now()
+      await sendEmailVerification(currentUser, actionCodeSettings)
+      const endTime = performance.now()
+      const duration = Math.round(endTime - startTime)
+      
+      console.log(`✅ Resend completed in ${duration}ms`)
+      console.log('📊 Check Firebase Usage tab to verify')
+      console.groupEnd()
+      
+      setMessage('Verification email resent! Check your inbox.')
+      setLoading(false)
+    } catch (err) {
+      const firebaseError = err as { code?: string; message?: string }
+      setError(firebaseError.message || 'Failed to resend email')
+      setLoading(false)
+    }
   }
 
   return (
@@ -171,16 +309,74 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         {/* Header */}
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-900">
-            {mode === 'signin' ? 'Welcome back' : 'Create account'}
+            {verificationSent ? 'Check your email' : mode === 'signin' ? 'Welcome back' : 'Create account'}
           </h2>
           <p className="mt-1 text-sm text-gray-600">
-            {mode === 'signin' 
-              ? 'Sign in to access your vessels and cases' 
-              : 'Sign up to save vessels and generate reports'}
+            {verificationSent 
+              ? `We sent a verification link to ${verificationEmail}`
+              : mode === 'signin' 
+                ? 'Sign in to access your vessels and cases' 
+                : 'Sign up to save vessels and generate reports'}
           </p>
         </div>
 
-        {/* Error/Success messages */}
+        {/* Verification Screen */}
+        {verificationSent ? (
+          <div className="space-y-6">
+            {/* Email Icon */}
+            <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+              <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+
+            {/* Error/Success messages */}
+            {error && (
+              <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800">
+                {error}
+              </div>
+            )}
+            {message && (
+              <div className="rounded-lg bg-green-50 p-3 text-sm text-green-800">
+                {message}
+              </div>
+            )}
+
+            {/* Instructions */}
+            <div className="text-center space-y-2">
+              <p className="text-sm text-gray-700">
+                Click the link in the email to verify your account. Once verified, you can sign in.
+              </p>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 mt-2">
+                <p className="text-xs font-medium text-yellow-800">
+                  ⚠️ Check your SPAM folder! Verification emails often land there.
+                </p>
+              </div>
+            </div>
+
+            {/* Resend button */}
+            <button
+              onClick={handleResendVerification}
+              disabled={loading}
+              className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {loading ? 'Sending...' : 'Resend verification email'}
+            </button>
+
+            {/* Back to sign in */}
+            <button
+              onClick={() => {
+                setVerificationSent(false)
+                setMode('signin')
+              }}
+              className="w-full text-sm text-blue-600 hover:text-blue-700 transition-colors"
+            >
+              ← Back to sign in
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* Error/Success messages */}
         {error && (
           <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">
             {error}
@@ -273,6 +469,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             {mode === 'signin' ? 'Sign up' : 'Sign in'}
           </button>
         </div>
+          </>
+        )}
       </div>
     </div>
   )
