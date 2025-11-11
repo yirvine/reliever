@@ -6,6 +6,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { SidebarProvider } from "./components/SidebarLayout";
 import Sidebar from "./components/Sidebar";
 import MainContentWrapper from "./components/MainContentWrapper";
+import VesselLoadingOverlay from "./components/VesselLoadingOverlay";
 
 export const metadata: Metadata = {
   title: "ReliefGuard - Pressure Relief & Rupture Disc Sizing",
@@ -35,6 +36,7 @@ export default function RootLayout({
                 <MainContentWrapper>
                   {children}
                 </MainContentWrapper>
+                <VesselLoadingOverlay />
               </SidebarProvider>
             </VesselProvider>
           </CaseProvider>

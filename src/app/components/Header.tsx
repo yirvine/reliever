@@ -10,7 +10,7 @@ import { useAuth } from '../context/AuthContext'
 
 export default function Header() {
   const { isExpanded } = useSidebar()
-  const { user, unverifiedUser, signOut } = useAuth()
+  const { user, unverifiedUser, signOut, loading } = useAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   
@@ -143,6 +143,7 @@ export default function Header() {
                       height={24}
                       className="w-6 h-6 rounded-full flex-shrink-0"
                       unoptimized
+                      referrerPolicy="no-referrer"
                     />
                   )}
                   
@@ -180,6 +181,7 @@ export default function Header() {
                               height={40}
                               className="w-10 h-10 rounded-full"
                               unoptimized
+                              referrerPolicy="no-referrer"
                             />
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center text-white font-semibold">

@@ -54,6 +54,14 @@ export default function ControlValveFailureCase() {
     customGasProps: COMMON_GASES.custom  // Store in flowData directly
   })
 
+  // Ensure boolean fields are always defined (fixes controlled component warning)
+  const safeFlowData = {
+    ...flowData,
+    isManualFlowInput: flowData.isManualFlowInput ?? false,
+    considerBypass: flowData.considerBypass ?? false,
+    creditOutletFlow: flowData.creditOutletFlow ?? false
+  }
+
   const [pressureData, setPressureData] = useLocalStorage<CasePressureData>(STORAGE_KEYS.CONTROL_VALVE_PRESSURE, {
     maxAllowedVentingPressure: 0,
     maxAllowableBackpressure: 0,
@@ -66,7 +74,14 @@ export default function ControlValveFailureCase() {
   // Use flowData directly - useLocalStorage hook already handles state updates efficiently
 
   const handleFlowDataChange = useCallback((field: keyof GasFlowInputs, value: string | number | boolean) => {
-    setFlowData(prev => ({ ...prev, [field]: value }))
+    setFlowData(prev => ({ 
+      ...prev, 
+      [field]: value,
+      // Ensure boolean fields are always defined
+      isManualFlowInput: field === 'isManualFlowInput' ? value as boolean : (prev.isManualFlowInput ?? false),
+      considerBypass: field === 'considerBypass' ? value as boolean : (prev.considerBypass ?? false),
+      creditOutletFlow: field === 'creditOutletFlow' ? value as boolean : (prev.creditOutletFlow ?? false)
+    }))
   }, [setFlowData])
 
   // Handle manual flow rate change - store the raw value, convert to lb/hr for calculations
@@ -247,14 +262,14 @@ export default function ControlValveFailureCase() {
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 mobile-pt-0">
           {/* Reusable Page Header with breadcrumb, title, about section, and toggle */}
           <CasePageHeader
-            caseName="Control Valve Failure"
-            title="Control Valve Failure (Gas Service)"
+            caseName={caseName}
+            title={`Control Valve Failure (${gasName} Service)`}
             isSelected={isSelected}
             onToggle={() => toggleCase('control-valve-failure')}
             rightControls={
               <ResetCaseFields 
                 onReset={handleResetFields}
-                caseName="Control Valve Failure"
+                caseName={caseName}
                 disabled={!isSelected}
               />
             }
@@ -429,7 +444,7 @@ export default function ControlValveFailureCase() {
           <CasePressureSettings
             pressureData={pressureData}
             onChange={handlePressureDataChange}
-            caseName="Control Valve Failure"
+            caseName={caseName}
             isAutoCalculated={true}
             vesselMawp={vesselData.vesselDesignMawp}
             mawpPercent={110}
@@ -443,7 +458,7 @@ export default function ControlValveFailureCase() {
               <label className="flex items-center">
                 <input
                   type="radio"
-                  checked={flowData.isManualFlowInput}
+                  checked={safeFlowData.isManualFlowInput}
                   onChange={() => handleFlowDataChange('isManualFlowInput', true)}
                   className="mr-2"
                 />
@@ -452,7 +467,7 @@ export default function ControlValveFailureCase() {
               <label className="flex items-center">
                 <input
                   type="radio"
-                  checked={!flowData.isManualFlowInput}
+                  checked={!safeFlowData.isManualFlowInput}
                   onChange={() => handleFlowDataChange('isManualFlowInput', false)}
                   className="mr-2"
                 />
@@ -464,7 +479,7 @@ export default function ControlValveFailureCase() {
           {/* Flow Calculations - Only user inputs */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Flow Calculations</h2>
-            {flowData.isManualFlowInput ? (
+            {safeFlowData.isManualFlowInput ? (
               // Manual Flow Input
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div>
@@ -870,7 +885,7 @@ export default function ControlValveFailureCase() {
             )}
 
             {/* Error and Warning Display - Only show for pressure-based calculations */}
-            {!flowData.isManualFlowInput && (previewValues.errors.length > 0 || previewValues.warnings.length > 0) && (
+            {!safeFlowData.isManualFlowInput && (previewValues.errors.length > 0 || previewValues.warnings.length > 0) && (
               <div className="mt-4 space-y-2">
                 {previewValues.errors.map((error, index) => (
                   <div key={index} className="flex items-center gap-2 text-red-600 text-sm">
@@ -903,7 +918,7 @@ export default function ControlValveFailureCase() {
                     <Tooltip 
                       className="w-96"
                       content={
-                        flowData.isManualFlowInput ? (
+                        safeFlowData.isManualFlowInput ? (
                           <>
                             <div>
                               <div className="font-semibold mb-2">Manual Input Path:</div>

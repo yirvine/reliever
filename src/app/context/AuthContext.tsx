@@ -48,9 +48,25 @@ const AuthContext = createContext<AuthContextType>({
 })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  // Start with null to match SSR, then hydrate from cache
   const [user, setUser] = useState<AuthUser | null>(null)
   const [unverifiedUser, setUnverifiedUser] = useState<FirebaseUser | null>(null)
   const [loading, setLoading] = useState(true)
+
+  // Load cached user after mount to prevent hydration mismatch
+  useEffect(() => {
+    const cached = localStorage.getItem('reliever-auth-cache')
+    if (cached) {
+      try {
+        const cachedUser = JSON.parse(cached)
+        // Only set cached user if Firebase hasn't loaded yet
+        // This prevents flash while still showing cached data quickly
+        setUser(cachedUser)
+      } catch {
+        // Ignore parse errors
+      }
+    }
+  }, [])
 
   useEffect(() => {
     // Listen for Firebase auth state changes
@@ -66,12 +82,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log('User email not verified')
           setUnverifiedUser(firebaseUser)
           setUser(null)
+          localStorage.removeItem('reliever-auth-cache')
           setLoading(false)
           return
         }
 
         // User signed in with verified email - verify token and sync with Supabase
         setUnverifiedUser(null)
+        
+        // Create minimal cache object
+        const cacheData = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName,
+          photoURL: firebaseUser.photoURL,
+          emailVerified: firebaseUser.emailVerified
+        }
+        
+        // Set cached user immediately for UI responsiveness
+        setUser(firebaseUser)
+        localStorage.setItem('reliever-auth-cache', JSON.stringify(cacheData))
+        
         try {
           const idToken = await firebaseUser.getIdToken()
           
@@ -93,16 +124,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(enrichedUser)
           } else {
             console.error('Failed to verify token with backend')
-            setUser(firebaseUser)
           }
         } catch (error) {
           console.error('Error verifying token:', error)
-          setUser(firebaseUser)
         }
       } else {
-        // User signed out
+        // User signed out - only clear if we were actually signed in
         setUser(null)
         setUnverifiedUser(null)
+        localStorage.removeItem('reliever-auth-cache')
       }
       setLoading(false)
     })
@@ -114,6 +144,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await firebaseSignOut(auth)
     setUser(null)
     setUnverifiedUser(null)
+    // Clear all user-specific caches
+    localStorage.removeItem('reliever-auth-cache')
+    localStorage.removeItem('reliever-current-vessel-id')
+    localStorage.removeItem('reliever-vessels-cache')
   }
 
   return (

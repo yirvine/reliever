@@ -51,6 +51,12 @@ export default function ExternalFireCase() {
     insulationThickness: undefined,
     processTemperature: undefined
   })
+  
+  // Ensure applicableFireCode always has a valid value (for hydration safety)
+  const safeFlowData = {
+    ...flowData,
+    applicableFireCode: flowData.applicableFireCode || 'NFPA 30'
+  }
 
   const [pressureData, setPressureData] = useLocalStorage<CasePressureData>(STORAGE_KEYS.EXTERNAL_FIRE_PRESSURE, {
     maxAllowedVentingPressure: 0,
@@ -74,20 +80,20 @@ export default function ExternalFireCase() {
         return { calculatedRelievingFlow: null, asmeVIIIDesignFlow: null, equivalentAirFlow: null, wettedSurfaceArea: null, heatInput: null, environmentalFactor: null, reason: 'Missing vessel data' }
       }
 
-      const fireExposedArea = calculateFireExposedArea(flowData.applicableFireCode)
+      const fireExposedArea = calculateFireExposedArea(safeFlowData.applicableFireCode)
       
       if (!fireExposedArea || fireExposedArea <= 0) {
         return { calculatedRelievingFlow: null, asmeVIIIDesignFlow: null, equivalentAirFlow: null, wettedSurfaceArea: null, heatInput: null, environmentalFactor: null, reason: 'Invalid fire exposed area' }
       }
       
       // For API 521, require drainage/firefighting selection
-      if (flowData.applicableFireCode === 'API 521' && flowData.hasAdequateDrainageFirefighting === undefined) {
+      if (safeFlowData.applicableFireCode === 'API 521' && flowData.hasAdequateDrainageFirefighting === undefined) {
         return { calculatedRelievingFlow: null, asmeVIIIDesignFlow: null, equivalentAirFlow: null, wettedSurfaceArea: null, heatInput: null, environmentalFactor: null, reason: 'API 521 requires drainage selection' }
       }
 
       // For API 521, calculate environmental factor F
       let environmentalFactor = 1.0 // Default: bare vessel
-      if (flowData.applicableFireCode === 'API 521') {
+      if (safeFlowData.applicableFireCode === 'API 521') {
         environmentalFactor = calculateEnvironmentalFactor({
           storageType: flowData.storageType,
           insulationMaterial: flowData.hasInsulation ? flowData.insulationMaterial : undefined,
@@ -97,7 +103,7 @@ export default function ExternalFireCase() {
       }
       
       const heatInputResult = calculateHeatInput(
-        flowData.applicableFireCode as 'NFPA 30' | 'API 521',
+        safeFlowData.applicableFireCode as 'NFPA 30' | 'API 521',
         fireExposedArea,
         flowData.hasAdequateDrainageFirefighting,
         environmentalFactor
@@ -105,7 +111,7 @@ export default function ExternalFireCase() {
 
       if (!heatInputResult || !heatInputResult.heatInput) {
         // Check if it's because NFPA area is too small
-        if (flowData.applicableFireCode === 'NFPA 30' && fireExposedArea < 20) {
+        if (safeFlowData.applicableFireCode === 'NFPA 30' && fireExposedArea < 20) {
           return { 
             calculatedRelievingFlow: null, 
             asmeVIIIDesignFlow: null, 
@@ -122,7 +128,7 @@ export default function ExternalFireCase() {
       let { heatInput } = heatInputResult
       
       // Apply NFPA 30 reduction factor if applicable
-      if (flowData.applicableFireCode === 'NFPA 30' && flowData.nfpaReductionFactor && flowData.nfpaReductionFactor < 1.0) {
+      if (safeFlowData.applicableFireCode === 'NFPA 30' && flowData.nfpaReductionFactor && flowData.nfpaReductionFactor < 1.0) {
         heatInput = heatInput * flowData.nfpaReductionFactor
       }
       
@@ -260,7 +266,7 @@ export default function ExternalFireCase() {
             caseName="External Fire"
             isAutoCalculated={true}
             vesselMawp={vesselData.vesselDesignMawp}
-            fireExposedArea={calculateFireExposedArea(flowData.applicableFireCode)}
+            fireExposedArea={calculateFireExposedArea(safeFlowData.applicableFireCode)}
             mawpPercent={121}
             disabled={!isSelected}
           />
@@ -283,7 +289,7 @@ export default function ExternalFireCase() {
                 }
               />
               <select
-                value={flowData.applicableFireCode}
+                value={safeFlowData.applicableFireCode}
                 onChange={(e) => {
                   const newCode = e.target.value
                   handleFlowDataChange('applicableFireCode', newCode)
@@ -381,14 +387,14 @@ export default function ExternalFireCase() {
                 <div className="mb-2">
                   <div className="flex items-center gap-1">
                     <label className="text-sm font-medium text-gray-700">
-                      {flowData.applicableFireCode === 'NFPA 30' 
+                      {safeFlowData.applicableFireCode === 'NFPA 30' 
                         ? 'Fire protection / mitigation factor'
                         : 'Adequate drainage & firefighting?'}
                     </label>
                     <Tooltip 
                       className="w-80 break-words"
                       content={
-                        flowData.applicableFireCode === 'NFPA 30' ? (
+                        safeFlowData.applicableFireCode === 'NFPA 30' ? (
                           <>
                             <div className="font-semibold mb-2">NFPA 30 Section 22.7.3.5 - Reduction Factors:</div>
                             <div className="space-y-1 text-xs">
@@ -439,7 +445,7 @@ export default function ExternalFireCase() {
                 </div>
                 
                 {/* NFPA 30: Reduction Factor Dropdown */}
-                {flowData.applicableFireCode === 'NFPA 30' && (
+                {safeFlowData.applicableFireCode === 'NFPA 30' && (
                   <>
                     <select
                       value={flowData.nfpaReductionFactor || 1.0}
@@ -461,7 +467,7 @@ export default function ExternalFireCase() {
                 )}
 
                 {/* API 521: Yes/No Drainage & Firefighting */}
-                {flowData.applicableFireCode === 'API 521' && (
+                {safeFlowData.applicableFireCode === 'API 521' && (
                   <>
                     <select
                       value={flowData.hasAdequateDrainageFirefighting === undefined ? '' : flowData.hasAdequateDrainageFirefighting.toString()}
@@ -485,7 +491,7 @@ export default function ExternalFireCase() {
             </div>
 
             {/* API 521 Priority 2: Environmental Factor / Insulation Section */}
-            {flowData.applicableFireCode === 'API 521' && (
+            {safeFlowData.applicableFireCode === 'API 521' && (
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">API 521 Environmental Factor (Optional)</h3>
                 <p className="text-sm text-gray-600 mb-4">
@@ -802,7 +808,7 @@ export default function ExternalFireCase() {
             )}
 
             {/* NFPA 30 Applicability Warning */}
-            {flowData.applicableFireCode === 'NFPA 30' && (
+            {safeFlowData.applicableFireCode === 'NFPA 30' && (
               <div className="mt-6">
                 <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r">
                   <div className="flex">
@@ -836,7 +842,7 @@ export default function ExternalFireCase() {
                       className="max-w-[90vw] sm:max-w-md lg:w-96 break-words"
                       content={
                         previewValues.reason || (
-                          flowData.applicableFireCode === 'NFPA 30' ? (
+                          safeFlowData.applicableFireCode === 'NFPA 30' ? (
                             <div>
                               <div className="font-semibold mb-2">NFPA 30 Chapter 22.7 - Heat Input Formulas:</div>
                               <div className="mb-2">

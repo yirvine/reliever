@@ -57,27 +57,30 @@ export async function POST(
       )
     }
 
-    // Prepare cases - ONLY save user inputs, not calculated values
-    // Calculated values will be regenerated client-side when the vessel is loaded
+    // Prepare cases - save user inputs AND selection state
     interface CaseInput {
       caseType: string
       caseName?: string | null
       flowData?: Record<string, unknown>
       pressureData?: Record<string, unknown>
+      isSelected?: boolean
+      isCalculated?: boolean
+      asmeVIIIDesignFlow?: number | null
+      calculatedRelievingFlow?: number | null
     }
     const casesToSave = cases.map((c: CaseInput) => ({
       vessel_id: vesselId,
       user_id: user.id,
       case_type: c.caseType,
       case_name: c.caseName || null,
-      // Store ONLY user inputs in JSONB columns
+      // Store user inputs in JSONB columns
       flow_data: c.flowData || {},
       pressure_data: c.pressureData || {},
-      // Do NOT store calculated values - they'll be regenerated client-side
-      calculated_relieving_flow: null,
-      asme_viii_design_flow: null,
-      is_calculated: false,
-      is_selected: false,
+      // Store selection state and calculated results
+      is_selected: c.isSelected || false,
+      is_calculated: c.isCalculated || false,
+      asme_viii_design_flow: c.asmeVIIIDesignFlow || null,
+      calculated_relieving_flow: c.calculatedRelievingFlow || null,
       updated_at: new Date().toISOString(),
     }))
 

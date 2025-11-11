@@ -16,7 +16,18 @@ import { getSupabaseAdmin } from '@/lib/supabase/database'
 
 export async function POST(request: NextRequest) {
   try {
-    const { idToken } = await request.json()
+    // Handle empty or malformed request body
+    let body
+    try {
+      body = await request.json()
+    } catch (jsonError) {
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      )
+    }
+
+    const { idToken } = body
 
     if (!idToken) {
       return NextResponse.json(

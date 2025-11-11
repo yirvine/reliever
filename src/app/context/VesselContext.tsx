@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { calculateFireExposedArea as dbCalculateArea, VesselOrientation } from '@/lib/database'
 
 /**
@@ -31,7 +32,10 @@ interface VesselContextType {
   vesselData: VesselData
   updateVesselData: (field: keyof VesselData, value: string | number | boolean) => void
   calculateFireExposedArea: (fireCode: string) => number
-  // Vessel management callbacks
+  // Vessel management - direct methods
+  selectVessel: (vesselId: string) => Promise<void>
+  newVessel: () => void
+  // Vessel management callbacks (deprecated - for backward compatibility)
   onNewVesselRequested?: () => void
   onSelectVesselRequested?: (vesselId: string) => void
   registerVesselCallbacks: (callbacks: { onNewVessel?: () => void, onSelectVessel?: (id: string) => void }) => void
@@ -40,6 +44,14 @@ interface VesselContextType {
   // Trigger to refresh vessel lists
   vesselsUpdatedTrigger: number
   triggerVesselsUpdate: () => void
+  // Loading state
+  loadingVessel: boolean
+  setLoadingVessel: (loading: boolean) => void
+  loadingMessage: string
+  setLoadingMessage: (message: string) => void
+  // Save callback registration
+  saveCurrentVessel: (() => Promise<boolean>) | null
+  registerSaveCallback: (callback: () => Promise<boolean>) => void
 }
 
 const defaultVesselData: VesselData = {
@@ -61,14 +73,39 @@ const defaultVesselData: VesselData = {
 const VesselContext = createContext<VesselContextType | undefined>(undefined)
 
 export function VesselProvider({ children }: { children: ReactNode }) {
+  const router = useRouter()
   const [vesselData, setVesselData] = useState<VesselData>(defaultVesselData)
   const [isHydrated, setIsHydrated] = useState(false)
-  const [currentVesselId, setCurrentVesselId] = useState<string | null>(null)
+  // Start with null to match SSR, then hydrate from cache
+  const [currentVesselId, setCurrentVesselIdState] = useState<string | null>(null)
+  
+  // Hydrate currentVesselId from localStorage after mount (client-side only)
+  useEffect(() => {
+    const cached = localStorage.getItem('reliever-current-vessel-id')
+    if (cached) {
+      setCurrentVesselIdState(cached)
+    }
+  }, [])
+  
+  // Wrapper to persist currentVesselId to localStorage
+  const setCurrentVesselId = (id: string | null) => {
+    console.log('🔍 setCurrentVesselId called with:', id, 'from:', new Error().stack?.split('\n')[2])
+    setCurrentVesselIdState(id)
+    if (id) {
+      localStorage.setItem('reliever-current-vessel-id', id)
+    } else {
+      localStorage.removeItem('reliever-current-vessel-id')
+    }
+  }
+  
   const [vesselCallbacks, setVesselCallbacks] = useState<{
     onNewVessel?: () => void
     onSelectVessel?: (id: string) => void
   }>({})
   const [vesselsUpdatedTrigger, setVesselsUpdatedTrigger] = useState(0)
+  const [loadingVessel, setLoadingVessel] = useState(false)
+  const [loadingMessage, setLoadingMessage] = useState('Loading vessel...')
+  const [saveCallback, setSaveCallback] = useState<(() => Promise<boolean>) | null>(null)
 
   // Load from localStorage after hydration
   useEffect(() => {
@@ -100,6 +137,62 @@ export function VesselProvider({ children }: { children: ReactNode }) {
 
   const triggerVesselsUpdate = () => {
     setVesselsUpdatedTrigger(prev => prev + 1)
+  }
+
+  const registerSaveCallback = (callback: (silent?: boolean, vesselSnapshot?: any, vesselIdSnapshot?: string) => Promise<boolean>) => {
+    setSaveCallback(() => callback)
+  }
+
+  // Direct vessel selection method (works from any page)
+  const selectVessel = async (vesselId: string) => {
+    // If selecting same vessel or already loading, navigate to cases
+    if (vesselId === currentVesselId) {
+      router.push('/cases')
+      return
+    }
+    
+    if (loadingVessel) {
+      return
+    }
+
+    // Navigate to cases page first
+    router.push('/cases')
+    
+    // Small delay for navigation
+    await new Promise(resolve => setTimeout(resolve, 50))
+
+    // Auto-save current vessel if needed (silently - don't block on failure)
+    // IMPORTANT: Capture vessel data snapshot BEFORE any state changes
+    const vesselDataSnapshot = { ...vesselData }
+    const currentVesselIdSnapshot = currentVesselId
+    
+    const hasVesselData = vesselDataSnapshot.vesselTag && vesselDataSnapshot.vesselTag.trim() !== ''
+    if (saveCallback && hasVesselData && currentVesselIdSnapshot) {
+      setLoadingMessage('Saving current vessel...')
+      setLoadingVessel(true)
+      
+      try {
+        // Pass snapshots to ensure we save the CURRENT vessel data, not the new vessel's data
+        await saveCallback(true, vesselDataSnapshot, currentVesselIdSnapshot)
+      } catch (error) {
+        // Silently catch all errors - don't block vessel switching
+        console.warn('Auto-save error:', error)
+      }
+      
+      // Clear the loading state after auto-save attempt
+      setLoadingVessel(false)
+    }
+
+    // Trigger the old callback system for VesselBar to handle loading
+    if (vesselCallbacks.onSelectVessel) {
+      vesselCallbacks.onSelectVessel(vesselId)
+    }
+  }
+
+  const newVessel = () => {
+    if (vesselCallbacks.onNewVessel) {
+      vesselCallbacks.onNewVessel()
+    }
   }
 
   /**
@@ -149,13 +242,23 @@ export function VesselProvider({ children }: { children: ReactNode }) {
       vesselData, 
       updateVesselData, 
       calculateFireExposedArea,
+      // New direct methods
+      selectVessel,
+      newVessel,
+      // Old callback system (backward compatibility)
       onNewVesselRequested: vesselCallbacks.onNewVessel,
       onSelectVesselRequested: vesselCallbacks.onSelectVessel,
       registerVesselCallbacks,
       currentVesselId,
       setCurrentVesselId,
       vesselsUpdatedTrigger,
-      triggerVesselsUpdate
+      triggerVesselsUpdate,
+      loadingVessel,
+      setLoadingVessel,
+      loadingMessage,
+      setLoadingMessage,
+      saveCurrentVessel: saveCallback,
+      registerSaveCallback
     }}>
       {children}
     </VesselContext.Provider>

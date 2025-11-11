@@ -41,6 +41,7 @@ interface CaseContextType {
   getDesignBasisFlow: () => { flow: number; caseName: string; caseId: CaseId } | null      // Get highest flow
   getSelectedCaseCount: () => number        // Count of active cases
   hasCalculatedResults: () => boolean       // Whether any calculations exist
+  refreshFromStorage: () => void            // Refresh case data from localStorage (for vessel switches)
 }
 
 const defaultCases = {
@@ -246,6 +247,34 @@ export function CaseProvider({ children }: { children: ReactNode }) {
     return Object.values(caseResults).some(result => result.isCalculated)
   }
 
+  /**
+   * Refresh case data from localStorage.
+   * Called when switching vessels to reload the new vessel's case data.
+   */
+  const refreshFromStorage = useCallback(() => {
+    const savedSelectedCases = localStorage.getItem('reliever-selected-cases')
+    if (savedSelectedCases) {
+      try {
+        setSelectedCases({ ...defaultCases, ...JSON.parse(savedSelectedCases) })
+      } catch (error) {
+        console.warn('Failed to refresh selected cases:', error)
+      }
+    } else {
+      setSelectedCases(defaultCases)
+    }
+
+    const savedCaseResults = localStorage.getItem('reliever-case-results')
+    if (savedCaseResults) {
+      try {
+        setCaseResults({ ...defaultCaseResults, ...JSON.parse(savedCaseResults) })
+      } catch (error) {
+        console.warn('Failed to refresh case results:', error)
+      }
+    } else {
+      setCaseResults(defaultCaseResults)
+    }
+  }, [])
+
   return (
     <CaseContext.Provider value={{ 
       selectedCases, 
@@ -254,7 +283,8 @@ export function CaseProvider({ children }: { children: ReactNode }) {
       updateCaseResult,
       getDesignBasisFlow,
       getSelectedCaseCount,
-      hasCalculatedResults
+      hasCalculatedResults,
+      refreshFromStorage
     }}>
       {children}
     </CaseContext.Provider>

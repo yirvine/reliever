@@ -13,6 +13,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '../context/AuthContext'
 import { useVessel } from '../context/VesselContext'
 import { useCase } from '../context/CaseContext'
@@ -30,31 +31,36 @@ interface SavedVessel {
 }
 
 export default function VesselBar({ onLoginRequired }: VesselBarProps) {
+  const router = useRouter()
   const { user } = useAuth()
-  const { vesselData, updateVesselData, registerVesselCallbacks, currentVesselId, setCurrentVesselId, triggerVesselsUpdate } = useVessel()
+  const { vesselData, updateVesselData, registerVesselCallbacks, registerSaveCallback, currentVesselId, setCurrentVesselId, triggerVesselsUpdate, loadingVessel, setLoadingVessel, setLoadingMessage } = useVessel()
+  const { refreshFromStorage } = useCase()
   const [showNewVesselModal, setShowNewVesselModal] = useState(false)
-  const [showSavePrompt, setShowSavePrompt] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [newVesselName, setNewVesselName] = useState('')
   const [saving, setSaving] = useState(false)
   const [userVessels, setUserVessels] = useState<SavedVessel[]>([])
 
-  // Register callbacks with VesselContext so Sidebar can trigger them
+  // Register callbacks with VesselContext
   useEffect(() => {
     registerVesselCallbacks({
       onNewVessel: handleNewVessel,
       onSelectVessel: handleSelectVessel
     })
+    // Register save callback for auto-save
+    registerSaveCallback(handleSave)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch user vessels when logged in
   useEffect(() => {
     if (user) {
       fetchUserVessels()
-    } else {
-      setUserVessels([])
-      setCurrentVesselId(null)
     }
-  }, [user, setCurrentVesselId])
+    // Don't clear vessels/currentVesselId when user becomes null
+    // (happens during auth initialization on refresh)
+    // AuthContext already handles clearing on actual logout
+  }, [user])
 
   const fetchUserVessels = async () => {
     try {
@@ -69,7 +75,10 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
 
       if (response.ok) {
         const data = await response.json()
-        setUserVessels(data.vessels || [])
+        const vessels = data.vessels || []
+        setUserVessels(vessels)
+        // Update cache to keep Sidebar in sync
+        localStorage.setItem('reliever-vessels-cache', JSON.stringify(vessels))
       }
     } catch (error) {
       console.error('Failed to fetch vessels:', error)
@@ -87,33 +96,57 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
       'heat-exchanger-tube-rupture'
     ]
 
+    // Get selection state and results from localStorage
+    const selectedCasesData = localStorage.getItem('reliever-selected-cases')
+    const selectedCases = selectedCasesData ? JSON.parse(selectedCasesData) : {}
+    
+    const caseResultsData = localStorage.getItem('reliever-case-results')
+    const caseResults = caseResultsData ? JSON.parse(caseResultsData) : {}
+
     return caseTypes.map(caseType => {
       const flowData = localStorage.getItem(`${caseType}-flow-data`)
       const pressureData = localStorage.getItem(`${caseType}-pressure-data`)
       
       const flowParsed = flowData ? JSON.parse(flowData) : {}
       const pressureParsed = pressureData ? JSON.parse(pressureData) : {}
+      
+      const result = caseResults[caseType]
 
       return {
         caseType,
-        caseName: null,
+        caseName: result?.caseName || null,
         // ONLY save user inputs - calculated values will be regenerated client-side
         flowData: flowParsed,
         pressureData: pressureParsed,
+        // Save selection state and calculated results
+        isSelected: selectedCases[caseType] || false,
+        isCalculated: result?.isCalculated || false,
+        asmeVIIIDesignFlow: result?.asmeVIIIDesignFlow || null,
+        calculatedRelievingFlow: null, // Deprecated, can be removed
       }
     })
   }
 
-  const handleSave = async () => {
-    if (!user) {
-      onLoginRequired()
-      return
+  const handleSave = async (silent = false, vesselSnapshot?: typeof vesselData, vesselIdSnapshot?: string) => {
+    // Use auth.currentUser directly instead of context user to avoid stale closure
+    if (!auth.currentUser) {
+      if (!silent) onLoginRequired()
+      return false
     }
 
-    setSaving(true)
+    // Don't set saving state if silent (auto-save) to avoid UI flicker
+    if (!silent) setSaving(true)
+    
     try {
-      const idToken = await auth.currentUser?.getIdToken()
-      if (!idToken) throw new Error('No auth token')
+      const idToken = await auth.currentUser.getIdToken()
+      if (!idToken) {
+        if (!silent) throw new Error('No auth token')
+        return false
+      }
+
+      // Use snapshots if provided (for auto-save), otherwise use current context data
+      const dataToSave = vesselSnapshot || vesselData
+      const idToSave = vesselIdSnapshot || currentVesselId
 
       // Save vessel
       const vesselResponse = await fetch('/api/vessels', {
@@ -124,27 +157,37 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
         body: JSON.stringify({
           idToken,
           vessel: {
-            id: currentVesselId,
-            vesselTag: vesselData.vesselTag,
-            vesselName: vesselData.vesselName,
-            vesselOrientation: vesselData.vesselOrientation,
-            vesselDiameter: vesselData.vesselDiameter,
-            straightSideHeight: vesselData.straightSideHeight,
-            headType: vesselData.headType,
-            vesselDesignMawp: vesselData.vesselDesignMawp,
-            asmeSetPressure: vesselData.asmeSetPressure,
+            id: idToSave,
+            vesselTag: dataToSave.vesselTag,
+            vesselName: dataToSave.vesselName,
+            vesselOrientation: dataToSave.vesselOrientation,
+            vesselDiameter: dataToSave.vesselDiameter,
+            straightSideHeight: dataToSave.straightSideHeight,
+            headType: dataToSave.headType,
+            vesselDesignMawp: dataToSave.vesselDesignMawp,
+            asmeSetPressure: dataToSave.asmeSetPressure,
           }
         })
       })
 
       if (!vesselResponse.ok) {
         const errorData = await vesselResponse.json()
-        throw new Error(errorData.error || 'Failed to save vessel')
+        const error = new Error(errorData.error || 'Failed to save vessel')
+        
+        // In silent mode, log and return false instead of throwing
+        if (silent) {
+          return false
+        }
+        throw error
       }
 
       const savedVesselData = await vesselResponse.json()
       const vesselId = savedVesselData.vessel.id
-      setCurrentVesselId(vesselId)
+      
+      // Only update currentVesselId if not using snapshot (i.e., not auto-save)
+      if (!vesselSnapshot) {
+        setCurrentVesselId(vesselId)
+      }
 
       // Save all cases
       const cases = collectCaseDataFromLocalStorage()
@@ -161,60 +204,62 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
 
       if (!casesResponse.ok) {
         const errorData = await casesResponse.json()
-        throw new Error(errorData.error || 'Failed to save cases')
+        const error = new Error(errorData.error || 'Failed to save cases')
+        
+        // In silent mode, log and return false instead of throwing
+        if (silent) {
+          return false
+        }
+        throw error
       }
 
-      // Refresh vessels list
-      await fetchUserVessels()
-      triggerVesselsUpdate() // Notify Sidebar to refresh
+      // Refresh vessels list only if not silent
+      if (!silent) {
+        await fetchUserVessels()
+        triggerVesselsUpdate() // Notify Sidebar to refresh
+      }
+      
+      return true
     } catch (error) {
-      console.error('Failed to save vessel:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Failed to save vessel. Please try again.'
-      alert(`❌ ${errorMessage}`)
+      console.error('Failed to save vessel (catch block):', error)
+      if (!silent) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to save vessel. Please try again.'
+        alert(`❌ ${errorMessage}`)
+      }
+      return false
     } finally {
-      setSaving(false)
+      if (!silent) setSaving(false)
     }
   }
 
-  const handleNewVessel = () => {
-    if (!user) {
+  const handleNewVessel = async () => {
+    // Use auth.currentUser directly to avoid stale closure
+    if (!auth.currentUser) {
       onLoginRequired()
       return
     }
     
-    // Check if there's unsaved work
+    // Auto-save current vessel if it exists (silent, like vessel switching)
     const hasVesselData = vesselData.vesselTag && vesselData.vesselTag.trim() !== ''
     
-    if (hasVesselData && currentVesselId === null) {
-      // Show save prompt first
-      setShowSavePrompt(true)
-    } else {
-      // No unsaved work, go straight to new vessel
-      setShowNewVesselModal(true)
+    if (hasVesselData && currentVesselId) {
+      // Capture snapshot before clearing data
+      const vesselDataSnapshot = { ...vesselData }
+      const currentVesselIdSnapshot = currentVesselId
+      
+      // Silent auto-save (don't block on failure)
+      try {
+        await handleSave(true, vesselDataSnapshot, currentVesselIdSnapshot)
+      } catch (error) {
+        console.warn('Auto-save before new vessel:', error)
+      }
     }
-  }
-
-  const handleSaveAndCreateNew = async () => {
-    setShowSavePrompt(false)
-    setSaving(true)
     
-    try {
-      await handleSave()
-      // After save, show new vessel modal
-      setShowNewVesselModal(true)
-    } catch (error) {
-      console.error('Error saving before new vessel:', error)
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleSkipSaveAndCreateNew = () => {
-    setShowSavePrompt(false)
+    // Show new vessel modal
     setShowNewVesselModal(true)
   }
 
-  const clearAllData = () => {
+  const clearAllData = (keepVesselId = false) => {
     // Clear vessel context (reset to defaults)
     updateVesselData('vesselTag', '')
     updateVesselData('vesselName', '')
@@ -243,43 +288,140 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
       localStorage.removeItem(`${caseType}-pressure-data`)
     })
     
-    // Note: CaseContext selection will clear automatically when localStorage is empty
-    setCurrentVesselId(null)
+    // Clear case selection data
+    localStorage.removeItem('reliever-selected-cases')
+    localStorage.removeItem('reliever-case-results')
+    
+    // Only clear vessel ID if not creating a new vessel
+    if (!keepVesselId) {
+      setCurrentVesselId(null)
+    }
   }
 
-  const handleCreateNewVessel = () => {
+  const handleCreateNewVessel = async () => {
     if (!newVesselName.trim()) {
       return
     }
 
-    // Clear all data and start fresh
-    clearAllData()
-    
-    // Set the new vessel name
-    updateVesselData('vesselName', newVesselName)
-    
-    // Close modal and reset
+    // Close modal first
     setShowNewVesselModal(false)
-    setNewVesselName('')
+    setSaving(true)
+
+    try {
+      // Save the new vessel to the database FIRST (before clearing local data)
+      const idToken = await auth.currentUser?.getIdToken()
+      if (!idToken) {
+        throw new Error('Not authenticated')
+      }
+
+      const vesselResponse = await fetch('/api/vessels', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          idToken,
+          vessel: {
+            id: null, // New vessel
+            vesselTag: newVesselName, // Use name as initial tag
+            vesselName: newVesselName,
+            vesselOrientation: 'vertical',
+            vesselDiameter: 0,
+            straightSideHeight: 0,
+            headType: 'Hemispherical',
+            vesselDesignMawp: 0,
+            asmeSetPressure: 0,
+          }
+        })
+      })
+
+      if (!vesselResponse.ok) {
+        const errorData = await vesselResponse.json()
+        throw new Error(errorData.error || 'Failed to create vessel')
+      }
+
+      const savedVesselData = await vesselResponse.json()
+      const vesselId = savedVesselData.vessel.id
+      
+      // Refresh vessels list FIRST to ensure sidebar has the new vessel
+      await fetchUserVessels()
+      triggerVesselsUpdate()
+      
+      // Set vessel ID FIRST, then clear data (keeping the ID), then update vessel info
+      // This prevents the dropdown from flickering to null
+      setCurrentVesselId(vesselId)
+      clearAllData(true) // Keep vessel ID while clearing everything else
+      updateVesselData('vesselName', newVesselName)
+      updateVesselData('vesselTag', newVesselName)
+      
+      // Refresh CaseContext to pick up cleared case data
+      refreshFromStorage()
+      
+      // Reset modal state
+      setNewVesselName('')
+    } catch (error) {
+      console.error('Failed to create vessel:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create vessel. Please try again.'
+      alert(`❌ ${errorMessage}`)
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleSelectVessel = async (vesselId: string) => {
-    // If selecting the current vessel, do nothing
-    if (vesselId === currentVesselId || vesselId === 'current') return
+    // If selecting 'current' placeholder or already loading, do nothing
+    if (vesselId === 'current' || loadingVessel) return
+    
+    // If clicking the same vessel, just navigate to /cases without reloading
+    if (vesselId === currentVesselId) {
+      return
+    }
 
     try {
-      // Update UI immediately for smooth transition
-      setCurrentVesselId(vesselId)
-
-      const idToken = await auth.currentUser?.getIdToken()
-      if (!idToken) return
-
-      // Fetch vessel data
-      const vesselResponse = await fetch(`/api/vessels/${vesselId}`, {
-        headers: {
-          'Authorization': `Bearer ${idToken}`
-        }
+      // Note: VesselContext.selectVessel already handles navigation and auto-save
+      // This handler just does the data loading part
+      setLoadingMessage('Loading vessel...')
+      setLoadingVessel(true)
+      
+      // Clear old case data immediately to prevent showing wrong vessel's cases
+      const caseTypes = [
+        'external-fire',
+        'control-valve-failure',
+        'liquid-overfill',
+        'blocked-outlet',
+        'cooling-reflux-failure',
+        'hydraulic-expansion',
+        'heat-exchanger-tube-rupture'
+      ]
+      caseTypes.forEach(caseType => {
+        localStorage.removeItem(`${caseType}-flow-data`)
+        localStorage.removeItem(`${caseType}-pressure-data`)
       })
+      // Clear case selection state and results
+      localStorage.removeItem('reliever-selected-cases')
+      localStorage.removeItem('reliever-case-results')
+      // Clear case context state immediately
+      refreshFromStorage()
+      
+      const idToken = await auth.currentUser?.getIdToken()
+      if (!idToken) {
+        setLoadingVessel(false)
+        return
+      }
+
+      // Load vessel and cases in parallel
+      const [vesselResponse, casesResponse] = await Promise.all([
+        fetch(`/api/vessels/${vesselId}`, {
+          headers: {
+            'Authorization': `Bearer ${idToken}`
+          }
+        }),
+        fetch(`/api/vessels/${vesselId}/cases`, {
+          headers: {
+            'Authorization': `Bearer ${idToken}`
+          }
+        })
+      ])
 
       if (!vesselResponse.ok) {
         throw new Error('Failed to load vessel')
@@ -288,7 +430,7 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
       const vesselDataResponse = await vesselResponse.json()
       const vessel = vesselDataResponse.vessel
 
-      // Load vessel properties into context
+      // Load all vessel properties at once
       updateVesselData('vesselTag', vessel.vessel_tag || '')
       updateVesselData('vesselName', vessel.vessel_name || '')
       updateVesselData('vesselOrientation', vessel.vessel_orientation || 'vertical')
@@ -298,52 +440,102 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
       updateVesselData('vesselDesignMawp', vessel.vessel_design_mawp || 0)
       updateVesselData('asmeSetPressure', vessel.asme_set_pressure || 0)
 
-      // Fetch cases for this vessel
-      const casesResponse = await fetch(`/api/vessels/${vesselId}/cases`, {
-        headers: {
-          'Authorization': `Bearer ${idToken}`
-        }
-      })
-
+      // Load all cases into localStorage at once
       if (casesResponse.ok) {
         const casesData = await casesResponse.json()
         const cases = casesData.cases || []
 
-        // Load cases into localStorage
         interface CaseData {
           case_type: string
           flow_data?: Record<string, unknown>
           pressure_data?: Record<string, unknown>
+          is_selected?: boolean
+          calculated_relieving_flow?: number
+          asme_viii_design_flow?: number
+          is_calculated?: boolean
+          case_name?: string
         }
+        
+        // Rebuild selectedCases and caseResults from database
+        const newSelectedCases: Record<string, boolean> = {
+          'external-fire': false,
+          'control-valve-failure': false,
+          'liquid-overfill': false,
+          'blocked-outlet': false,
+          'cooling-reflux-failure': false,
+          'hydraulic-expansion': false,
+          'heat-exchanger-tube-rupture': false
+        }
+        
+        const newCaseResults: Record<string, any> = {}
+        
         cases.forEach((caseData: CaseData) => {
           const caseType = caseData.case_type
+          
+          // Restore flow and pressure data
           if (caseData.flow_data) {
             localStorage.setItem(`${caseType}-flow-data`, JSON.stringify(caseData.flow_data))
           }
           if (caseData.pressure_data) {
             localStorage.setItem(`${caseType}-pressure-data`, JSON.stringify(caseData.pressure_data))
           }
+          
+          // Restore selection state
+          if (caseData.is_selected !== undefined) {
+            newSelectedCases[caseType] = caseData.is_selected
+          }
+          
+          // Restore case results
+          if (caseData.is_calculated) {
+            newCaseResults[caseType] = {
+              caseId: caseType,
+              caseName: caseData.case_name || '',
+              asmeVIIIDesignFlow: caseData.asme_viii_design_flow,
+              isCalculated: caseData.is_calculated
+            }
+          }
         })
+        
+        // ALWAYS save to localStorage for CaseContext (even if empty - to clear ghost data)
+        localStorage.setItem('reliever-selected-cases', JSON.stringify(newSelectedCases))
+        localStorage.setItem('reliever-case-results', JSON.stringify(newCaseResults))
       }
+
+      // Refresh CaseContext to pick up the new localStorage data
+      refreshFromStorage()
+
+      // Set current vessel ID after all data is loaded
+      setCurrentVesselId(vesselId)
+
+      // End loading immediately after data is fetched
+      setLoadingVessel(false)
     } catch (error) {
       console.error('Failed to load vessel:', error)
-      // Revert currentVesselId on error
       setCurrentVesselId(null)
+      setLoadingVessel(false)
     }
   }
 
-  const handleDelete = async () => {
+  const handleDeleteClick = () => {
+    if (!currentVesselId) {
+      return
+    }
+    setShowDeleteModal(true)
+  }
+
+  const handleDeleteConfirm = async () => {
     if (!currentVesselId) {
       return
     }
 
-    if (!confirm(`Are you sure you want to delete this vessel? This action cannot be undone.`)) {
-      return
-    }
+    setDeleting(true)
 
     try {
       const idToken = await auth.currentUser?.getIdToken()
-      if (!idToken) return
+      if (!idToken) {
+        setDeleting(false)
+        return
+      }
 
       const response = await fetch(`/api/vessels/${currentVesselId}`, {
         method: 'DELETE',
@@ -356,14 +548,65 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
         throw new Error('Failed to delete vessel')
       }
 
-      // Clear current data
-      clearAllData()
+      // Clear vessels cache AND current vessel ID to prevent stale data on refresh
+      localStorage.removeItem('reliever-vessels-cache')
+      localStorage.removeItem('reliever-current-vessel-id')
       
-      // Refresh vessels list
+      // Refresh vessels list to get updated list without deleted vessel
       await fetchUserVessels()
+      
+      // Check if there are other vessels to switch to
+      const updatedVessels = await (async () => {
+        const response = await fetch('/api/vessels', {
+          headers: { 'Authorization': `Bearer ${idToken}` }
+        })
+        if (response.ok) {
+          const data = await response.json()
+          return data.vessels || []
+        }
+        return []
+      })()
+      
+      // THOROUGHLY clear ALL localStorage case data to remove ghost cases
+      const caseTypes = [
+        'external-fire',
+        'control-valve-failure',
+        'liquid-overfill',
+        'blocked-outlet',
+        'cooling-reflux-failure',
+        'hydraulic-expansion',
+        'heat-exchanger-tube-rupture'
+      ]
+      caseTypes.forEach(caseType => {
+        localStorage.removeItem(`${caseType}-flow-data`)
+        localStorage.removeItem(`${caseType}-pressure-data`)
+      })
+      localStorage.removeItem('reliever-selected-cases')
+      localStorage.removeItem('reliever-case-results')
+      
+      // Clear all vessel and case context
+      clearAllData()
+      refreshFromStorage() // Clear case context
+      
+      if (updatedVessels.length > 0) {
+        // Switch to the first available vessel (which will load its own cases from DB)
+        const firstVessel = updatedVessels[0]
+        await handleSelectVessel(firstVessel.id)
+      } else {
+        // No vessels left, navigate to home
+        router.push('/')
+      }
+      
       triggerVesselsUpdate()
+      
+      // Close modal only after everything is complete
+      setShowDeleteModal(false)
+      setDeleting(false)
     } catch (error) {
       console.error('Failed to delete vessel:', error)
+      setDeleting(false)
+      setShowDeleteModal(false)
+      alert('❌ Failed to delete vessel. Please try again.')
     }
   }
 
@@ -381,12 +624,16 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
           <select 
             className="flex-1 max-w-md text-sm font-medium text-gray-900 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             value={currentVesselId || 'current'}
-            disabled={userVessels.length === 0}
+            disabled={!user || (userVessels.length === 0 && !currentVesselId)}
             onChange={(e) => handleSelectVessel(e.target.value)}
           >
-            <option value="current">
-              {currentVesselDisplay}{vesselNameSuffix}
-            </option>
+            {/* Show unsaved vessel only if no currentVesselId */}
+            {!currentVesselId && (
+              <option value="current">
+                {currentVesselDisplay}{vesselNameSuffix}
+              </option>
+            )}
+            {/* Show all saved vessels - the select's value prop will highlight the current one */}
             {userVessels.map(vessel => (
               <option key={vessel.id} value={vessel.id}>
                 {vessel.vessel_tag}{vessel.vessel_name ? ` - ${vessel.vessel_name}` : ''}
@@ -413,7 +660,7 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
           {user && (
             <>
               <button
-                onClick={handleSave}
+                onClick={() => handleSave()}
                 disabled={saving}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-lg transition-colors"
               >
@@ -426,7 +673,7 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
               {/* Delete Button - Only show if there's a saved vessel loaded */}
               {currentVesselId && (
                 <button
-                  onClick={handleDelete}
+                  onClick={handleDeleteClick}
                   className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
                   title="Delete this vessel"
                 >
@@ -451,42 +698,6 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
         </div>
       </div>
 
-      {/* Save Changes Prompt Modal */}
-      {showSavePrompt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Save Changes?</h3>
-            <p className="text-sm text-gray-600 mb-6">
-              You have unsaved changes to <strong>{currentVesselDisplay}</strong>. Would you like to save before creating a new vessel?
-            </p>
-            
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={handleSaveAndCreateNew}
-                disabled={saving}
-                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 font-medium"
-              >
-                {saving ? 'Saving...' : 'Save & Create New'}
-              </button>
-              <button
-                onClick={handleSkipSaveAndCreateNew}
-                disabled={saving}
-                className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
-              >
-                Don&apos;t Save
-              </button>
-              <button
-                onClick={() => setShowSavePrompt(false)}
-                disabled={saving}
-                className="w-full px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* New Vessel Modal */}
       {showNewVesselModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -505,9 +716,15 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
                 type="text"
                 value={newVesselName}
                 onChange={(e) => setNewVesselName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && newVesselName.trim() && !saving) {
+                    handleCreateNewVessel()
+                  }
+                }}
                 placeholder="e.g., Acetone Storage Tank"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 autoFocus
+                disabled={saving}
               />
               <p className="text-xs text-gray-500 mt-1">
                 You can set the vessel tag (V-102, etc.) in the vessel properties below
@@ -517,16 +734,58 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
             <div className="flex gap-3">
               <button
                 onClick={handleCreateNewVessel}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                disabled={saving || !newVesselName.trim()}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Create Vessel
+                {saving ? 'Creating...' : 'Create Vessel'}
               </button>
               <button
                 onClick={() => {
                   setShowNewVesselModal(false)
                   setNewVesselName('')
                 }}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
+                disabled={saving}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">Delete Vessel?</h3>
+            </div>
+            
+            <p className="text-sm text-gray-600 mb-2">
+              Are you sure you want to delete <strong>{currentVesselDisplay}</strong>?
+            </p>
+            <p className="text-sm text-gray-600 mb-6">
+              This will permanently delete the vessel and all associated case data. This action cannot be undone.
+            </p>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={deleting}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {deleting ? 'Deleting...' : 'Delete Vessel'}
+              </button>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
