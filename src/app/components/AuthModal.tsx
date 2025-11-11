@@ -55,7 +55,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         // Success - show checkmark and close
         showSuccessAndClose()
       } else {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+        await createUserWithEmailAndPassword(auth, email, password)
         
         // Wait a moment for Firebase to fully initialize the user
         // Then use auth.currentUser (as recommended by Firebase docs)
@@ -116,7 +116,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           console.log('   → See: docs/EMAIL_VERIFICATION_TROUBLESHOOT.md')
           console.log('')
           console.log('🌐 Network status:', navigator.onLine ? 'Online ✅' : 'Offline ❌')
-          console.log('🔌 Connection type:', (navigator as any).connection?.effectiveType || 'Unknown')
+          const connection = (navigator as { connection?: { effectiveType?: string } }).connection
+          console.log('🔌 Connection type:', connection?.effectiveType || 'Unknown')
           console.groupEnd()
           
           // Summary diagnostic
