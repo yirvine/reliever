@@ -426,3 +426,74 @@ Implemented Heat Exchanger Tube Rupture case per API-521 Section 4.4.14, coverin
 
 ---
 
+## November 11, 2025
+
+### Summary
+Implemented complete vessel management system with Firebase authentication and Supabase database integration. Users can now save, load, delete, and switch between multiple vessels, with all case data persisting across sessions.
+
+### Vessel Management Implementation
+- **VesselBar component**: Created comprehensive vessel management bar with dropdown selector, New Vessel, Save, and Delete buttons
+- **Vessel saving**: Save vessel properties and all case inputs to database (only user inputs, calculated values regenerated client-side)
+- **Vessel loading**: Load saved vessels from dropdown or sidebar, populating vessel properties and case data from database
+- **Vessel deletion**: Delete vessels with confirmation dialog, cascades to all associated cases
+- **Multi-vessel support**: Users can create and manage unlimited vessels, each with independent case data
+- **Sidebar integration**: Redesigned sidebar to display user's vessel list with active vessel highlighting
+- **Instant sync**: Dropdown and sidebar stay in perfect sync when switching vessels
+
+### Database & API Routes
+- **API routes created**: 
+  - `POST /api/vessels` - Create/update vessel
+  - `GET /api/vessels` - List user's vessels
+  - `GET /api/vessels/[id]` - Fetch specific vessel
+  - `DELETE /api/vessels/[id]` - Delete vessel
+  - `POST /api/vessels/[id]/cases` - Save all cases for vessel
+  - `GET /api/vessels/[id]/cases` - Load vessel's cases
+- **Data persistence strategy**: Only user inputs (flowData, pressureData) stored as JSONB; calculated values regenerated client-side
+- **Database schema**: Uses composite unique constraint on (user_id, vessel_tag) - different users can have same vessel tag
+- **Security**: All API routes verify Firebase token and enforce user ownership
+
+### UX Enhancements
+- **Removed success toasts**: Clean UI with no annoying success alerts, only critical error messages
+- **Instant dropdown updates**: UI updates immediately when selecting vessels for smooth transitions
+- **Save prompt workflow**: When creating new vessel with unsaved work, prompts to save current vessel first
+- **Vessel name input**: Made text black and removed "optional" label per UX feedback
+- **Delete button**: Only visible when a saved vessel is loaded, red color scheme with confirmation dialog
+
+### Context System Enhancements
+- **VesselContext updates**: Added vessel management callbacks, currentVesselId tracking, and vesselsUpdatedTrigger for cross-component coordination
+- **Callback registration**: VesselBar registers handlers that Sidebar can call for "Add Vessel" and vessel selection
+- **Automatic refresh**: Sidebar automatically refreshes vessel list when vessels are saved/deleted via trigger mechanism
+
+### Error Handling
+- **Duplicate vessel tag**: User-friendly error message "You already have a vessel with tag 'X'. Please use a different vessel tag."
+- **HTTP status codes**: Proper 409 Conflict for duplicates, 404 for not found, 401 for unauthorized, 403 for access denied
+- **Failed loads**: Graceful error handling with currentVesselId revert on load failure
+
+### Technical Notes
+- **Next.js 15 async params**: Updated all dynamic route handlers to await params per Next.js 15 requirements
+- **Optimistic UI updates**: setCurrentVesselId called immediately before fetch for instant feedback
+- **Cascade deletes**: Database schema uses ON DELETE CASCADE for automatic case cleanup
+- **localStorage bridge**: Vessel loading writes case data to localStorage where case pages read it
+- **JSONB storage**: PostgreSQL JSONB columns for flexible case input storage
+- **Firebase + Supabase**: Authentication via Firebase, data storage in Supabase with firebase_uid linking
+
+### Files Modified
+- `src/app/components/VesselBar.tsx` - Complete vessel management UI with save/load/delete/new functionality
+- `src/app/components/Sidebar.tsx` - Redesigned with vessel list, load on click, Add Vessel button
+- `src/app/context/VesselContext.tsx` - Added vessel management state and callbacks
+- `src/app/api/vessels/route.ts` - Vessel create/update/list endpoints
+- `src/app/api/vessels/[id]/route.ts` - Single vessel fetch/delete endpoints
+- `src/app/api/vessels/[id]/cases/route.ts` - Case save/load endpoints
+- `docs/DATA_PERSISTENCE_STRATEGY.md` - New doc explaining input-only storage approach
+- `PROJECT_CONTEXT.md` - Updated with vessel saving status
+- `database/migrations/001_initial_schema.sql` - Clarified unique constraint comment
+
+### Architecture Decisions
+- **Input-only storage**: Store only user-entered values, recalculate everything on load for accuracy and flexibility
+- **Global vessel bar**: Vessel management at top of cases page, not per-case
+- **Shared callbacks**: VesselContext mediates between VesselBar and Sidebar for coordinated actions
+- **Trigger pattern**: Simple counter increment to notify components of vessel list changes
+- **API token verification**: Every API call verifies Firebase token and checks Supabase user ownership
+
+---
+

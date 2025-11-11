@@ -32,7 +32,6 @@ interface SavedVessel {
 export default function VesselBar({ onLoginRequired }: VesselBarProps) {
   const { user } = useAuth()
   const { vesselData, updateVesselData, registerVesselCallbacks, currentVesselId, setCurrentVesselId, triggerVesselsUpdate } = useVessel()
-  const { selectedCases, caseResults } = useCase()
   const [showNewVesselModal, setShowNewVesselModal] = useState(false)
   const [showSavePrompt, setShowSavePrompt] = useState(false)
   const [newVesselName, setNewVesselName] = useState('')
@@ -311,7 +310,12 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
         const cases = casesData.cases || []
 
         // Load cases into localStorage
-        cases.forEach((caseData: any) => {
+        interface CaseData {
+          case_type: string
+          flow_data?: Record<string, unknown>
+          pressure_data?: Record<string, unknown>
+        }
+        cases.forEach((caseData: CaseData) => {
           const caseType = caseData.case_type
           if (caseData.flow_data) {
             localStorage.setItem(`${caseType}-flow-data`, JSON.stringify(caseData.flow_data))
@@ -469,7 +473,7 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
                 disabled={saving}
                 className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
               >
-                Don't Save
+                Don&apos;t Save
               </button>
               <button
                 onClick={() => setShowSavePrompt(false)}

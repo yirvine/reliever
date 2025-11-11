@@ -26,7 +26,8 @@ Each overpressure scenario is a separate "case" (e.g., External Fire, Liquid Ove
 
 ### Key Components
 - **Reusable case components**: `CasePageHeader`, `DesignBasisFlowBanner`, `IncludeCaseToggle`, `CaseBreadcrumb`
-- **Shared vessel UI**: `CollapsibleVesselProperties`, `VesselProperties`
+- **Shared vessel UI**: `CollapsibleVesselProperties`, `VesselProperties`, `VesselBar` (vessel management)
+- **Navigation components**: `Header`, `Sidebar` (with vessel list and management)
 - **Custom hooks**: `useCaseCalculation` (standardizes auto-update logic), `useLocalStorage`, `useReportGenerator`
 
 ## How Cases Work
@@ -37,6 +38,14 @@ Each overpressure scenario is a separate "case" (e.g., External Fire, Liquid Ove
 5. User selects which cases to include via toggle switches
 6. Selected cases appear on the main cases page, showing the design basis flow (highest required flow rate)
 7. User generates a PDF report containing all selected cases
+
+## Vessel Management Workflow
+1. **Create/Edit Vessel**: User enters vessel properties and case data (stored in localStorage for active session)
+2. **Save Vessel**: Click "Save" button in VesselBar to persist to database (requires authentication)
+3. **Load Vessel**: Select from dropdown or sidebar to load saved vessel + all case data from database
+4. **Switch Vessels**: Seamlessly switch between saved vessels - dropdown and sidebar stay in sync
+5. **Delete Vessel**: Click "Delete" button to permanently remove vessel and all associated cases
+6. **New Vessel**: Click "New Vessel" to start fresh (prompts to save current vessel if unsaved changes exist)
 
 ## Important Notes
 
@@ -51,11 +60,12 @@ Each overpressure scenario is a separate "case" (e.g., External Fire, Liquid Ove
 - Used to determine the minimum relief device capacity required
 
 ### Data Persistence
-- **Current**: All data persists in **localStorage** (no backend database yet)
-- **Future**: Migrating to Supabase database with proper user ownership
+- **Current**: Hybrid approach - **localStorage** for active session + **Supabase** for permanent storage
+- **Active session**: Cases store data in localStorage for real-time calculations and auto-save
+- **Permanent storage**: Users can save vessels to Supabase database, which stores only user inputs (flowData, pressureData as JSONB)
+- **Loading flow**: When loading a saved vessel, data is fetched from Supabase and written to localStorage, then calculations run automatically
 - Each case has two storage keys: one for flow data, one for pressure data (see `STORAGE_KEYS` in `case-types.ts`)
 - The `useCaseCalculation` hook automatically merges inputs and outputs and saves to localStorage
-- Database schema is ready (`database/migrations/001_initial_schema.sql`)
 
 ### Adding New Cases
 - See `/docs/summaries/ADD_NEW_CASE.md` for step-by-step instructions
@@ -92,7 +102,7 @@ reliever/
 ### Status
 ✅ **Authentication is fully functional** - Email/password signup with verification and Google OAuth are working. Email verification emails arrive (check spam folder for new projects).
 
-✅ **Vessel saving is now functional** - Users can save vessels and cases to the database. Only user-inputted values (flowData, pressureData) are stored; calculated values are regenerated client-side when vessels are loaded.
+✅ **Vessel management is fully functional** - Users can save, load, delete, and switch between multiple vessels. The VesselBar and Sidebar provide seamless vessel management with instant synchronization. Only user-inputted values (flowData, pressureData) are stored; calculated values are regenerated client-side when vessels are loaded.
 
 ### Architecture
 ReliefGuard uses a **Firebase + Supabase** architecture:

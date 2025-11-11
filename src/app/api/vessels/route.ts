@@ -85,12 +85,12 @@ export async function POST(request: NextRequest) {
       success: true,
       vessel: result,
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error saving vessel:', error)
     
     // Handle duplicate vessel tag error (unique constraint on user_id + vessel_tag)
     // Note: Different users CAN have the same vessel tag - the constraint is only per user
-    if (error?.code === '23505' && error?.message?.includes('vessels_user_id_vessel_tag_key')) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === '23505' && 'message' in error && typeof error.message === 'string' && error.message.includes('vessels_user_id_vessel_tag_key')) {
       return NextResponse.json(
         { error: `You already have a vessel with tag "${vesselTag || 'this name'}". Please use a different vessel tag.` },
         { status: 409 } // 409 Conflict

@@ -59,7 +59,13 @@ export async function POST(
 
     // Prepare cases - ONLY save user inputs, not calculated values
     // Calculated values will be regenerated client-side when the vessel is loaded
-    const casesToSave = cases.map((c: any) => ({
+    interface CaseInput {
+      caseType: string
+      caseName?: string | null
+      flowData?: Record<string, unknown>
+      pressureData?: Record<string, unknown>
+    }
+    const casesToSave = cases.map((c: CaseInput) => ({
       vessel_id: vesselId,
       user_id: user.id,
       case_type: c.caseType,
