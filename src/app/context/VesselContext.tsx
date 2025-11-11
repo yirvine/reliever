@@ -89,7 +89,6 @@ export function VesselProvider({ children }: { children: ReactNode }) {
   
   // Wrapper to persist currentVesselId to localStorage
   const setCurrentVesselId = (id: string | null) => {
-    console.log('🔍 setCurrentVesselId called with:', id, 'from:', new Error().stack?.split('\n')[2])
     setCurrentVesselIdState(id)
     if (id) {
       localStorage.setItem('reliever-current-vessel-id', id)
@@ -105,7 +104,7 @@ export function VesselProvider({ children }: { children: ReactNode }) {
   const [vesselsUpdatedTrigger, setVesselsUpdatedTrigger] = useState(0)
   const [loadingVessel, setLoadingVessel] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState('Loading vessel...')
-  const [saveCallback, setSaveCallback] = useState<(() => Promise<boolean>) | null>(null)
+  const [saveCallback, setSaveCallback] = useState<((silent?: boolean, vesselSnapshot?: VesselData, vesselIdSnapshot?: string) => Promise<boolean>) | null>(null)
 
   // Load from localStorage after hydration
   useEffect(() => {
@@ -139,7 +138,7 @@ export function VesselProvider({ children }: { children: ReactNode }) {
     setVesselsUpdatedTrigger(prev => prev + 1)
   }
 
-  const registerSaveCallback = (callback: (silent?: boolean, vesselSnapshot?: any, vesselIdSnapshot?: string) => Promise<boolean>) => {
+  const registerSaveCallback = (callback: (silent?: boolean, vesselSnapshot?: VesselData, vesselIdSnapshot?: string) => Promise<boolean>) => {
     setSaveCallback(() => callback)
   }
 

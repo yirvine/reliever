@@ -10,7 +10,7 @@ import { useAuth } from '../context/AuthContext'
 
 export default function Header() {
   const { isExpanded } = useSidebar()
-  const { user, unverifiedUser, signOut, loading } = useAuth()
+  const { user, unverifiedUser, signOut } = useAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   

@@ -467,7 +467,7 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
           'heat-exchanger-tube-rupture': false
         }
         
-        const newCaseResults: Record<string, any> = {}
+        const newCaseResults: Record<string, unknown> = {}
         
         cases.forEach((caseData: CaseData) => {
           const caseType = caseData.case_type

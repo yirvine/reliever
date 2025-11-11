@@ -55,6 +55,7 @@ export default function Sidebar() {
       setUserVessels([])
       localStorage.removeItem('reliever-vessels-cache')
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, vesselsUpdatedTrigger, isHydrated])
 
   const fetchUserVessels = async () => {
@@ -202,7 +203,7 @@ export default function Sidebar() {
             {/* Toggled Cases List */}
             <div className="space-y-1 mt-2">
               {Object.entries(selectedCases)
-                .filter(([_, isSelected]) => isSelected)
+                .filter(([, isSelected]) => isSelected)
                 .map(([caseId]) => {
                   const result = caseResults[caseId as keyof typeof caseResults]
                   const caseRoute = `/cases/${caseId}`
