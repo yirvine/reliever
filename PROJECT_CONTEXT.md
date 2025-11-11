@@ -89,6 +89,11 @@ reliever/
 
 ## Authentication & Database
 
+### Status
+✅ **Authentication is fully functional** - Email/password signup with verification and Google OAuth are working. Email verification emails arrive (check spam folder for new projects).
+
+✅ **Vessel saving is now functional** - Users can save vessels and cases to the database. Only user-inputted values (flowData, pressureData) are stored; calculated values are regenerated client-side when vessels are loaded.
+
 ### Architecture
 ReliefGuard uses a **Firebase + Supabase** architecture:
 - **Firebase Auth**: Handles all user authentication (sign-in, session management)

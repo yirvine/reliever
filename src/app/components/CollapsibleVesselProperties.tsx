@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useVessel } from '../context/VesselContext'
 import VesselProperties from './VesselProperties'
 import EditWarningModal, { shouldShowEditWarning } from './EditWarningModal'
@@ -17,26 +17,29 @@ export default function CollapsibleVesselProperties({ defaultExpanded = false, s
   // Use different localStorage keys for main page vs case pages
   const collapseKey = showEditButton ? CASE_PAGE_COLLAPSE_KEY : MAIN_PAGE_COLLAPSE_KEY
 
-  // Initialize state from localStorage immediately to prevent flash
-  const [isExpanded, setIsExpanded] = useState(() => {
-    if (typeof window === 'undefined') return defaultExpanded // SSR
+  // Initialize with default to prevent hydration mismatch
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded)
+  const [isHydrated, setIsHydrated] = useState(false)
+
+  // Load from localStorage after hydration
+  useEffect(() => {
     const savedState = localStorage.getItem(collapseKey)
     if (savedState !== null) {
-      return savedState !== 'true' // 'true' means collapsed, so expanded = false
+      setIsExpanded(savedState !== 'true') // 'true' means collapsed, so expanded = false
     }
-    return defaultExpanded
-  })
+    setIsHydrated(true)
+  }, [collapseKey])
 
   const [showModal, setShowModal] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const { vesselData, updateVesselData } = useVessel()
 
-  // Save collapsed state to localStorage when it changes
+  // Save collapsed state to localStorage when it changes (only after hydration)
   const handleToggleExpand = () => {
     if (!isEditing) {
       const newExpanded = !isExpanded
       setIsExpanded(newExpanded)
-      if (typeof window !== 'undefined') {
+      if (isHydrated) {
         localStorage.setItem(collapseKey, (!newExpanded).toString()) // Store inverse (collapsed state)
       }
     }

@@ -6,6 +6,8 @@ import PageTransition from '../components/PageTransition'
 import CollapsibleVesselProperties from '../components/CollapsibleVesselProperties'
 import ASMEWarningModal from '../components/ASMEWarningModal'
 import CaseCard from '../components/CaseCard'
+import VesselBar from '../components/VesselBar'
+import AuthModal from '../components/AuthModal'
 import { useCase } from '../context/CaseContext'
 import { useVessel } from '../context/VesselContext'
 import { useScrollPosition } from '../hooks/useScrollPosition'
@@ -18,6 +20,7 @@ export default function Calculator() {
   const designBasisFlow = getDesignBasisFlow()
   const selectedCount = getSelectedCaseCount()
   const [showASMEWarning, setShowASMEWarning] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
   
   useScrollPosition()
 
@@ -252,6 +255,11 @@ export default function Calculator() {
           </p>
         </div>
 
+        {/* Vessel Bar */}
+        <div className="mb-6">
+          <VesselBar onLoginRequired={() => setShowAuthModal(true)} />
+        </div>
+
         {/* Global Vessel Properties Section */}
         <div className="mb-6">
           <CollapsibleVesselProperties 
@@ -445,6 +453,12 @@ export default function Calculator() {
         isOpen={showASMEWarning}
         onClose={() => setShowASMEWarning(false)}
         onProceed={handleProceedWithReport}
+      />
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
       />
     </PageTransition>
   )

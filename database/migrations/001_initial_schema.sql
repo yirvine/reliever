@@ -44,6 +44,7 @@ CREATE TABLE vessels (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   
   -- Ensure vessel_tag is unique per user
+  -- Note: Different users CAN have vessels with the same tag - only enforced per user
   UNIQUE(user_id, vessel_tag)
 );
 

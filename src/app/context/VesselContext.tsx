@@ -31,6 +31,15 @@ interface VesselContextType {
   vesselData: VesselData
   updateVesselData: (field: keyof VesselData, value: string | number | boolean) => void
   calculateFireExposedArea: (fireCode: string) => number
+  // Vessel management callbacks
+  onNewVesselRequested?: () => void
+  onSelectVesselRequested?: (vesselId: string) => void
+  registerVesselCallbacks: (callbacks: { onNewVessel?: () => void, onSelectVessel?: (id: string) => void }) => void
+  currentVesselId: string | null
+  setCurrentVesselId: (id: string | null) => void
+  // Trigger to refresh vessel lists
+  vesselsUpdatedTrigger: number
+  triggerVesselsUpdate: () => void
 }
 
 const defaultVesselData: VesselData = {
@@ -54,6 +63,12 @@ const VesselContext = createContext<VesselContextType | undefined>(undefined)
 export function VesselProvider({ children }: { children: ReactNode }) {
   const [vesselData, setVesselData] = useState<VesselData>(defaultVesselData)
   const [isHydrated, setIsHydrated] = useState(false)
+  const [currentVesselId, setCurrentVesselId] = useState<string | null>(null)
+  const [vesselCallbacks, setVesselCallbacks] = useState<{
+    onNewVessel?: () => void
+    onSelectVessel?: (id: string) => void
+  }>({})
+  const [vesselsUpdatedTrigger, setVesselsUpdatedTrigger] = useState(0)
 
   // Load from localStorage after hydration
   useEffect(() => {
@@ -77,6 +92,14 @@ export function VesselProvider({ children }: { children: ReactNode }) {
 
   const updateVesselData = (field: keyof VesselData, value: string | number | boolean) => {
     setVesselData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const registerVesselCallbacks = (callbacks: { onNewVessel?: () => void, onSelectVessel?: (id: string) => void }) => {
+    setVesselCallbacks(callbacks)
+  }
+
+  const triggerVesselsUpdate = () => {
+    setVesselsUpdatedTrigger(prev => prev + 1)
   }
 
   /**
@@ -122,7 +145,18 @@ export function VesselProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <VesselContext.Provider value={{ vesselData, updateVesselData, calculateFireExposedArea }}>
+    <VesselContext.Provider value={{ 
+      vesselData, 
+      updateVesselData, 
+      calculateFireExposedArea,
+      onNewVesselRequested: vesselCallbacks.onNewVessel,
+      onSelectVesselRequested: vesselCallbacks.onSelectVessel,
+      registerVesselCallbacks,
+      currentVesselId,
+      setCurrentVesselId,
+      vesselsUpdatedTrigger,
+      triggerVesselsUpdate
+    }}>
       {children}
     </VesselContext.Provider>
   )
