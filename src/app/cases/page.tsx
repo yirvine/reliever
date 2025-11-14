@@ -10,12 +10,14 @@ import VesselBar from '../components/VesselBar'
 import AuthModal from '../components/AuthModal'
 import { useCase } from '../context/CaseContext'
 import { useVessel } from '../context/VesselContext'
+import { useAuth } from '../context/AuthContext'
 import { useScrollPosition } from '../hooks/useScrollPosition'
 import { useReportGenerator } from '../hooks/useReportGenerator'
 
 export default function Calculator() {
-  const { selectedCases, caseResults, toggleCase, getDesignBasisFlow, getSelectedCaseCount, hasCalculatedResults } = useCase()
-  const { vesselData } = useVessel()
+  const { selectedCases, caseResults, toggleCase, getDesignBasisFlow, getSelectedCaseCount, hasCalculatedResults, isHydrated: casesHydrated } = useCase()
+  const { vesselData, isHydrated: vesselHydrated } = useVessel()
+  const { loading: authLoading } = useAuth()
   const { generateReport, isGenerating } = useReportGenerator()
   const designBasisFlow = getDesignBasisFlow()
   const selectedCount = getSelectedCaseCount()
@@ -204,6 +206,8 @@ export default function Calculator() {
     return ''
   }
 
+  const isReady = !authLoading && vesselHydrated && casesHydrated
+
   return (
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
@@ -255,18 +259,69 @@ export default function Calculator() {
           </p>
         </div>
 
-        {/* Vessel Bar */}
-        <div className="mb-6">
-          <VesselBar onLoginRequired={() => setShowAuthModal(true)} />
-        </div>
+        {/* Main content: show either skeleton or real content to avoid jumbled transitions */}
+        {!isReady ? (
+          <>
+            {/* Skeleton Vessel Bar */}
+            <div className="mb-6">
+              <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-3 sticky top-0 z-10 shadow-sm">
+                <div className="flex items-center gap-2 flex-1">
+                  <div className="w-5 h-5 rounded bg-gray-200" />
+                  <div className="h-9 bg-gray-200 rounded-lg flex-1 max-w-md" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-24 h-9 bg-gray-200 rounded-lg" />
+                  <div className="w-20 h-9 bg-gray-200 rounded-lg" />
+                  <div className="w-20 h-9 bg-gray-200 rounded-lg" />
+                </div>
+              </div>
+            </div>
 
-        {/* Global Vessel Properties Section */}
-        <div className="mb-6">
-          <CollapsibleVesselProperties 
-            defaultExpanded={true}
-            showEditButton={false}
-          />
-        </div>
+            {/* Skeleton Vessel Properties */}
+            <div className="mb-6">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="h-5 w-40 bg-gray-200 rounded mb-4" />
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {Array.from({ length: 6 }).map((_, idx) => (
+                    <div key={idx}>
+                      <div className="h-4 w-32 bg-gray-200 rounded mb-2" />
+                      <div className="h-10 w-full bg-gray-200 rounded" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Skeleton Cases Card */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 bg-gray-200 rounded" />
+                  <div className="h-4 w-40 bg-gray-200 rounded" />
+                </div>
+                <div className="h-4 w-24 bg-gray-200 rounded" />
+              </div>
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, idx) => (
+                  <div key={idx} className="h-14 bg-gray-100 rounded-lg border border-dashed border-gray-200" />
+                ))}
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Vessel Bar */}
+            <div className="mb-6">
+              <VesselBar onLoginRequired={() => setShowAuthModal(true)} />
+            </div>
+            
+            {/* Global Vessel Properties Section */}
+            <div className="mb-6">
+              <CollapsibleVesselProperties 
+                defaultExpanded={true}
+                showEditButton={false}
+              />
+            </div>
 
         {/* Calculation Cases */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -440,12 +495,14 @@ export default function Calculator() {
             </div>
           </div>
         </div>
+          </>
+        )}
 
         {/* Footer */}
         <div className="mt-12 text-center text-gray-500">
           <p>Built for engineers, by engineers. Following NFPA 30, API 521, and ASME VIII standards.</p>
         </div>
-    </main>
+      </main>
       </div>
       
       {/* ASME Warning Modal */}

@@ -42,6 +42,7 @@ interface CaseContextType {
   getSelectedCaseCount: () => number        // Count of active cases
   hasCalculatedResults: () => boolean       // Whether any calculations exist
   refreshFromStorage: () => void            // Refresh case data from localStorage (for vessel switches)
+  isHydrated: boolean                       // Whether initial localStorage load is complete
 }
 
 const defaultCases = {
@@ -284,7 +285,8 @@ export function CaseProvider({ children }: { children: ReactNode }) {
       getDesignBasisFlow,
       getSelectedCaseCount,
       hasCalculatedResults,
-      refreshFromStorage
+      refreshFromStorage,
+      isHydrated
     }}>
       {children}
     </CaseContext.Provider>

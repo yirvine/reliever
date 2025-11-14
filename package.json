@@ -6,7 +6,9 @@
     "dev": "NODE_OPTIONS='--no-deprecation' next dev --turbopack",
     "build": "NODE_OPTIONS='--no-deprecation' next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "clean": "rm -rf .next",
+    "fresh": "npm run clean && npm run dev"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.3.1",

@@ -19,7 +19,7 @@ interface Vessel {
 export default function Sidebar() {
   const { isExpanded, setIsExpanded } = useSidebar()
   const pathname = usePathname()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { selectVessel, newVessel, currentVesselId, vesselsUpdatedTrigger, loadingVessel } = useVessel()
   const { selectedCases, caseResults } = useCase()
   // Start with empty to match SSR, then hydrate from cache
@@ -51,7 +51,7 @@ export default function Sidebar() {
   useEffect(() => {
     if (user && isHydrated) {
       fetchUserVessels()
-    } else if (!user && isHydrated) {
+    } else if (!user && !authLoading && isHydrated) {
       setUserVessels([])
       localStorage.removeItem('reliever-vessels-cache')
     }
@@ -152,9 +152,11 @@ export default function Sidebar() {
                         )}
                         <div className={`flex-1 text-left overflow-hidden transition-opacity duration-150 ${effectiveExpanded ? 'visible' : 'invisible'}`}>
                           <div className="text-sm font-medium truncate">
-                            {vessel.vessel_tag}
+                            {vessel.vessel_tag?.startsWith('temp-') 
+                              ? (vessel.vessel_name || 'Untitled Vessel')
+                              : vessel.vessel_tag}
                           </div>
-                          {vessel.vessel_name ? (
+                          {vessel.vessel_name && !vessel.vessel_tag?.startsWith('temp-') ? (
                             <div className="text-xs text-gray-500 truncate">
                               {vessel.vessel_name}
                             </div>

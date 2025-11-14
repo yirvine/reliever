@@ -52,26 +52,7 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
       {!hideHeading && <h2 className="text-xl font-bold text-gray-900 mb-6">Vessel Properties</h2>}
       
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* First row: vessel tag, vessel name, vessel orientation, vessel diameter, working fluid */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Vessel Tag
-          </label>
-          <input
-            type="text"
-            value={vesselData.vesselTag}
-            onChange={(e) => onChange('vesselTag', e.target.value)}
-            disabled={disabled}
-            className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 placeholder-gray-400 ${
-              disabled 
-                ? 'border-gray-200 bg-gray-50 text-gray-500' 
-                : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-            }`}
-            placeholder="e.g., 123"
-            required
-          />
-        </div>
-
+        {/* First row: vessel name, vessel tag, vessel orientation, vessel diameter, working fluid */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Vessel Name
@@ -87,6 +68,25 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
                 : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
             }`}
             placeholder="e.g., Reactor V-101"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Vessel Tag
+          </label>
+          <input
+            type="text"
+            value={vesselData.vesselTag?.startsWith('temp-') ? '' : vesselData.vesselTag}
+            onChange={(e) => onChange('vesselTag', e.target.value)}
+            disabled={disabled}
+            className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 placeholder-gray-400 ${
+              disabled 
+                ? 'border-gray-200 bg-gray-50 text-gray-500' 
+                : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+            }`}
+            placeholder="e.g., V-123"
+            required
           />
         </div>
 

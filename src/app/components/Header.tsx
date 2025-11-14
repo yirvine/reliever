@@ -10,7 +10,7 @@ import { useAuth } from '../context/AuthContext'
 
 export default function Header() {
   const { isExpanded } = useSidebar()
-  const { user, unverifiedUser, signOut } = useAuth()
+  const { user, unverifiedUser, signOut, loading } = useAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   
@@ -128,7 +128,18 @@ export default function Header() {
             />
 
             {/* Auth Button / User Menu */}
-            {user ? (
+            {loading ? (
+              // Loading placeholder - keeps layout stable during auth hydration
+              <div className="relative ml-3">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 h-10 min-w-[120px]">
+                  <div className="w-6 h-6 rounded-full bg-gray-200 flex-shrink-0" />
+                  <div className="hidden sm:block w-16 h-4 bg-gray-200 rounded" />
+                  <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+            ) : user ? (
               <div className="relative ml-3">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}

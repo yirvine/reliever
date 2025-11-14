@@ -48,20 +48,21 @@ const AuthContext = createContext<AuthContextType>({
 })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // Start with null to match SSR, then hydrate from cache
+  // Start with null to match SSR; hydrate from cache on client
   const [user, setUser] = useState<AuthUser | null>(null)
   const [unverifiedUser, setUnverifiedUser] = useState<FirebaseUser | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Load cached user after mount to prevent hydration mismatch
+  // Load cached user after mount to prevent hydration mismatch while
+  // keeping the initial SSR markup consistent.
   useEffect(() => {
     const cached = localStorage.getItem('reliever-auth-cache')
     if (cached) {
       try {
         const cachedUser = JSON.parse(cached)
-        // Only set cached user if Firebase hasn't loaded yet
-        // This prevents flash while still showing cached data quickly
         setUser(cachedUser)
+        // Note: we intentionally keep `loading` true here until Firebase
+        // confirms the auth state in the onAuthStateChanged listener.
       } catch {
         // Ignore parse errors
       }

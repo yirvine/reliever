@@ -32,8 +32,8 @@ interface SavedVessel {
 
 export default function VesselBar({ onLoginRequired }: VesselBarProps) {
   const router = useRouter()
-  const { user } = useAuth()
-  const { vesselData, updateVesselData, registerVesselCallbacks, registerSaveCallback, currentVesselId, setCurrentVesselId, triggerVesselsUpdate, loadingVessel, setLoadingVessel, setLoadingMessage } = useVessel()
+  const { user, loading: authLoading } = useAuth()
+  const { vesselData, updateVesselData, registerSaveCallback, currentVesselId, setCurrentVesselId, triggerVesselsUpdate, loadingVessel, setLoadingVessel, setLoadingMessage } = useVessel()
   const { refreshFromStorage } = useCase()
   const [showNewVesselModal, setShowNewVesselModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -42,13 +42,8 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
   const [saving, setSaving] = useState(false)
   const [userVessels, setUserVessels] = useState<SavedVessel[]>([])
 
-  // Register callbacks with VesselContext
+  // Register save callback for auto-save
   useEffect(() => {
-    registerVesselCallbacks({
-      onNewVessel: handleNewVessel,
-      onSelectVessel: handleSelectVessel
-    })
-    // Register save callback for auto-save
     registerSaveCallback(handleSave)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -61,6 +56,25 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
     // (happens during auth initialization on refresh)
     // AuthContext already handles clearing on actual logout
   }, [user])
+
+  // Check for pending vessel to load (from Sidebar vessel selection)
+  // This runs on every render to catch vessel clicks even when already on /cases
+  useEffect(() => {
+    const pendingVesselId = localStorage.getItem('reliever-pending-vessel-id')
+    if (pendingVesselId && pendingVesselId !== currentVesselId && !loadingVessel) {
+      // Clear the flag immediately to prevent re-triggering
+      localStorage.removeItem('reliever-pending-vessel-id')
+      // Load the pending vessel
+      handleSelectVessel(pendingVesselId)
+    }
+    
+    // Check for new vessel request
+    const newVesselRequested = localStorage.getItem('reliever-new-vessel-requested')
+    if (newVesselRequested === 'true' && !loadingVessel) {
+      localStorage.removeItem('reliever-new-vessel-requested')
+      handleNewVessel()
+    }
+  }) // No dependencies - check on every render
 
   const fetchUserVessels = async () => {
     try {
@@ -79,9 +93,55 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
         setUserVessels(vessels)
         // Update cache to keep Sidebar in sync
         localStorage.setItem('reliever-vessels-cache', JSON.stringify(vessels))
+        
+        // Prefetch all vessel data in the background for instant switching
+        prefetchAllVessels(vessels, idToken)
       }
     } catch (error) {
       console.error('Failed to fetch vessels:', error)
+    }
+  }
+
+  // Prefetch all vessels' data and cases in the background for instant loading
+  const prefetchAllVessels = async (vessels: SavedVessel[], idToken: string) => {
+    if (!vessels || vessels.length === 0) return
+    
+    try {
+      // Fetch all vessels in parallel (non-blocking)
+      await Promise.all(
+        vessels.map(async (vessel) => {
+          try {
+            // Fetch vessel data and cases in parallel
+            const [vesselResponse, casesResponse] = await Promise.all([
+              fetch(`/api/vessels/${vessel.id}`, {
+                headers: { 'Authorization': `Bearer ${idToken}` }
+              }),
+              fetch(`/api/vessels/${vessel.id}/cases`, {
+                headers: { 'Authorization': `Bearer ${idToken}` }
+              })
+            ])
+
+            if (vesselResponse.ok) {
+              const vesselData = await vesselResponse.json()
+              // Cache vessel data
+              localStorage.setItem(`reliever-vessel-${vessel.id}`, JSON.stringify(vesselData.vessel))
+            }
+
+            if (casesResponse.ok) {
+              const casesData = await casesResponse.json()
+              // Cache cases data
+              if (casesData.cases) {
+                localStorage.setItem(`reliever-vessel-cases-${vessel.id}`, JSON.stringify(casesData.cases))
+              }
+            }
+          } catch (err) {
+            // Silently fail for individual vessels - don't block other prefetches
+            console.warn(`Failed to prefetch vessel ${vessel.id}:`, err)
+          }
+        })
+      )
+    } catch (error) {
+      console.warn('Prefetch error:', error)
     }
   }
 
@@ -213,6 +273,13 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
         throw error
       }
 
+      // Cache the saved vessel and cases data for instant loading next time
+      localStorage.setItem(`reliever-vessel-${vesselId}`, JSON.stringify(savedVesselData.vessel))
+      const casesData = await casesResponse.json()
+      if (casesData.cases) {
+        localStorage.setItem(`reliever-vessel-cases-${vesselId}`, JSON.stringify(casesData.cases))
+      }
+
       // Refresh vessels list only if not silent
       if (!silent) {
         await fetchUserVessels()
@@ -239,10 +306,8 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
       return
     }
     
-    // Auto-save current vessel if it exists (silent, like vessel switching)
-    const hasVesselData = vesselData.vesselTag && vesselData.vesselTag.trim() !== ''
-    
-    if (hasVesselData && currentVesselId) {
+    // Auto-save current vessel if it exists (captures any unsaved changes including tag updates)
+    if (currentVesselId) {
       // Capture snapshot before clearing data
       const vesselDataSnapshot = { ...vesselData }
       const currentVesselIdSnapshot = currentVesselId
@@ -314,6 +379,9 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
         throw new Error('Not authenticated')
       }
 
+      // Generate a unique temporary tag to avoid conflicts (user can change it)
+      const tempTag = `temp-${Date.now()}`
+      
       const vesselResponse = await fetch('/api/vessels', {
         method: 'POST',
         headers: {
@@ -323,8 +391,8 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
           idToken,
           vessel: {
             id: null, // New vessel
-            vesselTag: newVesselName, // Use name as initial tag
-            vesselName: newVesselName,
+            vesselTag: tempTag, // Temporary unique tag - user can change it
+            vesselName: newVesselName, // Only populate name field
             vesselOrientation: 'vertical',
             vesselDiameter: 0,
             straightSideHeight: 0,
@@ -352,7 +420,7 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
       setCurrentVesselId(vesselId)
       clearAllData(true) // Keep vessel ID while clearing everything else
       updateVesselData('vesselName', newVesselName)
-      updateVesselData('vesselTag', newVesselName)
+      // vesselTag is left empty - user will fill it in
       
       // Refresh CaseContext to pick up cleared case data
       refreshFromStorage()
@@ -368,6 +436,62 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
     }
   }
 
+  // Helper function to load cases from case data array
+  const loadCasesFromData = (cases: Array<{
+    case_type: string
+    flow_data?: Record<string, unknown>
+    pressure_data?: Record<string, unknown>
+    is_selected?: boolean
+    calculated_relieving_flow?: number
+    asme_viii_design_flow?: number
+    is_calculated?: boolean
+    case_name?: string
+  }>) => {
+    // Rebuild selectedCases and caseResults from database
+    const newSelectedCases: Record<string, boolean> = {
+      'external-fire': false,
+      'control-valve-failure': false,
+      'liquid-overfill': false,
+      'blocked-outlet': false,
+      'cooling-reflux-failure': false,
+      'hydraulic-expansion': false,
+      'heat-exchanger-tube-rupture': false
+    }
+    
+    const newCaseResults: Record<string, unknown> = {}
+    
+    cases.forEach((caseData) => {
+      const caseType = caseData.case_type
+      
+      // Restore flow and pressure data
+      if (caseData.flow_data) {
+        localStorage.setItem(`${caseType}-flow-data`, JSON.stringify(caseData.flow_data))
+      }
+      if (caseData.pressure_data) {
+        localStorage.setItem(`${caseType}-pressure-data`, JSON.stringify(caseData.pressure_data))
+      }
+      
+      // Restore selection state
+      if (caseData.is_selected !== undefined) {
+        newSelectedCases[caseType] = caseData.is_selected
+      }
+      
+      // Restore case results
+      if (caseData.is_calculated) {
+        newCaseResults[caseType] = {
+          caseId: caseType,
+          caseName: caseData.case_name || '',
+          asmeVIIIDesignFlow: caseData.asme_viii_design_flow,
+          isCalculated: caseData.is_calculated
+        }
+      }
+    })
+    
+    // ALWAYS save to localStorage for CaseContext (even if empty - to clear ghost data)
+    localStorage.setItem('reliever-selected-cases', JSON.stringify(newSelectedCases))
+    localStorage.setItem('reliever-case-results', JSON.stringify(newCaseResults))
+  }
+
   const handleSelectVessel = async (vesselId: string) => {
     // If selecting 'current' placeholder or already loading, do nothing
     if (vesselId === 'current' || loadingVessel) return
@@ -377,11 +501,29 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
       return
     }
 
+    let hasCache = false
+    
     try {
-      // Note: VesselContext.selectVessel already handles navigation and auto-save
-      // This handler just does the data loading part
-      setLoadingMessage('Loading vessel...')
+      // Get the new vessel's name for better UX messaging
+      const newVessel = userVessels.find(v => v.id === vesselId)
+      const newVesselDisplay = newVessel?.vessel_name || newVessel?.vessel_tag || 'vessel'
+      const currentVesselDisplay = vesselData.vesselName || vesselData.vesselTag || 'current vessel'
+      
+      // Show loading modal immediately with descriptive message
+      setLoadingMessage(`Saving ${currentVesselDisplay} and loading ${newVesselDisplay}...`)
       setLoadingVessel(true)
+      
+      // Auto-save current vessel first (inside the modal, so it happens while user sees feedback)
+      // Always save if we have a currentVesselId (captures any changes user made, including tag updates)
+      if (currentVesselId) {
+        const vesselDataSnapshot = { ...vesselData }
+        const currentVesselIdSnapshot = currentVesselId
+        try {
+          await handleSave(true, vesselDataSnapshot, currentVesselIdSnapshot)
+        } catch (error) {
+          console.warn('Auto-save error:', error)
+        }
+      }
       
       // Clear old case data immediately to prevent showing wrong vessel's cases
       const caseTypes = [
@@ -403,13 +545,45 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
       // Clear case context state immediately
       refreshFromStorage()
       
+      // Try to load from cache first (optimistic UI)
+      const cachedVesselData = localStorage.getItem(`reliever-vessel-${vesselId}`)
+      const cachedCaseData = localStorage.getItem(`reliever-vessel-cases-${vesselId}`)
+      if (cachedVesselData) {
+        try {
+          const cached = JSON.parse(cachedVesselData)
+          // Load cached vessel data immediately (prevents blank dropdown)
+          updateVesselData('vesselTag', cached.vessel_tag || '')
+          updateVesselData('vesselName', cached.vessel_name || '')
+          updateVesselData('vesselOrientation', cached.vessel_orientation || 'vertical')
+          updateVesselData('vesselDiameter', cached.vessel_diameter || 0)
+          updateVesselData('straightSideHeight', cached.straight_side_height || 0)
+          updateVesselData('headType', cached.head_type || 'Hemispherical')
+          updateVesselData('vesselDesignMawp', cached.vessel_design_mawp || 0)
+          updateVesselData('asmeSetPressure', cached.asme_set_pressure || 0)
+          setCurrentVesselId(vesselId)
+          
+          // Load cached case data if available
+          if (cachedCaseData) {
+            const cases = JSON.parse(cachedCaseData)
+            loadCasesFromData(cases)
+            refreshFromStorage()
+          }
+          
+          hasCache = true
+          // Close loading modal immediately - cached data is loaded!
+          setLoadingVessel(false)
+        } catch (error) {
+          console.warn('Failed to load cached vessel:', error)
+        }
+      }
+      
       const idToken = await auth.currentUser?.getIdToken()
       if (!idToken) {
-        setLoadingVessel(false)
+        if (!hasCache) setLoadingVessel(false)
         return
       }
 
-      // Load vessel and cases in parallel
+      // Fetch fresh data from DB in background (to sync any changes with cache)
       const [vesselResponse, casesResponse] = await Promise.all([
         fetch(`/api/vessels/${vesselId}`, {
           headers: {
@@ -430,6 +604,9 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
       const vesselDataResponse = await vesselResponse.json()
       const vessel = vesselDataResponse.vessel
 
+      // Cache vessel data for future instant loading
+      localStorage.setItem(`reliever-vessel-${vesselId}`, JSON.stringify(vessel))
+
       // Load all vessel properties at once
       updateVesselData('vesselTag', vessel.vessel_tag || '')
       updateVesselData('vesselName', vessel.vessel_name || '')
@@ -444,75 +621,29 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
       if (casesResponse.ok) {
         const casesData = await casesResponse.json()
         const cases = casesData.cases || []
-
-        interface CaseData {
-          case_type: string
-          flow_data?: Record<string, unknown>
-          pressure_data?: Record<string, unknown>
-          is_selected?: boolean
-          calculated_relieving_flow?: number
-          asme_viii_design_flow?: number
-          is_calculated?: boolean
-          case_name?: string
-        }
         
-        // Rebuild selectedCases and caseResults from database
-        const newSelectedCases: Record<string, boolean> = {
-          'external-fire': false,
-          'control-valve-failure': false,
-          'liquid-overfill': false,
-          'blocked-outlet': false,
-          'cooling-reflux-failure': false,
-          'hydraulic-expansion': false,
-          'heat-exchanger-tube-rupture': false
-        }
+        // Cache case data for future instant loading
+        localStorage.setItem(`reliever-vessel-cases-${vesselId}`, JSON.stringify(cases))
         
-        const newCaseResults: Record<string, unknown> = {}
-        
-        cases.forEach((caseData: CaseData) => {
-          const caseType = caseData.case_type
-          
-          // Restore flow and pressure data
-          if (caseData.flow_data) {
-            localStorage.setItem(`${caseType}-flow-data`, JSON.stringify(caseData.flow_data))
-          }
-          if (caseData.pressure_data) {
-            localStorage.setItem(`${caseType}-pressure-data`, JSON.stringify(caseData.pressure_data))
-          }
-          
-          // Restore selection state
-          if (caseData.is_selected !== undefined) {
-            newSelectedCases[caseType] = caseData.is_selected
-          }
-          
-          // Restore case results
-          if (caseData.is_calculated) {
-            newCaseResults[caseType] = {
-              caseId: caseType,
-              caseName: caseData.case_name || '',
-              asmeVIIIDesignFlow: caseData.asme_viii_design_flow,
-              isCalculated: caseData.is_calculated
-            }
-          }
-        })
-        
-        // ALWAYS save to localStorage for CaseContext (even if empty - to clear ghost data)
-        localStorage.setItem('reliever-selected-cases', JSON.stringify(newSelectedCases))
-        localStorage.setItem('reliever-case-results', JSON.stringify(newCaseResults))
+        // Load cases using helper function
+        loadCasesFromData(cases)
       }
 
       // Refresh CaseContext to pick up the new localStorage data
       refreshFromStorage()
 
-      // Set current vessel ID after all data is loaded
-      setCurrentVesselId(vesselId)
-
-      // End loading immediately after data is fetched
-      setLoadingVessel(false)
+      // Set current vessel ID after all data is loaded (if not already set from cache)
+      if (!hasCache) {
+        setCurrentVesselId(vesselId)
+        setLoadingVessel(false)
+      }
+      // If we had cache, data is already loaded and modal is closed - no need to do anything
     } catch (error) {
       console.error('Failed to load vessel:', error)
-      setCurrentVesselId(null)
-      setLoadingVessel(false)
+      if (!hasCache) {
+        setCurrentVesselId(null)
+        setLoadingVessel(false)
+      }
     }
   }
 
@@ -551,6 +682,9 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
       // Clear vessels cache AND current vessel ID to prevent stale data on refresh
       localStorage.removeItem('reliever-vessels-cache')
       localStorage.removeItem('reliever-current-vessel-id')
+      // Clear cached vessel and case data for the deleted vessel
+      localStorage.removeItem(`reliever-vessel-${currentVesselId}`)
+      localStorage.removeItem(`reliever-vessel-cases-${currentVesselId}`)
       
       // Refresh vessels list to get updated list without deleted vessel
       await fetchUserVessels()
@@ -584,14 +718,48 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
       localStorage.removeItem('reliever-selected-cases')
       localStorage.removeItem('reliever-case-results')
       
-      // Clear all vessel and case context
+      // Clear all vessel and case context (this sets currentVesselId to null)
       clearAllData()
-      refreshFromStorage() // Clear case context
+      refreshFromStorage()
       
       if (updatedVessels.length > 0) {
-        // Switch to the first available vessel (which will load its own cases from DB)
+        // Load the next vessel directly (skip auto-save logic since we just deleted)
         const firstVessel = updatedVessels[0]
-        await handleSelectVessel(firstVessel.id)
+        
+        // Load vessel data and cases directly without auto-save
+        const [vesselResponse, casesResponse] = await Promise.all([
+          fetch(`/api/vessels/${firstVessel.id}`, {
+            headers: { 'Authorization': `Bearer ${idToken}` }
+          }),
+          fetch(`/api/vessels/${firstVessel.id}/cases`, {
+            headers: { 'Authorization': `Bearer ${idToken}` }
+          })
+        ])
+
+        if (vesselResponse.ok) {
+          const vesselDataResponse = await vesselResponse.json()
+          const vessel = vesselDataResponse.vessel
+
+          // Load vessel properties
+          updateVesselData('vesselTag', vessel.vessel_tag || '')
+          updateVesselData('vesselName', vessel.vessel_name || '')
+          updateVesselData('vesselOrientation', vessel.vessel_orientation || 'vertical')
+          updateVesselData('vesselDiameter', vessel.vessel_diameter || 0)
+          updateVesselData('straightSideHeight', vessel.straight_side_height || 0)
+          updateVesselData('headType', vessel.head_type || 'Hemispherical')
+          updateVesselData('vesselDesignMawp', vessel.vessel_design_mawp || 0)
+          updateVesselData('asmeSetPressure', vessel.asme_set_pressure || 0)
+
+          // Load cases
+          if (casesResponse.ok) {
+            const casesData = await casesResponse.json()
+            const cases = casesData.cases || []
+            loadCasesFromData(cases)
+          }
+
+          refreshFromStorage()
+          setCurrentVesselId(firstVessel.id)
+        }
       } else {
         // No vessels left, navigate to home
         router.push('/')
@@ -610,8 +778,15 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
     }
   }
 
-  const currentVesselDisplay = vesselData.vesselTag || 'Untitled Vessel'
-  const vesselNameSuffix = vesselData.vesselName ? ` - ${vesselData.vesselName}` : ''
+  // Show tag if available (and not temporary), otherwise name, otherwise "Untitled Vessel"
+  const isTemporaryTag = vesselData.vesselTag?.startsWith('temp-')
+  const currentVesselDisplay = (vesselData.vesselTag && !isTemporaryTag) 
+    ? vesselData.vesselTag 
+    : (vesselData.vesselName || 'Untitled Vessel')
+  // Only show name suffix if we're showing a real tag (not temporary) and have a name
+  const vesselNameSuffix = (vesselData.vesselTag && !isTemporaryTag && vesselData.vesselName) 
+    ? ` - ${vesselData.vesselName}` 
+    : ''
 
   return (
     <>
@@ -624,7 +799,7 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
           <select 
             className="flex-1 max-w-md text-sm font-medium text-gray-900 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             value={currentVesselId || 'current'}
-            disabled={!user || (userVessels.length === 0 && !currentVesselId)}
+            disabled={(!user && !authLoading) || (userVessels.length === 0 && !currentVesselId)}
             onChange={(e) => handleSelectVessel(e.target.value)}
           >
             {/* Show unsaved vessel only if no currentVesselId */}
@@ -634,20 +809,29 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
               </option>
             )}
             {/* Show all saved vessels - the select's value prop will highlight the current one */}
-            {userVessels.map(vessel => (
-              <option key={vessel.id} value={vessel.id}>
-                {vessel.vessel_tag}{vessel.vessel_name ? ` - ${vessel.vessel_name}` : ''}
-              </option>
-            ))}
+            {userVessels.map(vessel => {
+              const isTemp = vessel.vessel_tag?.startsWith('temp-')
+              const displayName = isTemp 
+                ? (vessel.vessel_name || 'Untitled Vessel')
+                : vessel.vessel_tag
+              const suffix = (!isTemp && vessel.vessel_name) ? ` - ${vessel.vessel_name}` : ''
+              
+              return (
+                <option key={vessel.id} value={vessel.id}>
+                  {displayName}{suffix}
+                </option>
+              )
+            })}
           </select>
         </div>
 
-        {/* Action Buttons */}
+          {/* Action Buttons */}
         <div className="flex items-center gap-2">
           {/* New Vessel Button */}
           <button
             onClick={handleNewVessel}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+            disabled={!user && !authLoading}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             title={user ? 'Create a new vessel' : 'Sign in to create vessels'}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -656,12 +840,12 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
             New Vessel
           </button>
 
-          {/* Save and Delete Buttons - Only show when logged in */}
-          {user && (
+          {/* Save and Delete Buttons */}
+          {(user || authLoading) && (
             <>
               <button
                 onClick={() => handleSave()}
-                disabled={saving}
+                disabled={saving || authLoading}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-lg transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -674,7 +858,8 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
               {currentVesselId && (
                 <button
                   onClick={handleDeleteClick}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                  disabled={authLoading}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                   title="Delete this vessel"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -687,7 +872,7 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
           )}
 
           {/* Login prompt if not logged in */}
-          {!user && (
+          {!user && !authLoading && (
             <button
               onClick={onLoginRequired}
               className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"

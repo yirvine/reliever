@@ -35,10 +35,6 @@ interface VesselContextType {
   // Vessel management - direct methods
   selectVessel: (vesselId: string) => Promise<void>
   newVessel: () => void
-  // Vessel management callbacks (deprecated - for backward compatibility)
-  onNewVesselRequested?: () => void
-  onSelectVesselRequested?: (vesselId: string) => void
-  registerVesselCallbacks: (callbacks: { onNewVessel?: () => void, onSelectVessel?: (id: string) => void }) => void
   currentVesselId: string | null
   setCurrentVesselId: (id: string | null) => void
   // Trigger to refresh vessel lists
@@ -52,6 +48,7 @@ interface VesselContextType {
   // Save callback registration
   saveCurrentVessel: (() => Promise<boolean>) | null
   registerSaveCallback: (callback: () => Promise<boolean>) => void
+  isHydrated: boolean
 }
 
 const defaultVesselData: VesselData = {
@@ -97,10 +94,6 @@ export function VesselProvider({ children }: { children: ReactNode }) {
     }
   }
   
-  const [vesselCallbacks, setVesselCallbacks] = useState<{
-    onNewVessel?: () => void
-    onSelectVessel?: (id: string) => void
-  }>({})
   const [vesselsUpdatedTrigger, setVesselsUpdatedTrigger] = useState(0)
   const [loadingVessel, setLoadingVessel] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState('Loading vessel...')
@@ -130,10 +123,6 @@ export function VesselProvider({ children }: { children: ReactNode }) {
     setVesselData(prev => ({ ...prev, [field]: value }))
   }
 
-  const registerVesselCallbacks = (callbacks: { onNewVessel?: () => void, onSelectVessel?: (id: string) => void }) => {
-    setVesselCallbacks(callbacks)
-  }
-
   const triggerVesselsUpdate = () => {
     setVesselsUpdatedTrigger(prev => prev + 1)
   }
@@ -154,44 +143,18 @@ export function VesselProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    // Navigate to cases page first
+    // Set a "pending vessel" flag so VesselBar knows to load this vessel when it mounts
+    localStorage.setItem('reliever-pending-vessel-id', vesselId)
+
+    // Navigate to cases page - VesselBar will detect pending vessel and load it
     router.push('/cases')
-    
-    // Small delay for navigation
-    await new Promise(resolve => setTimeout(resolve, 50))
-
-    // Auto-save current vessel if needed (silently - don't block on failure)
-    // IMPORTANT: Capture vessel data snapshot BEFORE any state changes
-    const vesselDataSnapshot = { ...vesselData }
-    const currentVesselIdSnapshot = currentVesselId
-    
-    const hasVesselData = vesselDataSnapshot.vesselTag && vesselDataSnapshot.vesselTag.trim() !== ''
-    if (saveCallback && hasVesselData && currentVesselIdSnapshot) {
-      setLoadingMessage('Saving current vessel...')
-      setLoadingVessel(true)
-      
-      try {
-        // Pass snapshots to ensure we save the CURRENT vessel data, not the new vessel's data
-        await saveCallback(true, vesselDataSnapshot, currentVesselIdSnapshot)
-      } catch (error) {
-        // Silently catch all errors - don't block vessel switching
-        console.warn('Auto-save error:', error)
-      }
-      
-      // Clear the loading state after auto-save attempt
-      setLoadingVessel(false)
-    }
-
-    // Trigger the old callback system for VesselBar to handle loading
-    if (vesselCallbacks.onSelectVessel) {
-      vesselCallbacks.onSelectVessel(vesselId)
-    }
   }
 
   const newVessel = () => {
-    if (vesselCallbacks.onNewVessel) {
-      vesselCallbacks.onNewVessel()
-    }
+    // Set a flag so VesselBar knows to show the new vessel modal
+    localStorage.setItem('reliever-new-vessel-requested', 'true')
+    // Navigate to cases page if not already there
+    router.push('/cases')
   }
 
   /**
@@ -241,13 +204,9 @@ export function VesselProvider({ children }: { children: ReactNode }) {
       vesselData, 
       updateVesselData, 
       calculateFireExposedArea,
-      // New direct methods
+      // Vessel management
       selectVessel,
       newVessel,
-      // Old callback system (backward compatibility)
-      onNewVesselRequested: vesselCallbacks.onNewVessel,
-      onSelectVesselRequested: vesselCallbacks.onSelectVessel,
-      registerVesselCallbacks,
       currentVesselId,
       setCurrentVesselId,
       vesselsUpdatedTrigger,
@@ -257,7 +216,8 @@ export function VesselProvider({ children }: { children: ReactNode }) {
       loadingMessage,
       setLoadingMessage,
       saveCurrentVessel: saveCallback,
-      registerSaveCallback
+      registerSaveCallback,
+      isHydrated
     }}>
       {children}
     </VesselContext.Provider>
