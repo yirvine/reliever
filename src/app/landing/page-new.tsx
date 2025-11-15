@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import Header from './components/Header'
+import Header from '../components/Header'
 
-export default function Home() {
+export default function LandingNew() {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
@@ -187,3 +187,4 @@ export default function Home() {
     </div>
   )
 }
+

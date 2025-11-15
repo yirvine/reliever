@@ -63,6 +63,40 @@
   font-display: swap;
 }
 
+/* Montserrat Font */
+@font-face {
+  font-family: 'Montserrat';
+  src: url('/fonts/Montserrat/Montserrat-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  src: url('/fonts/Montserrat/Montserrat-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Figtree Font */
+@font-face {
+  font-family: 'Figtree';
+  src: url('/fonts/Figtree/Figtree-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Figtree';
+  src: url('/fonts/Figtree/Figtree-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
 /* Font utility classes */
 .font-spartan {
   font-family: 'League Spartan', system-ui, -apple-system, sans-serif;
@@ -70,6 +104,14 @@
 
 .font-inter {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.font-montserrat {
+  font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+}
+
+.font-figtree {
+  font-family: 'Figtree', system-ui, -apple-system, sans-serif;
 }
 
 /* Prevent navbar text reflow during font loading */

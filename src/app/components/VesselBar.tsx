@@ -349,18 +349,6 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
     setSaving(true)
 
     try {
-      // Auto-save current vessel BEFORE creating new one (if one exists)
-      // if (currentVesselId) {
-      //   const vesselDataSnapshot = { ...vesselData }
-      //   const currentVesselIdSnapshot = currentVesselId
-        
-      //   try {
-      //     await handleSave(true, vesselDataSnapshot, currentVesselIdSnapshot)
-      //   } catch (error) {
-      //     console.warn('Auto-save before new vessel creation:', error)
-      //     // Continue even if auto-save fails
-      //   }
-      // }
 
       // Save the new vessel to the database
       const idToken = await auth.currentUser?.getIdToken()
