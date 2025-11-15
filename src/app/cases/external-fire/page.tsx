@@ -197,13 +197,20 @@ export default function ExternalFireCase() {
   }
 
   // Auto-update case results when calculations change (using standardized hook)
+  // Includes vessel geometry to trigger recalculation when vessel dimensions change
   useCaseCalculation({
     caseId: 'external-fire',
     previewValues,
     flowData,
     updateCaseResult,
     storageKey: STORAGE_KEYS.EXTERNAL_FIRE_FLOW,
-    vesselData: { asmeSetPressure: vesselData.asmeSetPressure }
+    vesselData: { 
+      asmeSetPressure: vesselData.asmeSetPressure,
+      vesselDiameter: vesselData.vesselDiameter,
+      straightSideHeight: vesselData.straightSideHeight,
+      headType: vesselData.headType,
+      vesselOrientation: vesselData.vesselOrientation
+    }
   })
 
   return (

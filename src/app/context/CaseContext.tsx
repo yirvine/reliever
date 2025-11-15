@@ -43,6 +43,7 @@ interface CaseContextType {
   hasCalculatedResults: () => boolean       // Whether any calculations exist
   refreshFromStorage: () => void            // Refresh case data from localStorage (for vessel switches)
   isHydrated: boolean                       // Whether initial localStorage load is complete
+  applyCaseData: (selected: Record<CaseId, boolean>, results: Record<CaseId, CaseResult>) => void  // Apply case data from external source (vessel loading)
 }
 
 const defaultCases = {
@@ -174,42 +175,57 @@ export function CaseProvider({ children }: { children: ReactNode }) {
     setIsHydrated(true)
   }, [])
 
-  // Save selected cases to localStorage whenever they change (only after hydration)
-  useEffect(() => {
-    if (isHydrated) {
-      localStorage.setItem('reliever-selected-cases', JSON.stringify(selectedCases))
-    }
-  }, [selectedCases, isHydrated])
-
-  // Save case results to localStorage whenever they change (only after hydration)
-  useEffect(() => {
-    if (isHydrated) {
-      localStorage.setItem('reliever-case-results', JSON.stringify(caseResults))
-    }
-  }, [caseResults, isHydrated])
+  // NOTE: These auto-sync useEffects have been REMOVED to eliminate race conditions.
+  // VesselBar is now the ONLY writer for reliever-selected-cases and reliever-case-results.
+  // CaseContext only reads at hydration and updates via applyCaseData().
+  
+  // REMOVED: Auto-sync to localStorage on selectedCases change (was causing overwrites)
+  // REMOVED: Auto-sync to localStorage on caseResults change (was causing overwrites)
 
   /**
    * Toggle a case's selected state.
    * This affects whether the case contributes to the design basis flow
    * and whether its page is interactive.
+   * 
+   * CRITICAL: Persists to localStorage immediately using single-writer pattern.
    */
   const toggleCase = (caseId: CaseId) => {
-    setSelectedCases(prev => ({
-      ...prev,
-      [caseId]: !prev[caseId]
-    }))
+    setSelectedCases(prev => {
+      const updated = {
+        ...prev,
+        [caseId]: !prev[caseId]
+      }
+      
+      // Persist to localStorage immediately (single writer for selected-cases)
+      console.log('[DBG] toggleCase: persisting to localStorage - caseId =', caseId, 'newState =', updated[caseId])
+      localStorage.setItem('reliever-selected-cases', JSON.stringify(updated))
+      
+      return updated
+    })
   }
 
   /**
    * Update calculation results for a specific case.
    * Memoized to prevent unnecessary re-renders in child components.
    * Partial updates are allowed to avoid overwriting unrelated fields.
+   * 
+   * CRITICAL: Persists to localStorage immediately using single-writer pattern.
+   * This ensures case results are saved when calculations complete, without
+   * requiring manual save or waiting for vessel switch.
    */
   const updateCaseResult = useCallback((caseId: CaseId, result: Partial<CaseResult>) => {
-    setCaseResults(prev => ({
-      ...prev,
-      [caseId]: { ...prev[caseId], ...result }
-    }))
+    setCaseResults(prev => {
+      const updated = {
+        ...prev,
+        [caseId]: { ...prev[caseId], ...result }
+      }
+      
+      // Persist to localStorage immediately (single writer for case-results)
+      console.log('[DBG] updateCaseResult: persisting to localStorage - caseId =', caseId, 'result =', result)
+      localStorage.setItem('reliever-case-results', JSON.stringify(updated))
+      
+      return updated
+    })
   }, [])
 
   /**
@@ -223,15 +239,23 @@ export function CaseProvider({ children }: { children: ReactNode }) {
    * - All calculated flows are null
    */
   const getDesignBasisFlow = () => {
+    console.log('[DBG] getDesignBasisFlow: selectedCases =', selectedCases)
+    console.log('[DBG] getDesignBasisFlow: caseResults =', caseResults)
+    
     const calculatedCases = Object.values(caseResults).filter(
       result => result.isCalculated && result.asmeVIIIDesignFlow !== null && selectedCases[result.caseId]
     )
     
-    if (calculatedCases.length === 0) return null
+    if (calculatedCases.length === 0) {
+      console.log('[DBG] getDesignBasisFlow: NO calculated cases found')
+      return null
+    }
     
     const maxCase = calculatedCases.reduce((max, current) => 
       (current.asmeVIIIDesignFlow! > max.asmeVIIIDesignFlow!) ? current : max
     )
+    
+    console.log('[DBG] getDesignBasisFlow: returning flow =', maxCase.asmeVIIIDesignFlow, 'from case =', maxCase.caseId)
     
     return {
       flow: maxCase.asmeVIIIDesignFlow!,
@@ -249,31 +273,51 @@ export function CaseProvider({ children }: { children: ReactNode }) {
   }
 
   /**
-   * Refresh case data from localStorage.
-   * Called when switching vessels to reload the new vessel's case data.
+   * DEPRECATED: This function is NO LONGER NEEDED.
+   * 
+   * Previously used to refresh case data from localStorage when switching vessels.
+   * Now DISABLED because:
+   * - VesselBar writes case data using applyCaseData() which updates both state + localStorage
+   * - CaseContext hydrates once on mount
+   * - No need to re-read from localStorage (causes race conditions)
+   * 
+   * Kept for backwards compatibility but does nothing.
    */
   const refreshFromStorage = useCallback(() => {
-    const savedSelectedCases = localStorage.getItem('reliever-selected-cases')
-    if (savedSelectedCases) {
-      try {
-        setSelectedCases({ ...defaultCases, ...JSON.parse(savedSelectedCases) })
-      } catch (error) {
-        console.warn('Failed to refresh selected cases:', error)
-      }
-    } else {
-      setSelectedCases(defaultCases)
-    }
+    console.log('[DBG] refreshFromStorage: DISABLED (no-op) - case data managed by applyCaseData')
+    // DO NOTHING - VesselBar is the single writer via applyCaseData
+  }, [])
 
-    const savedCaseResults = localStorage.getItem('reliever-case-results')
-    if (savedCaseResults) {
-      try {
-        setCaseResults({ ...defaultCaseResults, ...JSON.parse(savedCaseResults) })
-      } catch (error) {
-        console.warn('Failed to refresh case results:', error)
-      }
-    } else {
-      setCaseResults(defaultCaseResults)
-    }
+  /**
+   * Apply case data directly from external source (e.g., vessel loading).
+   * This is the ONLY way VesselBar should update case selections and results.
+   * Merges with defaults to ensure all case keys exist.
+   * 
+   * CRITICAL: This function is the SINGLE WRITER for localStorage case data.
+   * It updates both React state AND localStorage atomically to prevent races.
+   */
+  const applyCaseData = useCallback((
+    selected: Record<CaseId, boolean>,
+    results: Record<CaseId, CaseResult>
+  ) => {
+    console.log('[DBG] applyCaseData: incoming selected =', selected)
+    console.log('[DBG] applyCaseData: incoming results =', results)
+    
+    // CRITICAL: REPLACE entire state (don't merge with current)
+    // This is called when loading a vessel, so incoming data IS the truth
+    const mergedSelected = { ...defaultCases, ...selected }
+    const mergedResults = { ...defaultCaseResults, ...results }
+    
+    console.log('[DBG] applyCaseData: writing selectedCases to localStorage =', mergedSelected)
+    console.log('[DBG] applyCaseData: writing caseResults to localStorage =', mergedResults)
+    
+    setSelectedCases(mergedSelected)
+    setCaseResults(mergedResults)
+    
+    localStorage.setItem('reliever-selected-cases', JSON.stringify(mergedSelected))
+    localStorage.setItem('reliever-case-results', JSON.stringify(mergedResults))
+    
+    console.log('[DBG] applyCaseData: state + localStorage updated atomically')
   }, [])
 
   return (
@@ -286,7 +330,8 @@ export function CaseProvider({ children }: { children: ReactNode }) {
       getSelectedCaseCount,
       hasCalculatedResults,
       refreshFromStorage,
-      isHydrated
+      isHydrated,
+      applyCaseData
     }}>
       {children}
     </CaseContext.Provider>

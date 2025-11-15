@@ -15,8 +15,9 @@ ReliefGuard is a web-based pressure relief sizing tool for chemical and process 
 ## Architecture Overview
 
 ### Global State (Contexts)
-- **VesselContext**: Manages vessel properties (MAWP, design pressure, dimensions, etc.) - shared across all cases
+- **VesselContext**: Manages vessel properties (MAWP, design pressure, dimensions, etc.) and the authoritative userVessels[] list (fetched from backend only)
 - **CaseContext**: Manages which cases are selected and tracks their calculated results for comparison
+- **AuthContext**: Manages Firebase authentication state and triggers vessel list fetching on login
 
 ### Case Structure
 Each overpressure scenario is a separate "case" (e.g., External Fire, Liquid Overfill, Control Valve Failure, Blocked Outlet). Cases are independent and calculate their own relief requirements based on:
@@ -43,9 +44,9 @@ Each overpressure scenario is a separate "case" (e.g., External Fire, Liquid Ove
 1. **Create/Edit Vessel**: User enters vessel properties and case data (stored in localStorage for active session)
 2. **Save Vessel**: Click "Save" button in VesselBar to persist to database (requires authentication)
 3. **Load Vessel**: Select from dropdown or sidebar to load saved vessel + all case data from database
-4. **Switch Vessels**: Seamlessly switch between saved vessels - dropdown and sidebar stay in sync
-5. **Delete Vessel**: Click "Delete" button to permanently remove vessel and all associated cases
-6. **New Vessel**: Click "New Vessel" to start fresh (prompts to save current vessel if unsaved changes exist)
+4. **Switch Vessels**: Auto-saves current vessel, then loads new vessel. Dropdown and sidebar display backend-driven vessel list (userVessels[]) - always synchronized
+5. **Delete Vessel**: Click "Delete" button to permanently remove vessel and all associated cases from database
+6. **New Vessel**: Click "New Vessel" to auto-save current vessel, then start fresh with a temporary vessel tag
 
 ## Important Notes
 
@@ -102,7 +103,7 @@ reliever/
 ### Status
 ✅ **Authentication is fully functional** - Email/password signup with verification and Google OAuth are working. Email verification emails arrive (check spam folder for new projects).
 
-✅ **Vessel management is fully functional** - Users can save, load, delete, and switch between multiple vessels. The VesselBar and Sidebar provide seamless vessel management with instant synchronization. Only user-inputted values (flowData, pressureData) are stored; calculated values are regenerated client-side when vessels are loaded.
+✅ **Vessel management is fully functional** - Users can save, load, delete, and switch between multiple vessels. VesselBar and Sidebar display a single, backend-driven vessel list (userVessels[]) managed by VesselContext. Auto-save triggers on vessel switching. Prefetching provides instant vessel loading. Only user-inputted values (flowData, pressureData) are stored; calculated values are regenerated client-side when vessels are loaded.
 
 ### Architecture
 ReliefGuard uses a **Firebase + Supabase** architecture:

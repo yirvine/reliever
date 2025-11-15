@@ -7,36 +7,20 @@ import { useSidebar } from './SidebarLayout'
 import { useAuth } from '../context/AuthContext'
 import { useVessel } from '../context/VesselContext'
 import { useCase } from '../context/CaseContext'
-import { auth } from '@/lib/firebase/config'
-
-interface Vessel {
-  id: string
-  vessel_tag: string
-  vessel_name: string | null
-  updated_at: string
-}
 
 export default function Sidebar() {
   const { isExpanded, setIsExpanded } = useSidebar()
   const pathname = usePathname()
   const { user, loading: authLoading } = useAuth()
-  const { selectVessel, newVessel, currentVesselId, vesselsUpdatedTrigger, loadingVessel } = useVessel()
-  const { selectedCases, caseResults } = useCase()
-  // Start with empty to match SSR, then hydrate from cache
-  const [userVessels, setUserVessels] = useState<Vessel[]>([])
-  const [loading, setLoading] = useState(false)
+  const { selectVessel, requestNewVesselModal, currentVesselId, loadingVessel, isHydrated: vesselHydrated, userVessels } = useVessel()
+  const { selectedCases, caseResults, isHydrated: casesHydrated } = useCase()
   const [isHydrated, setIsHydrated] = useState(false)
+  
+  // Unified hydration gate
+  const appHydrated = !authLoading && vesselHydrated && casesHydrated && isHydrated
 
-  // Load cached vessels after hydration to prevent mismatch
+  // Simple hydration marker (no vessel loading needed - context handles it)
   useEffect(() => {
-    const cached = localStorage.getItem('reliever-vessels-cache')
-    if (cached) {
-      try {
-        setUserVessels(JSON.parse(cached))
-      } catch {
-        // Ignore parse errors
-      }
-    }
     setIsHydrated(true)
   }, [])
 
@@ -47,49 +31,13 @@ export default function Sidebar() {
     }
   }, [loadingVessel, setIsExpanded])
 
-  // Fetch user's vessels from API (refetch when user logs in or vessels are updated)
-  useEffect(() => {
-    if (user && isHydrated) {
-      fetchUserVessels()
-    } else if (!user && !authLoading && isHydrated) {
-      setUserVessels([])
-      localStorage.removeItem('reliever-vessels-cache')
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, vesselsUpdatedTrigger, isHydrated])
-
-  const fetchUserVessels = async () => {
-    try {
-      // Only show loading if we don't have cached vessels
-      if (userVessels.length === 0) {
-        setLoading(true)
-      }
-      
-      const idToken = await auth.currentUser?.getIdToken()
-      if (!idToken) return
-
-      const response = await fetch('/api/vessels', {
-        headers: {
-          'Authorization': `Bearer ${idToken}`
-        }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        const vessels = data.vessels || []
-        setUserVessels(vessels)
-        // Cache vessels for optimistic rendering on refresh
-        localStorage.setItem('reliever-vessels-cache', JSON.stringify(vessels))
-      }
-    } catch (error) {
-      console.error('Failed to fetch vessels:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  // Note: Vessel fetching is now handled by VesselContext
+  // userVessels comes directly from context
 
   const handleAddVessel = () => {
-    newVessel()
+    // Request new vessel modal via context (instant, no localStorage)
+    // Context handles navigation if not on /cases
+    requestNewVesselModal()
   }
 
   const handleSelectVessel = (vesselId: string) => {
@@ -125,14 +73,16 @@ export default function Sidebar() {
               <span className={`whitespace-nowrap transition-opacity duration-150 ${effectiveExpanded ? 'visible' : 'invisible'}`}>Vessels</span>
             </div>
 
-            {user ? (
+            {!appHydrated ? (
               <div className="space-y-1 mt-2">
-                {/* Only show loading if we have no vessels at all (not even cached) */}
-                {loading && userVessels.length === 0 ? (
-                  <div className={`px-2 py-2 text-xs text-gray-500 italic transition-opacity duration-150 ${effectiveExpanded ? 'visible' : 'invisible'}`}>
-                    <span className="whitespace-nowrap">Loading vessels...</span>
-                  </div>
-                ) : userVessels.length > 0 ? (
+                <div className={`px-2 py-2 text-xs text-gray-400 italic transition-opacity duration-150 ${effectiveExpanded ? 'visible' : 'invisible'}`}>
+                  <span className="whitespace-nowrap">Loading...</span>
+                </div>
+              </div>
+            ) : user ? (
+              <div className="space-y-1 mt-2">
+                {/* Show vessel list from context (loading handled by VesselContext) */}
+                {userVessels.length > 0 ? (
                   userVessels.map((vessel) => {
                     const isActive = vessel.id === currentVesselId
                     return (
@@ -152,11 +102,13 @@ export default function Sidebar() {
                         )}
                         <div className={`flex-1 text-left overflow-hidden transition-opacity duration-150 ${effectiveExpanded ? 'visible' : 'invisible'}`}>
                           <div className="text-sm font-medium truncate">
-                            {vessel.vessel_tag?.startsWith('temp-') 
+                            {/* Show vessel name if tag is temporary or untitled-N format */}
+                            {vessel.vessel_tag?.startsWith('temp-') || /^untitled-\d+$/.test(vessel.vessel_tag || '')
                               ? (vessel.vessel_name || 'Untitled Vessel')
                               : vessel.vessel_tag}
                           </div>
-                          {vessel.vessel_name && !vessel.vessel_tag?.startsWith('temp-') ? (
+                          {/* Show name as subtitle only for real tags (not temp- or untitled-N) */}
+                          {vessel.vessel_name && !vessel.vessel_tag?.startsWith('temp-') && !/^untitled-\d+$/.test(vessel.vessel_tag || '') ? (
                             <div className="text-xs text-gray-500 truncate">
                               {vessel.vessel_name}
                             </div>
@@ -257,17 +209,6 @@ export default function Sidebar() {
                 </div>
               )}
             </div>
-
-            {/* View All Cases Link */}
-            <Link 
-              href="/cases"
-              className="w-full flex items-center gap-2 px-2 py-1.5 mt-2 rounded transition-all duration-150 text-blue-600 hover:bg-blue-50"
-            >
-              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              <span className={`text-sm font-medium whitespace-nowrap transition-opacity duration-150 ${effectiveExpanded ? 'visible' : 'invisible'}`}>View All Cases</span>
-            </Link>
           </div>
 
           <div className="my-2 border-t border-gray-200"></div>

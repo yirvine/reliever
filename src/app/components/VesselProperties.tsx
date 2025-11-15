@@ -117,7 +117,7 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
             />
           </div>
           <select
-            value={vesselData.vesselOrientation || 'vertical'}
+            value={vesselData.vesselOrientation || ''}
             onChange={(e) => onChange('vesselOrientation', e.target.value)}
             disabled={disabled}
             className={`w-full h-10 px-3 py-2 border rounded-md text-gray-900 ${
@@ -125,7 +125,9 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
                 ? 'border-gray-200 bg-gray-50 text-gray-500' 
                 : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
             }`}
+            required
           >
+            <option value="">Select orientation...</option>
             <option value="vertical">Vertical</option>
             <option value="horizontal">Horizontal</option>
             <option value="sphere">Sphere</option>
@@ -219,7 +221,9 @@ export default function VesselProperties({ vesselData, onChange, onFluidProperti
                   ? 'border-gray-200 bg-gray-50 text-gray-500' 
                   : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
               }`}
+              required
             >
+              <option value="">Select head type...</option>
               <option value="Hemispherical">Hemispherical</option>
               <option value="Elliptical">Elliptical</option>
               <option value="Flat">Flat</option>

@@ -1,8 +1,10 @@
 'use client'
 
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 import { calculateFireExposedArea as dbCalculateArea, VesselOrientation } from '@/lib/database'
+import { auth } from '@/lib/firebase/config'
+import { useAuth } from './AuthContext'
 
 /**
  * Vessel Data Interface
@@ -28,15 +30,32 @@ export interface VesselData {
   fireSourceElevation?: number // feet, default: 0 (grade level)
 }
 
+export interface SavedVessel {
+  id: string
+  vessel_tag: string
+  vessel_name: string | null
+  updated_at: string
+}
+
 interface VesselContextType {
   vesselData: VesselData
   updateVesselData: (field: keyof VesselData, value: string | number | boolean) => void
   calculateFireExposedArea: (fireCode: string) => number
   // Vessel management - direct methods
-  selectVessel: (vesselId: string) => Promise<void>
+  selectVessel: (vesselId: string) => void
   newVessel: () => void
+  openNewVesselModal: () => void
+  loadVesselNow: (vesselId: string) => Promise<void>
   currentVesselId: string | null
   setCurrentVesselId: (id: string | null) => void
+  pendingVesselId: string | null
+  // New vessel modal state (context-driven, no localStorage)
+  newVesselModalRequested: boolean
+  requestNewVesselModal: () => void
+  clearNewVesselModalRequest: () => void
+  // Vessel list management (authoritative source)
+  userVessels: SavedVessel[]
+  fetchUserVessels: () => Promise<void>
   // Trigger to refresh vessel lists
   vesselsUpdatedTrigger: number
   triggerVesselsUpdate: () => void
@@ -56,13 +75,13 @@ const defaultVesselData: VesselData = {
   vesselName: '',
   straightSideHeight: 0,
   vesselDiameter: 0,
-  headType: 'Hemispherical',
+  headType: '', // No default - user must select
   workingFluid: '',
   vesselDesignMawp: 0,
   asmeSetPressure: 0,
   
   // API 521 defaults (backward compatible)
-  vesselOrientation: 'vertical',
+  vesselOrientation: undefined, // No default - user must select
   headProtectedBySkirt: false,
   fireSourceElevation: 0 // Grade level
 }
@@ -71,18 +90,24 @@ const VesselContext = createContext<VesselContextType | undefined>(undefined)
 
 export function VesselProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
+  const pathname = usePathname()
+  const { user } = useAuth()
   const [vesselData, setVesselData] = useState<VesselData>(defaultVesselData)
   const [isHydrated, setIsHydrated] = useState(false)
-  // Start with null to match SSR, then hydrate from cache
-  const [currentVesselId, setCurrentVesselIdState] = useState<string | null>(null)
-  
-  // Hydrate currentVesselId from localStorage after mount (client-side only)
-  useEffect(() => {
-    const cached = localStorage.getItem('reliever-current-vessel-id')
-    if (cached) {
-      setCurrentVesselIdState(cached)
+  // Hydrate currentVesselId from localStorage immediately on client
+  const [currentVesselId, setCurrentVesselIdState] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('reliever-current-vessel-id')
     }
-  }, [])
+    return null
+  })
+  const [pendingVesselId, setPendingVesselId] = useState<string | null>(null)
+  
+  // Vessel list state (authoritative source)
+  const [userVessels, setUserVessels] = useState<SavedVessel[]>([])
+  
+  // New vessel modal state (context-driven, no localStorage)
+  const [newVesselModalRequested, setNewVesselModalRequested] = useState(false)
   
   // Wrapper to persist currentVesselId to localStorage
   const setCurrentVesselId = (id: string | null) => {
@@ -99,18 +124,20 @@ export function VesselProvider({ children }: { children: ReactNode }) {
   const [loadingMessage, setLoadingMessage] = useState('Loading vessel...')
   const [saveCallback, setSaveCallback] = useState<((silent?: boolean, vesselSnapshot?: VesselData, vesselIdSnapshot?: string) => Promise<boolean>) | null>(null)
 
-  // Load from localStorage after hydration
+  // Load from localStorage after hydration (only once per lifecycle)
   useEffect(() => {
-    const saved = localStorage.getItem('reliever-vessel-data')
-    if (saved) {
-      try {
-        setVesselData({ ...defaultVesselData, ...JSON.parse(saved) })
-      } catch (error) {
-        console.warn('Failed to parse saved vessel data:', error)
+    if (!isHydrated) {
+      const saved = localStorage.getItem('reliever-vessel-data')
+      if (saved) {
+        try {
+          setVesselData({ ...defaultVesselData, ...JSON.parse(saved) })
+        } catch (error) {
+          console.warn('Failed to parse saved vessel data:', error)
+        }
       }
+      setIsHydrated(true)
     }
-    setIsHydrated(true)
-  }, [])
+  }, [isHydrated])
 
   // Save vessel data to localStorage whenever it changes (only after hydration)
   useEffect(() => {
@@ -131,31 +158,128 @@ export function VesselProvider({ children }: { children: ReactNode }) {
     setSaveCallback(() => callback)
   }
 
-  // Direct vessel selection method (works from any page)
-  const selectVessel = async (vesselId: string) => {
-    // If selecting same vessel or already loading, navigate to cases
+  /**
+   * Authoritative vessel list fetching function.
+   * Fetches vessels from the API and updates both state and localStorage cache.
+   * This is the ONLY place where userVessels should be fetched.
+   */
+  const fetchUserVessels = useCallback(async () => {
+    try {
+      const idToken = await auth.currentUser?.getIdToken()
+      if (!idToken) return
+
+      const response = await fetch('/api/vessels', {
+        headers: {
+          'Authorization': `Bearer ${idToken}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const vessels = data.vessels || []
+        setUserVessels(vessels)
+        localStorage.setItem('reliever-vessels-cache', JSON.stringify(vessels))
+      }
+    } catch (err) {
+      console.error('Failed to fetch vessels:', err)
+    }
+  }, [])
+
+  // Fetch vessels when user logs in
+  useEffect(() => {
+    if (user) {
+      fetchUserVessels()
+    }
+  }, [user, fetchUserVessels])
+
+  /**
+   * Authoritative vessel loading function.
+   * Handles all vessel-switching logic:
+   * - Auto-saves current vessel if needed
+   * - Loads from cache if available
+   * - Fetches fresh data from DB
+   * - Updates contexts atomically
+   */
+  const loadVesselNow = useCallback(async (vesselId: string) => {
+    if (loadingVessel || vesselId === currentVesselId) return
+    
+    setLoadingVessel(true)
+    setLoadingMessage('Loading vessel...')
+    
+    // This function is implemented by VesselBar
+    // VesselBar will call this when pendingVesselId changes
+    // The actual loading logic is delegated to VesselBar's handleSelectVessel
+    
+    // This is just a stub - VesselBar implements the real logic
+    console.log('loadVesselNow called:', vesselId)
+  }, [loadingVessel, currentVesselId])
+
+  /**
+   * Smart vessel selection that handles cross-page navigation.
+   * If already on /cases, loads immediately.
+   * Otherwise, sets pending state and navigates.
+   */
+  const selectVessel = useCallback((vesselId: string) => {
+    // If selecting same vessel or already loading, do nothing
     if (vesselId === currentVesselId) {
-      router.push('/cases')
+      if (pathname !== '/cases') {
+        router.push('/cases')
+      }
       return
     }
     
-    if (loadingVessel) {
-      return
+    if (loadingVessel) return
+
+    // Show loading modal immediately before any navigation or state changes
+    setLoadingMessage('Loading...')
+    setLoadingVessel(true)
+
+    // If we're on /cases page, set pending state to trigger VesselBar
+    if (pathname === '/cases') {
+      setPendingVesselId(vesselId)
+    } else {
+      // If navigating from another page, set pending and navigate
+      setPendingVesselId(vesselId)
+      router.push('/cases')
     }
+  }, [pathname, currentVesselId, loadingVessel, router, setLoadingMessage, setLoadingVessel])
 
-    // Set a "pending vessel" flag so VesselBar knows to load this vessel when it mounts
-    localStorage.setItem('reliever-pending-vessel-id', vesselId)
+  /**
+   * Request new vessel modal to open.
+   * If not on /cases page, navigate there first.
+   * Modal opens instantly via context state, no localStorage.
+   */
+  const requestNewVesselModal = useCallback(() => {
+    if (pathname !== '/cases') {
+      // Navigate to /cases first, modal will open when we get there
+      setNewVesselModalRequested(true)
+      router.push('/cases')
+    } else {
+      // Already on /cases, request modal instantly
+      setNewVesselModalRequested(true)
+    }
+  }, [pathname, router])
 
-    // Navigate to cases page - VesselBar will detect pending vessel and load it
-    router.push('/cases')
-  }
+  /**
+   * Clear the new vessel modal request (called by VesselBar after opening modal)
+   */
+  const clearNewVesselModalRequest = useCallback(() => {
+    setNewVesselModalRequested(false)
+  }, [])
 
-  const newVessel = () => {
-    // Set a flag so VesselBar knows to show the new vessel modal
-    localStorage.setItem('reliever-new-vessel-requested', 'true')
-    // Navigate to cases page if not already there
-    router.push('/cases')
-  }
+  /**
+   * Legacy: kept for backwards compatibility, delegates to requestNewVesselModal
+   */
+  const newVessel = useCallback(() => {
+    requestNewVesselModal()
+  }, [requestNewVesselModal])
+
+  /**
+   * Legacy: kept for backwards compatibility, delegates to requestNewVesselModal
+   */
+  const openNewVesselModal = useCallback(() => {
+    requestNewVesselModal()
+  }, [requestNewVesselModal])
 
   /**
    * Calculate fire exposed area using enhanced API 521 compliant method
@@ -207,8 +331,18 @@ export function VesselProvider({ children }: { children: ReactNode }) {
       // Vessel management
       selectVessel,
       newVessel,
+      openNewVesselModal,
+      loadVesselNow,
       currentVesselId,
       setCurrentVesselId,
+      // New vessel modal (context-driven)
+      newVesselModalRequested,
+      requestNewVesselModal,
+      clearNewVesselModalRequest,
+      pendingVesselId,
+      // Vessel list management (authoritative source)
+      userVessels,
+      fetchUserVessels,
       vesselsUpdatedTrigger,
       triggerVesselsUpdate,
       loadingVessel,

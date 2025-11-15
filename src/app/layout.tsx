@@ -33,10 +33,10 @@ export default function RootLayout({
             <VesselProvider>
               <SidebarProvider>
                 <Sidebar />
+                <VesselLoadingOverlay />
                 <MainContentWrapper>
                   {children}
                 </MainContentWrapper>
-                <VesselLoadingOverlay />
               </SidebarProvider>
             </VesselProvider>
           </CaseProvider>

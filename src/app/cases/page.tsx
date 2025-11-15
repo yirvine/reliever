@@ -310,18 +310,18 @@ export default function Calculator() {
           </>
         ) : (
           <>
-            {/* Vessel Bar */}
-            <div className="mb-6">
-              <VesselBar onLoginRequired={() => setShowAuthModal(true)} />
-            </div>
-            
-            {/* Global Vessel Properties Section */}
-            <div className="mb-6">
-              <CollapsibleVesselProperties 
-                defaultExpanded={true}
-                showEditButton={false}
-              />
-            </div>
+        {/* Vessel Bar */}
+        <div className="mb-6">
+          <VesselBar onLoginRequired={() => setShowAuthModal(true)} />
+        </div>
+
+        {/* Global Vessel Properties Section */}
+        <div className="mb-6">
+          <CollapsibleVesselProperties 
+            defaultExpanded={true}
+            showEditButton={false}
+          />
+        </div>
 
         {/* Calculation Cases */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -502,7 +502,7 @@ export default function Calculator() {
         <div className="mt-12 text-center text-gray-500">
           <p>Built for engineers, by engineers. Following NFPA 30, API 521, and ASME VIII standards.</p>
         </div>
-      </main>
+    </main>
       </div>
       
       {/* ASME Warning Modal */}
