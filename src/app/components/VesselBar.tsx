@@ -96,7 +96,7 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
               }),
               fetch(`/api/vessels/${vessel.id}/cases`, {
                 headers: { 'Authorization': `Bearer ${idToken}` }
-              })
+      })
             ])
 
             if (vesselResponse.ok) {
@@ -227,7 +227,7 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
       
       // Only update currentVesselId if not using snapshot (i.e., not auto-save)
       if (!vesselSnapshot) {
-        setCurrentVesselId(vesselId)
+      setCurrentVesselId(vesselId)
       }
 
       // Save all cases
@@ -263,16 +263,16 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
 
       // Refresh vessels list only if not silent
       if (!silent) {
-        await fetchUserVessels()
-        triggerVesselsUpdate() // Notify Sidebar to refresh
+      await fetchUserVessels()
+      triggerVesselsUpdate() // Notify Sidebar to refresh
       }
       
       return true
     } catch (error) {
       console.error('Failed to save vessel (catch block):', error)
       if (!silent) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to save vessel. Please try again.'
-        alert(`❌ ${errorMessage}`)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save vessel. Please try again.'
+      alert(`❌ ${errorMessage}`)
       }
       return false
     } finally {
@@ -335,7 +335,7 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
     
     // Only clear vessel ID if not creating a new vessel
     if (!keepVesselId) {
-      setCurrentVesselId(null)
+    setCurrentVesselId(null)
     }
   }
 
@@ -394,7 +394,7 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
       await fetchUserVessels()
       
       // Reset modal state
-      setNewVesselName('')
+    setNewVesselName('')
       
       // Load the newly created vessel properly (this will fetch from DB, populate cache, and show all 7 case rows)
       // This ensures consistent state and avoids manual state manipulation
@@ -580,15 +580,15 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
 
       // Only update UI if we didn't use cache (to avoid double-render flicker)
       if (!hasCache) {
-        // Load all vessel properties at once
-        updateVesselData('vesselTag', vessel.vessel_tag || '')
-        updateVesselData('vesselName', vessel.vessel_name || '')
-        updateVesselData('vesselOrientation', vessel.vessel_orientation || 'vertical')
-        updateVesselData('vesselDiameter', vessel.vessel_diameter || 0)
-        updateVesselData('straightSideHeight', vessel.straight_side_height || 0)
-        updateVesselData('headType', vessel.head_type || 'Hemispherical')
-        updateVesselData('vesselDesignMawp', vessel.vessel_design_mawp || 0)
-        updateVesselData('asmeSetPressure', vessel.asme_set_pressure || 0)
+      // Load all vessel properties at once
+      updateVesselData('vesselTag', vessel.vessel_tag || '')
+      updateVesselData('vesselName', vessel.vessel_name || '')
+      updateVesselData('vesselOrientation', vessel.vessel_orientation || 'vertical')
+      updateVesselData('vesselDiameter', vessel.vessel_diameter || 0)
+      updateVesselData('straightSideHeight', vessel.straight_side_height || 0)
+      updateVesselData('headType', vessel.head_type || 'Hemispherical')
+      updateVesselData('vesselDesignMawp', vessel.vessel_design_mawp || 0)
+      updateVesselData('asmeSetPressure', vessel.asme_set_pressure || 0)
         setCurrentVesselId(vesselId)
       }
 
@@ -596,7 +596,7 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
       if (casesResponse.ok) {
         const casesData = await casesResponse.json()
         const cases = casesData.cases || []
-        
+
         console.log('🟩 DB cases being loaded:', cases)
         
         // Cache case data for future instant loading
@@ -606,9 +606,9 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
         if (!hasCache) {
           // (3) Load case data via CaseContext (applyCaseData will update state + localStorage)
           loadCasesFromData(cases)
-          
+
           // (4) Close loading modal (CaseContext handles the rest)
-          setLoadingVessel(false)
+      setLoadingVessel(false)
         }
       } else if (!hasCache) {
         setLoadingVessel(false)
@@ -616,7 +616,7 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
     } catch (error) {
       console.error('Failed to load vessel:', error)
       if (!hasCache) {
-        setLoadingVessel(false)
+      setLoadingVessel(false)
       }
     }
   }
@@ -787,7 +787,7 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
           >
             {/* Show unsaved vessel only if no currentVesselId */}
             {!currentVesselId && (
-              <option value="current">
+            <option value="current">
                 {vesselData.vesselTag || vesselData.vesselName || 'Loading...'}
               </option>
             )}
@@ -812,7 +812,7 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
 
         </div>
 
-          {/* Action Buttons */}
+        {/* Action Buttons */}
         <div className="flex items-center gap-2">
           {/* New Vessel Button */}
           <button

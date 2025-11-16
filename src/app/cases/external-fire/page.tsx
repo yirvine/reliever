@@ -51,7 +51,7 @@ export default function ExternalFireCase() {
     insulationThickness: undefined,
     processTemperature: undefined
   })
-  
+
   // Ensure applicableFireCode always has a valid value (for hydration safety)
   const safeFlowData = {
     ...flowData,

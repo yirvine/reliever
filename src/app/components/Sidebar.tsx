@@ -15,7 +15,7 @@ export default function Sidebar() {
   const { selectVessel, requestNewVesselModal, currentVesselId, loadingVessel, isHydrated: vesselHydrated, userVessels } = useVessel()
   const { selectedCases, caseResults, isHydrated: casesHydrated } = useCase()
   const [isHydrated, setIsHydrated] = useState(false)
-  
+
   // Unified hydration gate
   const appHydrated = !authLoading && vesselHydrated && casesHydrated && isHydrated
 
@@ -68,7 +68,7 @@ export default function Sidebar() {
                 <div className={`px-2 py-2 text-xs text-gray-400 italic transition-opacity duration-150 ${isExpanded ? 'visible' : 'invisible'}`}>
                   <span className="whitespace-nowrap">Loading...</span>
                 </div>
-              </div>
+                    </div>
             ) : user ? (
               <div className="space-y-1 mt-2">
                 {/* Show vessel list from context (loading handled by VesselContext) */}
@@ -112,7 +112,7 @@ export default function Sidebar() {
                 ) : (
                   <div className={`px-2 py-2 text-xs text-gray-500 italic transition-opacity duration-150 ${isExpanded ? 'visible' : 'invisible'}`}>
                     <span className="whitespace-nowrap">No vessels yet</span>
-                  </div>
+                    </div>
                 )}
                 
                 {/* Add Vessel Button */}
@@ -129,7 +129,7 @@ export default function Sidebar() {
             ) : (
               <div className={`px-2 py-2 text-xs text-gray-500 italic transition-opacity duration-150 ${isExpanded ? 'visible' : 'invisible'}`}>
                 <span className="whitespace-nowrap">Sign in to manage vessels</span>
-              </div>
+                </div>
             )}
           </div>
 
@@ -162,19 +162,19 @@ export default function Sidebar() {
                   }
                   
                   return (
-                    <Link 
+          <Link 
                       key={caseId}
                       href={caseRoute}
                       className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-all duration-150 ${
                         isActive
-                          ? 'bg-gray-200 text-gray-900' 
-                          : 'hover:bg-gray-100 text-gray-700 hover:text-gray-900'
-                      }`}
-                    >
+                ? 'bg-gray-200 text-gray-900' 
+                : 'hover:bg-gray-100 text-gray-700 hover:text-gray-900'
+            }`}
+          >
                       {result.isCalculated && (
                         <svg className="w-3 h-3 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
+            </svg>
                       )}
                       <div className={`flex-1 text-left overflow-hidden transition-opacity duration-150 ${isExpanded ? 'visible' : 'invisible'}`}>
                         <div className="text-sm truncate">
@@ -188,7 +188,7 @@ export default function Sidebar() {
                           <div className="text-xs text-transparent">Placeholder</div>
                         )}
                       </div>
-                    </Link>
+          </Link>
                   )
                 })}
               

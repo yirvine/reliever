@@ -30,7 +30,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           <CaseProvider>
-            <VesselProvider>
+          <VesselProvider>
               <SidebarProvider>
                 <Sidebar />
                 <VesselLoadingOverlay />
@@ -39,7 +39,7 @@ export default function RootLayout({
                 </MainContentWrapper>
               </SidebarProvider>
             </VesselProvider>
-          </CaseProvider>
+            </CaseProvider>
         </AuthProvider>
       </body>
     </html>

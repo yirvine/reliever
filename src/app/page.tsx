@@ -46,8 +46,8 @@ export default function Home() {
           />
           {/* Dark overlay for better text contrast */}
           <div className="absolute inset-0 bg-black/40" />
-          {/* Gradient fade to gray-50 at the bottom */}
-          <div className="absolute inset-x-0 bottom-0 h-50 bg-gradient-to-b from-transparent to-gray-50" />
+          {/* Gradient fade to gray-100 at the bottom */}
+          <div className="absolute inset-x-0 bottom-0 h-70 bg-gradient-to-b from-transparent to-gray-100" />
         </div>
 
         {/* Content */}
@@ -56,13 +56,17 @@ export default function Home() {
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}>
             {/* Main Heading */}
-            <h1 className="text-white font-figtree text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-8 leading-tight">
+            <h1
+              className="text-white font-figtree text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-8 leading-tight"
+              style={{ textShadow: '0 10px 16px rgba(0,0,0,0.6)' }}
+            >
               Relief sizing<br />
               made simple.
             </h1>
 
+
             {/* Subtitle */}
-            <p className="text-white/90 font-figtree text-lg sm:text-xl mb-12">
+            <p className="text-white/100 font-figtree text-lg sm:text-xl mb-12">
               A fast, reliable tool for relief-flow calculations in overpressure scenarios.
             </p>
 
@@ -81,14 +85,14 @@ export default function Home() {
                 </div>
               </Link>
 
-              {/* Learn More Button - Navy with white circle and black arrow */}
+              {/* Learn More Button - Navy with white circle and arrow that rotates on click */}
               <button 
                 onClick={scrollToHowItWorks}
-                className="group inline-flex items-center justify-between bg-slate-700 text-white px-8 py-4 rounded-full font-figtree font-semibold text-lg hover:bg-slate-800 transition-all duration-300 shadow-lg"
+                className="group inline-flex items-center justify-between bg-slate-800 text-white px-8 py-4 rounded-full font-figtree font-semibold text-lg hover:bg-slate-900 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 cursor-pointer"
               >
                 <span>Learn More</span>
                 <div className="ml-4 w-10 h-10 rounded-full bg-white flex items-center justify-center transition-colors">
-                  <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-black transition-transform duration-300 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
                 </div>
@@ -99,26 +103,13 @@ export default function Home() {
       </section>
 
       {/* How It Works Section */}
-      <section id="how-it-works" className="relative bg-gray-50 pt-12 pb-12">
+      <section id="how-it-works" className="relative bg-gray-100 pt-12 pb-12">
         <div className="max-w-7xl mx-auto px-8 sm:px-12 lg:px-16">
-          <div className="grid lg:grid-cols-[1.5fr_3fr] gap-6 lg:gap-8 items-start mb-4">
-            {/* Image */}
-            <div className="order-2 lg:order-1">
-              <div className="relative aspect-[3/4] rounded-3xl overflow-hidden shadow-xl">
-                <Image 
-                  src="/PressureReliefValves3.png" 
-                  alt="Industrial pressure relief valves system" 
-                  fill
-                  className="object-cover"
-                  unoptimized
-                />
-              </div>
-            </div>
-
+          <div className="grid lg:grid-cols-[3fr_1.5fr] gap-6 lg:gap-8 items-center mb-12">
             {/* Content */}
-            <div className="order-1 lg:order-2">
-              <h2 className="text-4xl sm:text-5xl lg:text-[3rem] font-bold text-black mb-4 font-figtree">
-                How it Works
+            <div className="order-1 lg:order-1">
+              <h2 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-black mb-6 font-figtree">
+                How it works...
               </h2>
 
               <div className="space-y-3">
@@ -153,10 +144,97 @@ export default function Home() {
                 </div>
               </div>
             </div>
+
+            {/* Animated Valve */}
+            <div className="order-2 lg:order-2">
+              <div className="relative aspect-[3/4] flex items-center justify-center">
+                <svg width="100%" height="100%" viewBox="60 95 100 105" stroke="#475569" strokeWidth="2" fill="none" className="w-full h-full p-8">
+                  {/* Soft drop shadow filter with animated pulse */}
+                  <defs>
+                    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="2" stdDeviation="1" floodOpacity="0.1">
+                        <animate attributeName="flood-opacity" values="0.1;0.25;0.1" dur="6s" repeatCount="indefinite"/>
+                      </feDropShadow>
+                    </filter>
+                  </defs>
+                  
+                  {/* Valve group with shadow */}
+                  <g filter="url(#softShadow)">
+                    {/* Base */}
+                    <line x1="75" y1="183" x2="135" y2="183" />
+                    <rect x="85" y="120" width="30" height="50" />
+                    <rect x="90" y="170" width="20" height="13" />
+                    <rect x="115" y="135" width="20" height="10" />
+
+                    {/* Stem - extends vertically from valve body to cap */}
+                    <g id="valveStem">
+                      <line x1="94" y1="120" x2="94" y2="105">
+                        <animate attributeName="y2"
+                          values="105;100;100;105"
+                          keyTimes="0;0.25;0.5;0.75;1"
+                          dur="6s" repeatCount="indefinite"
+                          calcMode="spline"
+                          keySplines=".25,.1,.25,1;0,0,1,1;.25,.1,.25,1;0,0,1,1"/>
+                      </line>
+                      <line x1="106" y1="120" x2="106" y2="105">
+                        <animate attributeName="y2"
+                          values="105;100;100;105"
+                          keyTimes="0;0.25;0.5;0.75;1"
+                          dur="6s" repeatCount="indefinite"
+                          calcMode="spline"
+                          keySplines=".25,.1,.25,1;0,0,1,1;.25,.1,.25,1;0,0,1,1"/>
+                      </line>
+                    </g>
+
+                    {/* Cap - moves with stem */}
+                    <g id="valveCap" transform="translate(0,0)">
+                      <animateTransform attributeName="transform" type="translate"
+                        values="0 0;0 -5;0 -5;0 0;0 0"
+                        keyTimes="0;0.25;0.5;0.75;1"
+                        dur="6s" repeatCount="indefinite"
+                        calcMode="spline"
+                        keySplines=".25,.1,.25,1;0,0,1,1;.25,.1,.25,1;0,0,1,1"/>
+                      <rect x="85" y="105" width="30" height="10" fill="white"/>
+                    </g>
+                  </g>
+
+                  {/* Steam lines: faster extend/retract with hold */}
+                  <g>
+                    <line x1="140" y1="136" x2="140" y2="136">
+                      <animate attributeName="x2"
+                        values="140;160;160;140;140"
+                        keyTimes="0;0.292;0.458;0.75;1"
+                        dur="6s"
+                        calcMode="spline"
+                        keySplines=".42,0,.58,1;0,0,1,1;.42,0,.58,1;0,0,1,1"
+                        repeatCount="indefinite"/>
+                    </line>
+                    <line x1="140" y1="140" x2="140" y2="140">
+                      <animate attributeName="x2"
+                        values="140;160;160;140;140"
+                        keyTimes="0;0.292;0.458;0.75;1"
+                        dur="6s"
+                        calcMode="spline"
+                        keySplines=".42,0,.58,1;0,0,1,1;.42,0,.58,1;0,0,1,1"
+                        repeatCount="indefinite"/>
+                    </line>
+                    <line x1="140" y1="144" x2="140" y2="144">
+                      <animate attributeName="x2"
+                        values="140;160;160;140;140"
+                        keyTimes="0;0.292;0.458;0.75;1"
+                        dur="6s"
+                        calcMode="spline"
+                        keySplines=".42,0,.58,1;0,0,1,1;.42,0,.58,1;0,0,1,1"
+                        repeatCount="indefinite"/>
+                    </line>
+                  </g>
+                </svg>
+              </div>
+            </div>
           </div>
 
           {/* Get Started Button - Centered below everything */}
-          <div className="flex justify-center">
+          <div className="flex justify-center mt-12">
             <Link 
               href="/cases"
               className="group inline-flex items-center justify-between bg-white text-black px-8 py-4 rounded-full font-figtree font-semibold text-lg hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 border-2 border-gray-200"
@@ -173,7 +251,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-50 py-4">
+      <footer className="bg-gray-100 py-6">
         <div className="max-w-7xl mx-auto px-8 sm:px-12 lg:px-16 text-center">
           <div className="flex justify-center gap-4 text-sm text-gray-600 font-figtree">
             <Link href="/privacy" className="hover:text-blue-600 transition-colors">
