@@ -344,12 +344,13 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
       return
     }
 
-    // Close modal first
+    // Close modal and show loading overlay
     setShowNewVesselModal(false)
+    setLoadingMessage('Creating vessel...')
+    setLoadingVessel(true)
     setSaving(true)
 
     try {
-
       // Save the new vessel to the database
       const idToken = await auth.currentUser?.getIdToken()
       if (!idToken) {
@@ -389,37 +390,21 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
       const savedVesselData = await vesselResponse.json()
       const vesselId = savedVesselData.vessel.id
       
-      // Refresh vessels list FIRST to ensure sidebar has the new vessel
+      // Refresh vessel list (single source of truth - no need for triggerVesselsUpdate)
       await fetchUserVessels()
-      triggerVesselsUpdate()
-      
-      // Set vessel ID FIRST, then clear data (keeping the ID), then update vessel info
-      // This prevents the dropdown from flickering to null
-      setCurrentVesselId(vesselId)
-      clearAllData(true) // Keep vessel ID while clearing everything else
-      updateVesselData('vesselName', newVesselName || 'Untitled Vessel')
-      updateVesselData('vesselTag', defaultTag) // Set the generated tag
-      
-      // Clear CaseContext state (new vessel has no cases)
-      applyCaseData(
-        {
-          'external-fire': false,
-          'control-valve-failure': false,
-          'liquid-overfill': false,
-          'blocked-outlet': false,
-          'cooling-reflux-failure': false,
-          'hydraulic-expansion': false,
-          'heat-exchanger-tube-rupture': false
-        },
-        {} as Record<CaseId, CaseResult>
-      )
       
       // Reset modal state
       setNewVesselName('')
+      
+      // Load the newly created vessel properly (this will fetch from DB, populate cache, and show all 7 case rows)
+      // This ensures consistent state and avoids manual state manipulation
+      await handleSelectVessel(vesselId)
+      
     } catch (error) {
       console.error('Failed to create vessel:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to create vessel. Please try again.'
       alert(`❌ ${errorMessage}`)
+      setLoadingVessel(false)
     } finally {
       setSaving(false)
     }
