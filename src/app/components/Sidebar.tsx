@@ -44,7 +44,12 @@ export default function Sidebar() {
         isExpanded ? 'w-60' : 'w-12'
       }`}
       onMouseEnter={() => setIsExpanded(true)}
-      onMouseLeave={() => setIsExpanded(false)}
+      onMouseLeave={() => {
+        // Keep expanded during vessel loading (user is actively using sidebar)
+        if (!loadingVessel) {
+          setIsExpanded(false)
+        }
+      }}
     >
       <div className="flex flex-col h-full overflow-y-auto overflow-x-hidden scrollbar-hide">
         {/* Navigation */}
