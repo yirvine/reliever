@@ -12,7 +12,7 @@
  * Requires authentication for Save/New - opens AuthModal if not logged in.
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../context/AuthContext'
 import { useVessel, SavedVessel } from '../context/VesselContext'
@@ -27,7 +27,7 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { vesselData, updateVesselData, registerSaveCallback, currentVesselId, setCurrentVesselId, pendingVesselId, triggerVesselsUpdate, loadingVessel, setLoadingVessel, setLoadingMessage, userVessels, fetchUserVessels, openNewVesselModal, newVesselModalRequested, clearNewVesselModalRequest } = useVessel()
+  const { vesselData, updateVesselData, registerSaveCallback, currentVesselId, setCurrentVesselId, pendingVesselId, setPendingVesselId, triggerVesselsUpdate, loadingVessel, setLoadingVessel, setLoadingMessage, userVessels, fetchUserVessels, openNewVesselModal, newVesselModalRequested, clearNewVesselModalRequest } = useVessel()
   const { applyCaseData } = useCase()
   const [showNewVesselModal, setShowNewVesselModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -35,6 +35,8 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
   const [vesselToDeleteName, setVesselToDeleteName] = useState('')
   const [newVesselName, setNewVesselName] = useState('')
   const [saving, setSaving] = useState(false)
+  const [isSelectingVessel, setIsSelectingVessel] = useState(false) // Guard against concurrent vessel switches
+  const lastHandledVesselIdRef = useRef<string | null>(null) // Track last handled vessel to prevent duplicates
 
   // Register save callback for auto-save
   useEffect(() => {
@@ -46,7 +48,16 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
   // Handle pending vessel selection (triggered by context state change)
   useEffect(() => {
     if (pendingVesselId && pendingVesselId !== currentVesselId) {
+      // Skip if we've already handled this vessel ID
+      if (lastHandledVesselIdRef.current === pendingVesselId) {
+        console.log('⚠️ Already handled vessel switch to', pendingVesselId, '- skipping duplicate')
+        return
+      }
+      
+      lastHandledVesselIdRef.current = pendingVesselId
       handleSelectVessel(pendingVesselId)
+      // Clear pending state immediately to prevent duplicate calls
+      setPendingVesselId(null)
     }
   }, [pendingVesselId]) // eslint-disable-line react-hooks/exhaustive-deps
   
@@ -67,61 +78,61 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
     }
   }, [newVesselModalRequested, clearNewVesselModalRequest, onLoginRequired])
 
-  // Prefetch vessel data in background when vessels list changes
-  // Note: prefetchAllVessels is defined below and not in deps to avoid re-running
-  useEffect(() => {
-    if (userVessels.length > 0 && user) {
-      auth.currentUser?.getIdToken().then(idToken => {
-        if (idToken) {
-          prefetchAllVessels(userVessels, idToken)
-        }
-      })
-    }
-  }, [userVessels, user])
+  // DISABLED: Prefetch was too aggressive, fetching all vessels on every refresh
+  // The on-demand cache in handleSelectVessel is sufficient for fast switching
+  // useEffect(() => {
+  //   if (userVessels.length > 0 && user) {
+  //     auth.currentUser?.getIdToken().then(idToken => {
+  //       if (idToken) {
+  //         prefetchAllVessels(userVessels, idToken)
+  //       }
+  //     })
+  //   }
+  // }, [userVessels, user])
 
-  // Prefetch all vessels' data and cases in the background for instant loading
-  // Uses vessel list from context
-  const prefetchAllVessels = async (vessels: SavedVessel[], idToken: string) => {
-    if (!vessels || vessels.length === 0) return
-    
-    try {
-      // Fetch all vessels in parallel (non-blocking)
-      await Promise.all(
-        vessels.map(async (vessel) => {
-          try {
-            // Fetch vessel data and cases in parallel
-            const [vesselResponse, casesResponse] = await Promise.all([
-              fetch(`/api/vessels/${vessel.id}`, {
-                headers: { 'Authorization': `Bearer ${idToken}` }
-              }),
-              fetch(`/api/vessels/${vessel.id}/cases`, {
-                headers: { 'Authorization': `Bearer ${idToken}` }
-      })
-            ])
-
-            if (vesselResponse.ok) {
-              const vesselData = await vesselResponse.json()
-              // Cache vessel data
-              localStorage.setItem(`reliever-vessel-${vessel.id}`, JSON.stringify(vesselData.vessel))
-            }
-
-            if (casesResponse.ok) {
-              const casesData = await casesResponse.json()
-              // Cache cases data
-              if (casesData.cases) {
-                localStorage.setItem(`reliever-vessel-cases-${vessel.id}`, JSON.stringify(casesData.cases))
-              }
-            }
-          } catch (err) {
-            // Silently fail for individual vessels - don't block other prefetches
-            console.warn(`Failed to prefetch vessel ${vessel.id}:`, err)
-          }
-        })
-      )
-    } catch (error) {
-      console.warn('Prefetch error:', error)
-    }
-  }
+  // DISABLED: Prefetch function (no longer called)
+  // Kept for reference in case we want to re-enable with better logic (e.g., only prefetch next/prev vessel)
+  // const prefetchAllVessels = async (vessels: SavedVessel[], idToken: string) => {
+  //   if (!vessels || vessels.length === 0) return
+  //   
+  //   try {
+  //     // Fetch all vessels in parallel (non-blocking)
+  //     await Promise.all(
+  //       vessels.map(async (vessel) => {
+  //         try {
+  //           // Fetch vessel data and cases in parallel
+  //           const [vesselResponse, casesResponse] = await Promise.all([
+  //             fetch(`/api/vessels/${vessel.id}`, {
+  //               headers: { 'Authorization': `Bearer ${idToken}` }
+  //             }),
+  //             fetch(`/api/vessels/${vessel.id}/cases`, {
+  //               headers: { 'Authorization': `Bearer ${idToken}` }
+  //     })
+  //           ])
+  //
+  //           if (vesselResponse.ok) {
+  //             const vesselData = await vesselResponse.json()
+  //             // Cache vessel data
+  //             localStorage.setItem(`reliever-vessel-${vessel.id}`, JSON.stringify(vesselData.vessel))
+  //           }
+  //
+  //           if (casesResponse.ok) {
+  //             const casesData = await casesResponse.json()
+  //             // Cache cases data
+  //             if (casesData.cases) {
+  //               localStorage.setItem(`reliever-vessel-cases-${vessel.id}`, JSON.stringify(casesData.cases))
+  //             }
+  //           }
+  //         } catch (err) {
+  //           // Silently fail for individual vessels - don't block other prefetches
+  //           console.warn(`Failed to prefetch vessel ${vessel.id}:`, err)
+  //         }
+  //       })
+  //     )
+  //   } catch (error) {
+  //     console.warn('Prefetch error:', error)
+  //   }
+  // }
 
   const collectCaseDataFromLocalStorage = () => {
     const caseTypes = [
@@ -477,29 +488,36 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
       return
     }
 
+    // Guard: Prevent concurrent vessel switches
+    if (isSelectingVessel) {
+      console.log('⚠️ Vessel switch already in progress, ignoring duplicate call')
+      return
+    }
+
+    setIsSelectingVessel(true)
+    let hasCache = false
+
+    try {
       // Show loading modal IMMEDIATELY
       setLoadingMessage('Loading...')
       setLoadingVessel(true)
 
       // LET REACT RENDER THE MODAL FIRST
       await new Promise(resolve => setTimeout(resolve, 0))
-
-      let hasCache = false
       
-      try {
-        // WAIT for auto-save to complete before switching vessels
-        if (currentVesselId) {
-          const vesselDataSnapshot = { ...vesselData }
-          const currentVesselIdSnapshot = currentVesselId
-          try {
-            await handleSave(true, vesselDataSnapshot, currentVesselIdSnapshot)
-            // Clear cache to force fresh DB load next time
-            localStorage.removeItem(`reliever-vessel-${currentVesselIdSnapshot}`)
-            localStorage.removeItem(`reliever-vessel-cases-${currentVesselIdSnapshot}`)
-          } catch (error) {
-            console.warn('Auto-save error:', error)
-          }
+      // WAIT for auto-save to complete before switching vessels
+      if (currentVesselId) {
+        const vesselDataSnapshot = { ...vesselData }
+        const currentVesselIdSnapshot = currentVesselId
+        try {
+          await handleSave(true, vesselDataSnapshot, currentVesselIdSnapshot)
+          // Clear cache to force fresh DB load next time
+          localStorage.removeItem(`reliever-vessel-${currentVesselIdSnapshot}`)
+          localStorage.removeItem(`reliever-vessel-cases-${currentVesselIdSnapshot}`)
+        } catch (error) {
+          console.warn('Auto-save error:', error)
         }
+      }
       
       // Try to load from cache first (optimistic UI)
       const cachedVesselData = localStorage.getItem(`reliever-vessel-${vesselId}`)
@@ -602,8 +620,11 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
     } catch (error) {
       console.error('Failed to load vessel:', error)
       if (!hasCache) {
-      setLoadingVessel(false)
+        setLoadingVessel(false)
       }
+    } finally {
+      // Always clear the guard when done
+      setIsSelectingVessel(false)
     }
   }
 

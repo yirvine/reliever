@@ -19,7 +19,9 @@ export default function Calculator() {
   const { vesselData, isHydrated: vesselHydrated } = useVessel()
   const { loading: authLoading } = useAuth()
   const { generateReport, isGenerating } = useReportGenerator()
-  const designBasisFlow = getDesignBasisFlow()
+  
+  // Recalculate design basis flow whenever caseResults changes (e.g., auto-recalc from geometry changes)
+  const designBasisFlow = useMemo(() => getDesignBasisFlow(), [getDesignBasisFlow])
   const selectedCount = getSelectedCaseCount()
   const [showASMEWarning, setShowASMEWarning] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -251,10 +253,10 @@ export default function Calculator() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mobile-pt-0">
       {/* Hero Section */}
         <div className="mb-6 text-left">
-          <h2 className="text-3xl font-bold text-gray-900 mb-3 font-inter">
+          <h2 className="text-3xl font-bold text-gray-900 mb-3">
             Available Overpressure Scenarios
           </h2>
-          <p className="text-base text-gray-900 mb-2 font-inter">
+          <p className="text-base text-gray-900 mb-2">
             Calculate the required relieving rate for common overpressure scenarios in accordance with NFPA 30, API 521, and ASME VIII.
           </p>
         </div>

@@ -114,6 +114,14 @@
   font-family: 'Figtree', system-ui, -apple-system, sans-serif;
 }
 
+/* Apply Figtree to all headings (h1-h6, titles) */
+h1, h2, h3, h4, h5, h6, 
+.heading-text,
+.case-title,
+.section-title {
+  font-family: 'Figtree', system-ui, -apple-system, sans-serif;
+}
+
 /* Prevent navbar text reflow during font loading */
 .navbar-text {
   min-width: fit-content;

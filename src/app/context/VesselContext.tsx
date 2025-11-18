@@ -49,6 +49,7 @@ interface VesselContextType {
   currentVesselId: string | null
   setCurrentVesselId: (id: string | null) => void
   pendingVesselId: string | null
+  setPendingVesselId: (id: string | null) => void
   // New vessel modal state (context-driven, no localStorage)
   newVesselModalRequested: boolean
   requestNewVesselModal: () => void
@@ -335,11 +336,12 @@ export function VesselProvider({ children }: { children: ReactNode }) {
       loadVesselNow,
       currentVesselId,
       setCurrentVesselId,
+      pendingVesselId,
+      setPendingVesselId,
       // New vessel modal (context-driven)
       newVesselModalRequested,
       requestNewVesselModal,
       clearNewVesselModalRequest,
-      pendingVesselId,
       // Vessel list management (authoritative source)
       userVessels,
       fetchUserVessels,

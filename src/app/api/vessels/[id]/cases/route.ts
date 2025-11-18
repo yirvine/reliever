@@ -84,15 +84,13 @@ export async function POST(
       updated_at: new Date().toISOString(),
     }))
 
-    // Delete existing cases for this vessel, then insert new ones
-    await supabase
-      .from('cases')
-      .delete()
-      .eq('vessel_id', vesselId)
-
+    // Upsert cases (insert or update if exists) - atomic operation prevents race conditions
     const { data: savedCases, error } = await supabase
       .from('cases')
-      .insert(casesToSave)
+      .upsert(casesToSave, {
+        onConflict: 'vessel_id,case_type', // Unique constraint columns
+        ignoreDuplicates: false // Update existing records
+      })
       .select()
 
     if (error) throw error
@@ -100,6 +98,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       saved_count: savedCases?.length || 0,
+      cases: savedCases || []
     })
   } catch (error) {
     console.error('Error saving cases:', error)

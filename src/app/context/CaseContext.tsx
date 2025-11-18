@@ -8,12 +8,15 @@
  * 
  * Key Features:
  * - Toggle cases on/off from both main page and case pages
+ * - Auto-recalculates External Fire when vessel geometry changes
  * - Store and update calculation results for each case
  * - Calculate design basis flow (maximum flow among selected cases)
  * - Persist case selections and results during navigation
  */
 
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react'
+import { useVessel } from './VesselContext'
+import { calculateFireExposedArea, calculateEnvironmentalFactor, calculateHeatInput } from '@/lib/database'
 
 // Valid case IDs in the system. Update this when adding new cases.
 export type CaseId = 'external-fire' | 'control-valve-failure' | 'liquid-overfill' | 'blocked-outlet' | 'cooling-reflux-failure' | 'hydraulic-expansion' | 'heat-exchanger-tube-rupture'
@@ -104,6 +107,7 @@ const defaultCaseResults: Record<CaseId, CaseResult> = {
 const CaseContext = createContext<CaseContextType | undefined>(undefined)
 
 export function CaseProvider({ children }: { children: ReactNode }) {
+  const { vesselData, currentVesselId } = useVessel()
   const [selectedCases, setSelectedCases] = useState(defaultCases)
   const [caseResults, setCaseResults] = useState(defaultCaseResults)
   const [isHydrated, setIsHydrated] = useState(false)
@@ -303,6 +307,113 @@ export function CaseProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('reliever-selected-cases', JSON.stringify(mergedSelected))
     localStorage.setItem('reliever-case-results', JSON.stringify(mergedResults))
   }, [])
+
+  /**
+   * AUTO-RECALCULATE EXTERNAL FIRE WHEN VESSEL GEOMETRY CHANGES
+   * 
+   * This effect watches for changes in vessel geometry (diameter, height, head type)
+   * and automatically recalculates the External Fire case if it's selected.
+   * 
+   * This ensures the design basis flow stays accurate when users modify vessel
+   * properties on the /cases page without needing to revisit the External Fire page.
+   */
+  useEffect(() => {
+    // Wait for hydration to complete
+    if (!isHydrated) return
+    
+    // Only run if External Fire case is selected
+    if (!selectedCases['external-fire']) return
+    
+    // Extract geometry values
+    const {
+      vesselDiameter,
+      straightSideHeight,
+      headType,
+      vesselOrientation,
+      headProtectedBySkirt,
+      fireSourceElevation
+    } = vesselData || {}
+    
+    // Require minimum geometry data
+    if (!vesselDiameter || !straightSideHeight || !headType) return
+    
+    // Require current vessel ID to load vessel-specific data
+    if (!currentVesselId) return
+    
+    // Load External Fire flow data from localStorage (vessel-specific)
+    const storageKey = `external-fire-flow-data-${currentVesselId}`
+    const raw = localStorage.getItem(storageKey)
+    if (!raw) return
+    
+    try {
+      const flowData = JSON.parse(raw)
+      
+      // Check if we have the required calculation inputs
+      // Note: If data is missing, user needs to visit the External Fire page to set it up
+      if (!flowData.applicableFireCode || !flowData.heatOfVaporization || flowData.heatOfVaporization === 0) {
+        return
+      }
+      
+      // Calculate fire-exposed area using current vessel geometry
+      const A = calculateFireExposedArea({
+        vesselDiameter,
+        straightSideHeight,
+        headType: headType as 'Elliptical' | 'Hemispherical' | 'Flat',
+        fireCode: flowData.applicableFireCode as 'NFPA 30' | 'API 521',
+        vesselOrientation,
+        headProtectedBySkirt,
+        fireSourceElevation
+      })
+      
+      // Calculate environmental factor (API 521 only)
+      const F = flowData.applicableFireCode === 'API 521'
+        ? calculateEnvironmentalFactor({
+            storageType: flowData.storageType,
+            insulationMaterial: flowData.insulationMaterial,
+            insulationThickness: flowData.insulationThickness,
+            processTemperature: flowData.processTemperature
+          })
+        : 1
+      
+      // Calculate heat input
+      const result = calculateHeatInput(
+        flowData.applicableFireCode,
+        A,
+        flowData.hasAdequateDrainageFirefighting,
+        F
+      )
+      
+      if (!result || !result.heatInput) return
+      
+      // Calculate relieving flow and ASME VIII design flow
+      const relievingFlow = Math.round(result.heatInput / flowData.heatOfVaporization)
+      const asmeFlow = Math.round(relievingFlow / 0.9)
+      
+      // Update case result - this will trigger design basis flow recalculation
+      updateCaseResult('external-fire', {
+        caseId: 'external-fire',
+        caseName: 'External Fire',
+        asmeVIIIDesignFlow: asmeFlow,
+        isCalculated: true
+      })
+    } catch (error) {
+      // Silently fail if data is malformed - user will need to recalculate manually
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('External Fire auto-recalc failed:', error)
+      }
+    }
+  }, [
+    isHydrated,
+    selectedCases,
+    currentVesselId,
+    vesselData.vesselDiameter,
+    vesselData.straightSideHeight,
+    vesselData.headType,
+    vesselData.vesselOrientation,
+    vesselData.headProtectedBySkirt,
+    vesselData.fireSourceElevation,
+    updateCaseResult
+  ])
 
   return (
     <CaseContext.Provider value={{ 

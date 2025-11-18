@@ -32,9 +32,10 @@ export default function RootLayout({
         <ErrorBoundary>
           <AuthProvider>
             <ErrorBoundary>
-              <CaseProvider>
+              {/* VesselProvider must wrap CaseProvider - CaseProvider uses useVessel() hook */}
+              <VesselProvider>
                 <ErrorBoundary>
-                  <VesselProvider>
+                  <CaseProvider>
                     <ErrorBoundary>
                       <SidebarProvider>
                         <Sidebar />
@@ -44,9 +45,9 @@ export default function RootLayout({
                         </MainContentWrapper>
                       </SidebarProvider>
                     </ErrorBoundary>
-                  </VesselProvider>
+                  </CaseProvider>
                 </ErrorBoundary>
-              </CaseProvider>
+              </VesselProvider>
             </ErrorBoundary>
           </AuthProvider>
         </ErrorBoundary>
