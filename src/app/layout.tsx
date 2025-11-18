@@ -7,6 +7,7 @@ import { SidebarProvider } from "./components/SidebarLayout";
 import Sidebar from "./components/Sidebar";
 import MainContentWrapper from "./components/MainContentWrapper";
 import VesselLoadingOverlay from "./components/VesselLoadingOverlay";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 export const metadata: Metadata = {
   title: "ReliefGuard - Pressure Relief & Rupture Disc Sizing",
@@ -28,19 +29,27 @@ export default function RootLayout({
       <body
         className="font-inter antialiased"
       >
-        <AuthProvider>
-          <CaseProvider>
-          <VesselProvider>
-              <SidebarProvider>
-                <Sidebar />
-                <VesselLoadingOverlay />
-                <MainContentWrapper>
-                  {children}
-                </MainContentWrapper>
-              </SidebarProvider>
-            </VesselProvider>
-            </CaseProvider>
-        </AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <ErrorBoundary>
+              <CaseProvider>
+                <ErrorBoundary>
+                  <VesselProvider>
+                    <ErrorBoundary>
+                      <SidebarProvider>
+                        <Sidebar />
+                        <VesselLoadingOverlay />
+                        <MainContentWrapper>
+                          {children}
+                        </MainContentWrapper>
+                      </SidebarProvider>
+                    </ErrorBoundary>
+                  </VesselProvider>
+                </ErrorBoundary>
+              </CaseProvider>
+            </ErrorBoundary>
+          </AuthProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

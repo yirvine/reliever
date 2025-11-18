@@ -197,7 +197,6 @@ export function CaseProvider({ children }: { children: ReactNode }) {
       }
       
       // Persist to localStorage immediately (single writer for selected-cases)
-      console.log('[DBG] toggleCase: persisting to localStorage - caseId =', caseId, 'newState =', updated[caseId])
       localStorage.setItem('reliever-selected-cases', JSON.stringify(updated))
       
       return updated
@@ -221,7 +220,6 @@ export function CaseProvider({ children }: { children: ReactNode }) {
       }
       
       // Persist to localStorage immediately (single writer for case-results)
-      console.log('[DBG] updateCaseResult: persisting to localStorage - caseId =', caseId, 'result =', result)
       localStorage.setItem('reliever-case-results', JSON.stringify(updated))
       
       return updated
@@ -239,23 +237,17 @@ export function CaseProvider({ children }: { children: ReactNode }) {
    * - All calculated flows are null
    */
   const getDesignBasisFlow = () => {
-    console.log('[DBG] getDesignBasisFlow: selectedCases =', selectedCases)
-    console.log('[DBG] getDesignBasisFlow: caseResults =', caseResults)
-    
     const calculatedCases = Object.values(caseResults).filter(
       result => result.isCalculated && result.asmeVIIIDesignFlow !== null && selectedCases[result.caseId]
     )
     
     if (calculatedCases.length === 0) {
-      console.log('[DBG] getDesignBasisFlow: NO calculated cases found')
       return null
     }
     
     const maxCase = calculatedCases.reduce((max, current) => 
       (current.asmeVIIIDesignFlow! > max.asmeVIIIDesignFlow!) ? current : max
     )
-    
-    console.log('[DBG] getDesignBasisFlow: returning flow =', maxCase.asmeVIIIDesignFlow, 'from case =', maxCase.caseId)
     
     return {
       flow: maxCase.asmeVIIIDesignFlow!,
@@ -284,8 +276,8 @@ export function CaseProvider({ children }: { children: ReactNode }) {
    * Kept for backwards compatibility but does nothing.
    */
   const refreshFromStorage = useCallback(() => {
-    console.log('[DBG] refreshFromStorage: DISABLED (no-op) - case data managed by applyCaseData')
-    // DO NOTHING - VesselBar is the single writer via applyCaseData
+    // DEPRECATED: No-op function kept for backwards compatibility
+    // VesselBar is the single writer via applyCaseData
   }, [])
 
   /**
@@ -300,24 +292,16 @@ export function CaseProvider({ children }: { children: ReactNode }) {
     selected: Record<CaseId, boolean>,
     results: Record<CaseId, CaseResult>
   ) => {
-    console.log('[DBG] applyCaseData: incoming selected =', selected)
-    console.log('[DBG] applyCaseData: incoming results =', results)
-    
     // CRITICAL: REPLACE entire state (don't merge with current)
     // This is called when loading a vessel, so incoming data IS the truth
     const mergedSelected = { ...defaultCases, ...selected }
     const mergedResults = { ...defaultCaseResults, ...results }
-    
-    console.log('[DBG] applyCaseData: writing selectedCases to localStorage =', mergedSelected)
-    console.log('[DBG] applyCaseData: writing caseResults to localStorage =', mergedResults)
     
     setSelectedCases(mergedSelected)
     setCaseResults(mergedResults)
     
     localStorage.setItem('reliever-selected-cases', JSON.stringify(mergedSelected))
     localStorage.setItem('reliever-case-results', JSON.stringify(mergedResults))
-    
-    console.log('[DBG] applyCaseData: state + localStorage updated atomically')
   }, [])
 
   return (

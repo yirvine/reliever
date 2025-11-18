@@ -140,9 +140,6 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
     
     const caseResultsData = localStorage.getItem('reliever-case-results')
     const caseResults = caseResultsData ? JSON.parse(caseResultsData) : {}
-    
-    console.log('[DBG] collectCaseDataFromLocalStorage: selectedCases =', selectedCases)
-    console.log('[DBG] collectCaseDataFromLocalStorage: caseResults =', caseResults)
 
     return caseTypes.map(caseType => {
       const flowData = localStorage.getItem(`${caseType}-flow-data`)
@@ -421,8 +418,6 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
     is_calculated?: boolean
     case_name?: string
   }>) => {
-    console.log('[DBG] loadCasesFromData: parsed cases =', cases)
-    
     // Rebuild selectedCases and caseResults from database
     const newSelectedCases: Record<string, boolean> = {
       'external-fire': false,
@@ -468,18 +463,12 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
       }
     })
     
-    console.log('[DBG] loadCasesFromData: built newSelectedCases =', newSelectedCases)
-    console.log('[DBG] loadCasesFromData: built newCaseResults =', newCaseResults)
-    console.log('[DBG] loadCasesFromData: calling applyCaseData...')
-    
     // Apply data to CaseContext (which will handle localStorage sync via its useEffects)
     // CaseContext is now the ONLY writer for reliever-selected-cases and reliever-case-results
     applyCaseData(
       newSelectedCases as Record<CaseId, boolean>,
       newCaseResults as Record<CaseId, CaseResult>
     )
-    
-    console.log('[DBG] loadCasesFromData: applyCaseData called')
   }
 
   const handleSelectVessel = async (vesselId: string) => {
@@ -535,7 +524,6 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
           setCurrentVesselId(vesselId)
           
       // Load cases from cache
-      console.log('🟦 CACHED cases being loaded:', cases)
       loadCasesFromData(cases)
       
       // Close modal immediately - cached data is now visible
@@ -596,8 +584,6 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
       if (casesResponse.ok) {
         const casesData = await casesResponse.json()
         const cases = casesData.cases || []
-
-        console.log('🟩 DB cases being loaded:', cases)
         
         // Cache case data for future instant loading
         localStorage.setItem(`reliever-vessel-cases-${vesselId}`, JSON.stringify(cases))
