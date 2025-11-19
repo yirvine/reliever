@@ -57,6 +57,7 @@ interface VesselContextType {
   // Vessel list management (authoritative source)
   userVessels: SavedVessel[]
   fetchUserVessels: () => Promise<void>
+  updateVesselInList: (vesselId: string, updates: Partial<Pick<SavedVessel, 'vessel_tag' | 'vessel_name'>>) => void
   // Trigger to refresh vessel lists
   vesselsUpdatedTrigger: number
   triggerVesselsUpdate: () => void
@@ -184,6 +185,21 @@ export function VesselProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error('Failed to fetch vessels:', err)
     }
+  }, [])
+
+  /**
+   * Optimistically update a single vessel in the list without re-fetching
+   * Useful for updating vessel tag/name after auto-save
+   */
+  const updateVesselInList = useCallback((vesselId: string, updates: Partial<Pick<SavedVessel, 'vessel_tag' | 'vessel_name'>>) => {
+    setUserVessels(prev => {
+      const updated = prev.map(v => 
+        v.id === vesselId ? { ...v, ...updates } : v
+      )
+      // Update localStorage cache
+      localStorage.setItem('reliever-vessels-cache', JSON.stringify(updated))
+      return updated
+    })
   }, [])
 
   // Fetch vessels when user logs in
@@ -345,6 +361,7 @@ export function VesselProvider({ children }: { children: ReactNode }) {
       // Vessel list management (authoritative source)
       userVessels,
       fetchUserVessels,
+      updateVesselInList,
       vesselsUpdatedTrigger,
       triggerVesselsUpdate,
       loadingVessel,

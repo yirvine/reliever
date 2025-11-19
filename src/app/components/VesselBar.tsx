@@ -27,7 +27,7 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { vesselData, updateVesselData, registerSaveCallback, currentVesselId, setCurrentVesselId, pendingVesselId, setPendingVesselId, triggerVesselsUpdate, loadingVessel, setLoadingVessel, setLoadingMessage, userVessels, fetchUserVessels, openNewVesselModal, newVesselModalRequested, clearNewVesselModalRequest } = useVessel()
+  const { vesselData, updateVesselData, registerSaveCallback, currentVesselId, setCurrentVesselId, pendingVesselId, setPendingVesselId, triggerVesselsUpdate, loadingVessel, setLoadingVessel, setLoadingMessage, userVessels, fetchUserVessels, updateVesselInList, openNewVesselModal, newVesselModalRequested, clearNewVesselModalRequest } = useVessel()
   const { applyCaseData } = useCase()
   const [showNewVesselModal, setShowNewVesselModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -510,7 +510,16 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
         const vesselDataSnapshot = { ...vesselData }
         const currentVesselIdSnapshot = currentVesselId
         try {
-          await handleSave(true, vesselDataSnapshot, currentVesselIdSnapshot)
+          const saveSuccess = await handleSave(true, vesselDataSnapshot, currentVesselIdSnapshot)
+          
+          // Optimistically update the vessel in the list (no re-fetch, no visual shuffle)
+          if (saveSuccess) {
+            updateVesselInList(currentVesselIdSnapshot, {
+              vessel_tag: vesselDataSnapshot.vesselTag,
+              vessel_name: vesselDataSnapshot.vesselName || null
+            })
+          }
+          
           // Clear cache to force fresh DB load next time
           localStorage.removeItem(`reliever-vessel-${currentVesselIdSnapshot}`)
           localStorage.removeItem(`reliever-vessel-cases-${currentVesselIdSnapshot}`)
@@ -801,12 +810,10 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
 
             {/* Show all saved vessels - the select's value prop will highlight the current one */}
             {userVessels.map(vessel => {
-              // Show vessel name for temp- or untitled-N tags
+              // Always show vessel name first, then tag if it's not untitled-N
               const isPlaceholderTag = vessel.vessel_tag?.startsWith('temp-') || /^untitled-\d+$/.test(vessel.vessel_tag || '')
-              const displayName = isPlaceholderTag 
-                ? (vessel.vessel_name || 'Untitled Vessel')
-                : vessel.vessel_tag
-              const suffix = (!isPlaceholderTag && vessel.vessel_name) ? ` - ${vessel.vessel_name}` : ''
+              const displayName = vessel.vessel_name || 'Untitled Vessel'
+              const suffix = (!isPlaceholderTag && vessel.vessel_tag) ? ` - ${vessel.vessel_tag}` : ''
               
               return (
                 <option key={vessel.id} value={vessel.id}>

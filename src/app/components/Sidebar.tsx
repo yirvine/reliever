@@ -92,15 +92,13 @@ export default function Sidebar() {
                         )}
                         <div className={`flex-1 text-left overflow-hidden transition-opacity duration-150 ${isExpanded ? 'visible' : 'invisible'}`}>
                           <div className="text-sm font-medium truncate">
-                            {/* Show vessel name if tag is temporary or untitled-N format */}
-                            {vessel.vessel_tag?.startsWith('temp-') || /^untitled-\d+$/.test(vessel.vessel_tag || '')
-                              ? (vessel.vessel_name || 'Untitled Vessel')
-                              : vessel.vessel_tag}
+                            {/* Always show vessel name as primary text */}
+                            {vessel.vessel_name || 'Untitled Vessel'}
                           </div>
-                          {/* Show name as subtitle only for real tags (not temp- or untitled-N) */}
-                          {vessel.vessel_name && !vessel.vessel_tag?.startsWith('temp-') && !/^untitled-\d+$/.test(vessel.vessel_tag || '') ? (
+                          {/* Show vessel tag as subtitle only if it's NOT untitled-N or temp- */}
+                          {vessel.vessel_tag && !vessel.vessel_tag.startsWith('temp-') && !/^untitled-\d+$/.test(vessel.vessel_tag) ? (
                             <div className="text-xs text-gray-500 truncate">
-                              {vessel.vessel_name}
+                              {vessel.vessel_tag}
                             </div>
                           ) : (
                             <div className="text-xs text-transparent">Placeholder</div>

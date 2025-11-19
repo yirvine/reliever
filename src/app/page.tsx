@@ -75,7 +75,7 @@ export default function Home() {
               {/* Get Started Button - White */}
               <Link 
                 href="/cases"
-                className="group inline-flex items-center justify-between bg-white text-black px-8 py-4 rounded-full font-figtree font-semibold text-lg hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="group inline-flex items-center justify-between bg-white text-black px-8 py-4 rounded-full font-figtree font-semibold text-lg hover:bg-gray-100 transition-all duration-300 shadow-[0_8px_16px_rgba(0,0,0,0.3)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.4)] transform hover:-translate-y-0.5 border-2 border-gray-200"
               >
                 <span>Get Started</span>
                 <div className="ml-4 w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center group-hover:bg-slate-800 transition-colors">
@@ -88,7 +88,7 @@ export default function Home() {
               {/* Learn More Button - Navy with white circle and arrow that rotates on click */}
               <button 
                 onClick={scrollToHowItWorks}
-                className="group inline-flex items-center justify-between bg-slate-800 text-white px-8 py-4 rounded-full font-figtree font-semibold text-lg hover:bg-slate-900 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 cursor-pointer"
+                className="group inline-flex items-center justify-between bg-slate-800 text-white px-8 py-4 rounded-full font-figtree font-semibold text-lg hover:bg-slate-900 transition-all duration-300 shadow-[0_8px_16px_rgba(0,0,0,0.3)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.4)] transform hover:-translate-y-0.5 cursor-pointer border-2 border-slate-700"
               >
                 <span>Learn More</span>
                 <div className="ml-4 w-10 h-10 rounded-full bg-white flex items-center justify-center transition-colors">
@@ -105,10 +105,10 @@ export default function Home() {
       {/* How It Works Section */}
       <section id="how-it-works" className="relative bg-gray-100 pt-12 pb-12">
         <div className="max-w-7xl mx-auto px-8 sm:px-12 lg:px-16">
-          <div className="grid lg:grid-cols-[3fr_1.5fr] gap-6 lg:gap-8 items-center mb-12">
+          <div className="grid lg:grid-cols-[4fr_1.2fr] gap-4 lg:gap-6 items-center mb-12">
             {/* Content */}
             <div className="order-1 lg:order-1">
-              <h2 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-black mb-6 font-figtree">
+              <h2 className="text-3Grxl sm:text-5xl lg:text-6xl font-bold text-black mb-6 font-figtree">
                 How it works...
               </h2>
 
@@ -148,7 +148,7 @@ export default function Home() {
             {/* Animated Valve */}
             <div className="order-2 lg:order-2">
               <div className="relative aspect-[3/4] flex items-center justify-center">
-                <svg width="100%" height="100%" viewBox="60 95 100 105" stroke="#475569" strokeWidth="2" fill="none" className="w-full h-full p-8">
+                <svg width="100%" height="100%" viewBox="60 95 100 105" stroke="#475569" strokeWidth="2" fill="none" className="w-full h-full p-4">
                   {/* Soft drop shadow filter with animated pulse */}
                   <defs>
                     <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
