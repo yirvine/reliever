@@ -16,7 +16,7 @@ import { useAuth } from './AuthContext'
  */
 export interface VesselData {
   vesselTag: string
-  vesselName?: string // Optional vessel name
+  vesselName: string // Vessel name (required)
   straightSideHeight: number
   vesselDiameter: number
   headType: string
