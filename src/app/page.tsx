@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Header from './components/Header'
+import { ContactForm } from './components/ContactForm'
 
 export default function Home() {
   const [isVisible, setIsVisible] = useState(false)
@@ -17,6 +18,19 @@ export default function Home() {
 
   const scrollToHowItWorks = () => {
     const element = document.getElementById('how-it-works')
+    if (element) {
+      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
+      const offsetPosition = elementPosition - 100 // Scroll to 100px above the section
+      
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      })
+    }
+  }
+
+  const scrollToContact = () => {
+    const element = document.getElementById('contact')
     if (element) {
       const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
       const offsetPosition = elementPosition - 100 // Scroll to 100px above the section
@@ -103,7 +117,7 @@ export default function Home() {
       </section>
 
       {/* How It Works Section */}
-      <section id="how-it-works" className="relative bg-gray-100 pt-12 pb-12">
+      <section id="how-it-works" className="relative pt-12 pb-12" style={{ background: 'linear-gradient(to bottom, rgb(243, 244, 246) 0%, rgb(243, 244, 246) 70%, rgb(51, 65, 85) 100%)' }}>
         <div className="max-w-7xl mx-auto px-8 sm:px-12 lg:px-16">
           <div className="grid lg:grid-cols-[4fr_1.2fr] gap-4 lg:gap-6 items-center mb-12">
             {/* Content */}
@@ -233,8 +247,9 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Get Started Button - Centered below everything */}
-          <div className="flex justify-center mt-12">
+          {/* Buttons - Centered below everything */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-4 mb-8">
+            {/* Get Started Button */}
             <Link 
               href="/cases"
               className="group inline-flex items-center justify-between bg-white text-black px-8 py-4 rounded-full font-figtree font-semibold text-lg hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 border-2 border-gray-200"
@@ -246,19 +261,48 @@ export default function Home() {
                 </svg>
               </div>
             </Link>
+
+            {/* Contact Us Button - Navy with white circle and arrow */}
+            <button 
+              onClick={scrollToContact}
+              className="group inline-flex items-center justify-between bg-slate-800 text-white px-8 py-4 rounded-full font-figtree font-semibold text-lg hover:bg-slate-900 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 cursor-pointer border-2 border-slate-700"
+            >
+              <span>Contact Us</span>
+              <div className="ml-4 w-10 h-10 rounded-full bg-white flex items-center justify-center transition-colors">
+                <svg className="w-5 h-5 text-black transition-transform duration-300 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </div>
+            </button>
           </div>
         </div>
       </section>
 
+      {/* Contact Section */}
+      <section id="contact" className="relative bg-slate-700 pt-20 pb-10">
+          <div className="max-w-7xl mx-auto px-8 sm:px-12 lg:px-16">
+          <div className="text-center mb-8">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4 font-figtree" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
+              Get in touch
+            </h2>
+              <p className="text-lg text-white/90 font-figtree max-w-3xl mx-auto">
+                Have questions or feedback? Send a message and we&apos;ll respond as soon as possible.
+              </p>
+            </div>
+            
+            <ContactForm />
+          </div>
+      </section>
+
       {/* Footer */}
-      <footer className="bg-gray-100 py-6">
+      <footer className="bg-slate-700 py-6">
         <div className="max-w-7xl mx-auto px-8 sm:px-12 lg:px-16 text-center">
-          <div className="flex justify-center gap-4 text-sm text-gray-600 font-figtree">
-            <Link href="/privacy" className="hover:text-blue-600 transition-colors">
+          <div className="flex justify-center gap-4 text-sm text-white/70 font-figtree">
+            <Link href="/privacy" className="hover:text-white transition-colors">
               Privacy Policy
             </Link>
             <span>•</span>
-            <Link href="/terms" className="hover:text-blue-600 transition-colors">
+            <Link href="/terms" className="hover:text-white transition-colors">
               Terms of Service
             </Link>
           </div>
