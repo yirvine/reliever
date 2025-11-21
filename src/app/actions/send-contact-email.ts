@@ -70,11 +70,11 @@ ${message}
     await transporter.sendMail(mailOptions)
 
     return { success: "Thank you for reaching out! We'll get back to you soon." }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error sending email:", error)
     
     // More user-friendly error messages
-    if (error.message?.includes("Missing credentials")) {
+    if (error instanceof Error && error.message?.includes("Missing credentials")) {
       return { error: "Email service not configured. Please try again later." }
     }
     
