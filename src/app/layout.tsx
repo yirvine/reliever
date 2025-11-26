@@ -8,6 +8,7 @@ import Sidebar from "./components/Sidebar";
 import MainContentWrapper from "./components/MainContentWrapper";
 import VesselLoadingOverlay from "./components/VesselLoadingOverlay";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { PostHogProvider } from "./provider";
 
 export const metadata: Metadata = {
   title: "ReliefGuard - Pressure Relief & Rupture Disc Sizing",
@@ -26,31 +27,31 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className="font-inter antialiased"
-      >
-        <ErrorBoundary>
-          <AuthProvider>
-            <ErrorBoundary>
-              {/* VesselProvider must wrap CaseProvider - CaseProvider uses useVessel() hook */}
-              <VesselProvider>
-                <ErrorBoundary>
-                  <CaseProvider>
-                    <ErrorBoundary>
-                      <SidebarProvider>
-                        <Sidebar />
-                        <VesselLoadingOverlay />
-                        <MainContentWrapper>
-                          {children}
-                        </MainContentWrapper>
-                      </SidebarProvider>
-                    </ErrorBoundary>
-                  </CaseProvider>
-                </ErrorBoundary>
-              </VesselProvider>
-            </ErrorBoundary>
-          </AuthProvider>
-        </ErrorBoundary>
+      <body className="font-inter antialiased">
+        <PostHogProvider>
+          <ErrorBoundary>
+            <AuthProvider>
+              <ErrorBoundary>
+                {/* VesselProvider must wrap CaseProvider - CaseProvider uses useVessel() hook */}
+                <VesselProvider>
+                  <ErrorBoundary>
+                    <CaseProvider>
+                      <ErrorBoundary>
+                        <SidebarProvider>
+                          <Sidebar />
+                          <VesselLoadingOverlay />
+                          <MainContentWrapper>
+                            {children}
+                          </MainContentWrapper>
+                        </SidebarProvider>
+                      </ErrorBoundary>
+                    </CaseProvider>
+                  </ErrorBoundary>
+                </VesselProvider>
+              </ErrorBoundary>
+            </AuthProvider>
+          </ErrorBoundary>
+        </PostHogProvider>
       </body>
     </html>
   );
