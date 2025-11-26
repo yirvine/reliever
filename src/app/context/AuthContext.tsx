@@ -20,6 +20,7 @@ import {
   signOut as firebaseSignOut,
 } from 'firebase/auth'
 import { auth } from '@/lib/firebase/config'
+import posthog from 'posthog-js'
 
 interface SupabaseUserData {
   id: string
@@ -123,6 +124,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               supabaseData: data.user,
             })
             setUser(enrichedUser)
+            
+            // Identify user in PostHog with relevant properties
+            posthog.identify(
+              data.user.id, // Use Supabase ID as distinct ID
+              {
+                email: firebaseUser.email,
+                name: firebaseUser.displayName || data.user.name,
+                firebase_uid: firebaseUser.uid,
+                email_verified: firebaseUser.emailVerified,
+                auth_provider: firebaseUser.providerData[0]?.providerId || 'email',
+              }
+            )
           } else {
             console.error('Failed to verify token with backend')
           }
@@ -149,6 +162,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('reliever-auth-cache')
     localStorage.removeItem('reliever-current-vessel-id')
     localStorage.removeItem('reliever-vessels-cache')
+    // Reset PostHog identification
+    posthog.reset()
   }
 
   return (
