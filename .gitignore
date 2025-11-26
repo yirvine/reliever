@@ -71,3 +71,5 @@ frontend/
 # TypeScript build info
 *.tsbuildinfo
 next-env.d.ts
+
+.unlighthouse/
