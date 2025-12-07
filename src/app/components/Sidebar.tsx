@@ -40,16 +40,11 @@ export default function Sidebar() {
 
   return (
     <div 
-      className={`fixed left-0 top-[5.5rem] h-[calc(100vh-5.5rem)] bg-gray-50 border-r border-gray-200 shadow-sm transition-all duration-300 ease-in-out z-10 sidebar-desktop-show ${
+      className={`fixed left-0 top-22 h-[calc(100vh-5.5rem)] bg-gray-50 border-r border-gray-200 shadow-sm transition-all duration-300 ease-in-out z-10 sidebar-desktop-show ${
         isExpanded ? 'w-60' : 'w-12'
       }`}
       onMouseEnter={() => setIsExpanded(true)}
-      onMouseLeave={() => {
-        // Keep expanded during vessel loading (user is actively using sidebar)
-        if (!loadingVessel) {
-          setIsExpanded(false)
-        }
-      }}
+      onMouseLeave={() => setIsExpanded(false)}
     >
       <div className="flex flex-col h-full overflow-y-auto overflow-x-hidden scrollbar-hide">
         {/* Navigation */}
@@ -57,7 +52,7 @@ export default function Sidebar() {
           {/* Vessels Section */}
           <div className="mb-4">
             <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
               <span className={`whitespace-nowrap transition-opacity duration-150 ${isExpanded ? 'visible' : 'invisible'}`}>Vessels</span>
@@ -80,16 +75,11 @@ export default function Sidebar() {
                         key={vessel.id}
                         onClick={() => handleSelectVessel(vessel.id)}
                         className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-all duration-150 ${
-                          isActive
+                          isActive && isExpanded
                             ? 'bg-blue-100 text-blue-900' 
                             : 'hover:bg-gray-100 text-gray-700 hover:text-gray-900'
                         }`}
                       >
-                        {isActive && (
-                          <svg className="w-3 h-3 text-blue-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
-                        )}
                         <div className={`flex-1 text-left overflow-hidden transition-opacity duration-150 ${isExpanded ? 'visible' : 'invisible'}`}>
                           <div className="text-sm font-medium truncate">
                             {/* Always show vessel name as primary text */}
@@ -118,7 +108,7 @@ export default function Sidebar() {
                   onClick={handleAddVessel}
                   className="w-full flex items-center gap-2 px-2 py-1.5 rounded transition-all duration-150 text-blue-600 hover:bg-blue-50"
                 >
-                  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
                   <span className={`text-sm font-medium whitespace-nowrap transition-opacity duration-150 ${isExpanded ? 'visible' : 'invisible'}`}>Add Vessel</span>
@@ -136,7 +126,7 @@ export default function Sidebar() {
           {/* Cases Section */}
           <div className="mb-4">
             <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
               <span className={`whitespace-nowrap transition-opacity duration-150 ${isExpanded ? 'visible' : 'invisible'}`}>Cases</span>
@@ -170,7 +160,7 @@ export default function Sidebar() {
             }`}
           >
                       {result.isCalculated && (
-                        <svg className="w-3 h-3 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-3 h-3 text-green-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
                       )}
@@ -204,7 +194,7 @@ export default function Sidebar() {
           {/* Reference Data Section */}
           <div className="mb-4">
             <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
               <span className={`whitespace-nowrap transition-opacity duration-150 ${isExpanded ? 'visible' : 'invisible'}`}>Reference Data</span>
@@ -219,7 +209,7 @@ export default function Sidebar() {
                     : 'hover:bg-gray-100 text-gray-700 hover:text-gray-900'
                 }`}
               >
-                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
                 </svg>
                 <span className={`text-sm whitespace-nowrap transition-opacity duration-150 ${isExpanded ? 'visible' : 'invisible'}`}>Fluids</span>
@@ -233,7 +223,7 @@ export default function Sidebar() {
                     : 'hover:bg-gray-100 text-gray-700 hover:text-gray-900'
                 }`}
               >
-                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
                 <span className={`text-sm whitespace-nowrap transition-opacity duration-150 ${isExpanded ? 'visible' : 'invisible'}`}>Gas Properties</span>
