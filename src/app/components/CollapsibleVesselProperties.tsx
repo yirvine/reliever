@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useVessel } from '../context/VesselContext'
 import VesselProperties from './VesselProperties'
 import EditWarningModal, { shouldShowEditWarning } from './EditWarningModal'
+import VesselBar from './VesselBar'
 
 const MAIN_PAGE_COLLAPSE_KEY = 'reliever-vessel-properties-main-collapsed'
 const CASE_PAGE_COLLAPSE_KEY = 'reliever-vessel-properties-case-collapsed'
@@ -11,9 +12,10 @@ const CASE_PAGE_COLLAPSE_KEY = 'reliever-vessel-properties-case-collapsed'
 interface CollapsibleVesselPropertiesProps {
   defaultExpanded?: boolean // For main page, default to expanded
   showEditButton?: boolean // Hide edit button on main page
+  onLoginRequired?: () => void // Callback to open login modal
 }
 
-export default function CollapsibleVesselProperties({ defaultExpanded = false, showEditButton = true }: CollapsibleVesselPropertiesProps) {
+export default function CollapsibleVesselProperties({ defaultExpanded = false, showEditButton = true, onLoginRequired }: CollapsibleVesselPropertiesProps) {
   // Use different localStorage keys for main page vs case pages
   const collapseKey = showEditButton ? CASE_PAGE_COLLAPSE_KEY : MAIN_PAGE_COLLAPSE_KEY
 
@@ -68,10 +70,13 @@ export default function CollapsibleVesselProperties({ defaultExpanded = false, s
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         {/* Header - Always visible */}
         <div 
-          className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-          onClick={handleToggleExpand}
+          className="flex items-center p-4 hover:bg-gray-50 transition-colors"
         >
-          <div className="flex items-center gap-2">
+          {/* Left side: Title and collapse arrow */}
+          <div 
+            className="flex items-center gap-2 cursor-pointer shrink-0"
+            onClick={handleToggleExpand}
+          >
             <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
             </svg>
@@ -85,33 +90,39 @@ export default function CollapsibleVesselProperties({ defaultExpanded = false, s
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </div>
-          <div className="flex items-center gap-3">
-            {!isEditing ? (
-              <>
-                {showEditButton && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleEditClick()
-                    }}
-                    className="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
-                  >
-                    Edit
-                  </button>
-                )}
-              </>
-            ) : (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleSave()
-                }}
-                className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
-              >
-                Done
-              </button>
-            )}
-          </div>
+
+          {/* Middle + Right: VesselBar inline on main page */}
+          {!showEditButton && onLoginRequired ? (
+            <VesselBar onLoginRequired={onLoginRequired} inline />
+          ) : (
+            <div className="flex items-center gap-3 shrink-0 ml-auto">
+              {!isEditing ? (
+                <>
+                  {showEditButton && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleEditClick()
+                      }}
+                      className="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
+                    >
+                      Edit
+                    </button>
+                  )}
+                </>
+              ) : (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleSave()
+                  }}
+                  className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+                >
+                  Done
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Expandable Content */}
@@ -142,4 +153,3 @@ export default function CollapsibleVesselProperties({ defaultExpanded = false, s
     </>
   )
 }
-

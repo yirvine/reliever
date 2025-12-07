@@ -32,7 +32,6 @@ export default function RootLayout({
           <ErrorBoundary>
             <AuthProvider>
               <ErrorBoundary>
-                {/* VesselProvider must wrap CaseProvider - CaseProvider uses useVessel() hook */}
                 <VesselProvider>
                   <ErrorBoundary>
                     <CaseProvider>

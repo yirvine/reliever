@@ -31,9 +31,10 @@ import { useVesselDeleter } from './useVesselDeleter'
 
 interface VesselBarProps {
   onLoginRequired: () => void // Callback to open AuthModal
+  inline?: boolean // Render inline (no card wrapper) for embedding in headers
 }
 
-export default function VesselBar({ onLoginRequired }: VesselBarProps) {
+export default function VesselBar({ onLoginRequired, inline = false }: VesselBarProps) {
   const { user, loading: authLoading } = useAuth()
   const { 
     vesselData, 
@@ -147,34 +148,43 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
     }
   }, [newVesselModalRequested, clearNewVesselModalRequest, onLoginRequired, setShowNewVesselModal])
 
-  return (
+  const handleNewVesselClick = () => {
+    if (!user) {
+      onLoginRequired()
+    } else {
+      openNewVesselModal()
+    }
+  }
+
+  // Shared content (dropdown + buttons)
+  const content = (
     <>
-      <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-3 sticky top-0 z-10 shadow-sm">
-        {/* Vessel Dropdown */}
-        <div className="flex items-center gap-2 flex-1">
-          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-          </svg>
+      {/* Vessel Dropdown - Only show if logged in */}
+      {user && (
+        <div className={inline ? "flex-1 max-w-md ml-4" : "flex items-center gap-2 flex-1"}>
+          {!inline && (
+            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+          )}
           <select 
-            className="flex-1 max-w-md text-sm font-medium text-gray-900 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className={inline 
+              ? "w-full text-sm font-medium text-gray-900 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              : "flex-1 max-w-md text-sm font-medium text-gray-900 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            }
             value={currentVesselId || 'current'}
-            disabled={(!user && !authLoading) || (userVessels.length === 0 && !currentVesselId)}
+            disabled={userVessels.length === 0 && !currentVesselId}
             onChange={(e) => handleSelectVessel(e.target.value)}
           >
-            {/* Show unsaved vessel only if no currentVesselId */}
             {!currentVesselId && (
               <option value="current">
-                {vesselData.vesselTag || vesselData.vesselName || 'Loading...'}
+                {vesselData.vesselTag || vesselData.vesselName || 'Current Vessel'}
               </option>
             )}
-
-            {/* Show all saved vessels - the select's value prop will highlight the current one */}
             {userVessels.map(vessel => {
-              // Always show vessel name first, then tag if it's not untitled-N
               const isPlaceholderTag = vessel.vessel_tag?.startsWith('temp-') || /^untitled-\d+$/.test(vessel.vessel_tag || '')
               const displayName = vessel.vessel_name || 'Untitled Vessel'
               const suffix = (!isPlaceholderTag && vessel.vessel_tag) ? ` - ${vessel.vessel_tag}` : ''
-              
               return (
                 <option key={vessel.id} value={vessel.id}>
                   {displayName}{suffix}
@@ -183,64 +193,71 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
             })}
           </select>
         </div>
+      )}
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2">
-          {/* New Vessel Button */}
-          <button
-            onClick={openNewVesselModal}
-            disabled={!user && !authLoading}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            title={user ? 'Create a new vessel' : 'Sign in to create vessels'}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            New Vessel
-          </button>
+      {/* Action Buttons */}
+      <div className={inline ? "flex items-center gap-3 shrink-0 ml-auto" : "flex items-center gap-2"}>
+        <button
+          onClick={handleNewVesselClick}
+          className={inline 
+            ? "flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+            : "flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+          }
+          title={user ? 'Create a new vessel' : 'Sign in to create vessels'}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          New Vessel
+        </button>
 
-          {/* Save and Delete Buttons */}
-          {(user || authLoading) && (
-            <>
+        {user && (
+          <>
+            <button
+              onClick={() => handleSave()}
+              disabled={saving}
+              className={inline
+                ? "flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-md transition-colors"
+                : "flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-lg transition-colors"
+              }
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+              </svg>
+              {saving ? 'Saving...' : 'Save'}
+            </button>
+
+            {currentVesselId && (
               <button
-                onClick={() => handleSave()}
-                disabled={saving || authLoading}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-lg transition-colors"
+                onClick={handleDeleteClick}
+                className={inline
+                  ? "flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+                  : "flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                }
+                title="Delete this vessel"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
-                {saving ? 'Saving...' : 'Save'}
+                Delete
               </button>
-
-              {/* Delete Button - Only show if there's a saved vessel loaded */}
-              {currentVesselId && (
-                <button
-                  onClick={handleDeleteClick}
-                  disabled={authLoading}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  title="Delete this vessel"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  Delete
-                </button>
-              )}
-            </>
-          )}
-
-          {/* Login prompt if not logged in */}
-          {!user && !authLoading && (
-            <button
-              onClick={onLoginRequired}
-              className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            >
-              Sign in to save
-            </button>
-          )}
-        </div>
+            )}
+          </>
+        )}
       </div>
+    </>
+  )
+
+  // Return content with or without card wrapper
+  return (
+    <>
+      {inline ? (
+        content
+      ) : (
+        <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-3 sticky top-0 z-10 shadow-sm">
+          {content}
+        </div>
+      )}
 
       {/* New Vessel Modal */}
       {showNewVesselModal && (
@@ -303,7 +320,7 @@ export default function VesselBar({ onLoginRequired }: VesselBarProps) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+              <div className="shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
                 <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>

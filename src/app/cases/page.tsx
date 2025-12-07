@@ -6,7 +6,6 @@ import PageTransition from '../components/PageTransition'
 import CollapsibleVesselProperties from '../components/CollapsibleVesselProperties'
 import ASMEWarningModal from '../components/ASMEWarningModal'
 import CaseCard from '../components/CaseCard'
-import VesselBar from '../components/VesselBar'
 import AuthModal from '../components/AuthModal'
 import { useCase } from '../context/CaseContext'
 import { useVessel } from '../context/VesselContext'
@@ -212,11 +211,11 @@ export default function Calculator() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
+      <div className="min-h-screen bg-linear-to-br from-slate-50 to-gray-100">
         <Header />
         {/* Sticky Design Basis Flow Banner */}
         <div 
-          className={`fixed sm:sticky top-[3.5rem] sm:top-[5.5rem] z-40 bg-gradient-to-r from-slate-600 to-slate-700 border-b-2 border-slate-800 shadow-lg overflow-hidden transition-all duration-500 ease-in-out w-full ${
+          className={`fixed sm:sticky top-14 sm:top-22 z-40 bg-linear-to-r from-slate-600 to-slate-700 border-b-2 border-slate-800 shadow-lg overflow-hidden transition-all duration-500 ease-in-out w-full ${
             designBasisFlow 
               ? 'sm:max-h-20 max-h-32 opacity-100' 
               : 'max-h-0 opacity-0 border-b-0 pointer-events-none'
@@ -226,8 +225,8 @@ export default function Calculator() {
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-3 transition-opacity duration-500">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-              <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                <svg className="w-5 h-5 text-slate-100 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                <svg className="w-5 h-5 text-slate-100 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
                 <span className="text-xs sm:text-sm font-semibold text-slate-100 font-inter uppercase tracking-wide">Current Design Basis Flow:</span>
@@ -264,21 +263,6 @@ export default function Calculator() {
         {/* Main content: show either skeleton or real content to avoid jumbled transitions */}
         {!isReady ? (
           <>
-            {/* Skeleton Vessel Bar */}
-            <div className="mb-6">
-              <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-3 sticky top-0 z-10 shadow-sm">
-                <div className="flex items-center gap-2 flex-1">
-                  <div className="w-5 h-5 rounded bg-gray-200" />
-                  <div className="h-9 bg-gray-200 rounded-lg flex-1 max-w-md" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-24 h-9 bg-gray-200 rounded-lg" />
-                  <div className="w-20 h-9 bg-gray-200 rounded-lg" />
-                  <div className="w-20 h-9 bg-gray-200 rounded-lg" />
-                </div>
-              </div>
-            </div>
-
             {/* Skeleton Vessel Properties */}
             <div className="mb-6">
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -312,16 +296,12 @@ export default function Calculator() {
           </>
         ) : (
           <>
-        {/* Vessel Bar */}
-        <div className="mb-6">
-          <VesselBar onLoginRequired={() => setShowAuthModal(true)} />
-        </div>
-
         {/* Global Vessel Properties Section */}
         <div className="mb-6">
           <CollapsibleVesselProperties 
             defaultExpanded={true}
             showEditButton={false}
+            onLoginRequired={() => setShowAuthModal(true)}
           />
         </div>
 
@@ -466,7 +446,7 @@ export default function Calculator() {
                     ? 'bg-gray-400 cursor-wait opacity-60'
                     : !hasCalculatedResults() || !vesselPropertiesValid
                     ? 'bg-gray-400 cursor-not-allowed opacity-60'
-                    : 'bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 hover:shadow-xl transform hover:-translate-y-0.5 text-white cursor-pointer'
+                    : 'bg-linear-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 hover:shadow-xl transform hover:-translate-y-0.5 text-white cursor-pointer'
                   }
                 `}
               >
