@@ -308,17 +308,17 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         </button>
 
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-6 text-center">
           <h2 className="text-2xl font-bold text-gray-900">
-            {verificationSent ? 'Check your email' : mode === 'signin' ? 'Welcome back' : 'Create account'}
+            {verificationSent ? 'Check your email' : mode === 'signin' ? 'Sign in to save, add new vessels, generate reports, and more' : 'Create account'}
           </h2>
-          <p className="mt-1 text-sm text-gray-600">
-            {verificationSent 
-              ? `We sent a verification link to ${verificationEmail}`
-              : mode === 'signin' 
-                ? 'Sign in to access your vessels and cases' 
+          {(verificationSent || mode === 'signup') && (
+            <p className="mt-1 text-sm text-gray-600">
+              {verificationSent 
+                ? `We sent a verification link to ${verificationEmail}`
                 : 'Sign up to save vessels and generate reports'}
-          </p>
+            </p>
+          )}
         </div>
 
         {/* Verification Screen */}

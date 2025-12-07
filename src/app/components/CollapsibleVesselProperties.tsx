@@ -96,32 +96,32 @@ export default function CollapsibleVesselProperties({ defaultExpanded = false, s
             <VesselBar onLoginRequired={onLoginRequired} inline />
           ) : (
             <div className="flex items-center gap-3 shrink-0 ml-auto">
-              {!isEditing ? (
-                <>
-                  {showEditButton && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleEditClick()
-                      }}
-                      className="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
-                    >
-                      Edit
-                    </button>
-                  )}
-                </>
-              ) : (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleSave()
-                  }}
-                  className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
-                >
-                  Done
-                </button>
-              )}
-            </div>
+            {!isEditing ? (
+              <>
+                {showEditButton && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleEditClick()
+                    }}
+                    className="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
+                  >
+                    Edit
+                  </button>
+                )}
+              </>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleSave()
+                }}
+                className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+              >
+                Done
+              </button>
+            )}
+          </div>
           )}
         </div>
 
