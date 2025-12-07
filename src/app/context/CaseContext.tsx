@@ -402,6 +402,7 @@ export function CaseProvider({ children }: { children: ReactNode }) {
         console.warn('External Fire auto-recalc failed:', error)
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     isHydrated,
     selectedCases,

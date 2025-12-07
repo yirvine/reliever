@@ -35,7 +35,7 @@ interface VesselBarProps {
 }
 
 export default function VesselBar({ onLoginRequired, inline = false }: VesselBarProps) {
-  const { user, loading: authLoading } = useAuth()
+  const { user } = useAuth()
   const { 
     vesselData, 
     updateVesselData, 
