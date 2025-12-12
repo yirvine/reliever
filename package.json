@@ -20,8 +20,8 @@
     "next": "15.5.7",
     "nodemailer": "^7.0.10",
     "posthog-js": "^1.298.0",
-    "react": "19.1.2",
-    "react-dom": "19.1.2"
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
