@@ -8,6 +8,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth } from '@/lib/firebase/admin'
 import { getSupabaseAdmin } from '@/lib/supabase/database'
 
+// Force this route to be dynamic (prevents build-time execution)
+export const dynamic = 'force-dynamic'
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -32,3 +32,5 @@ echo "Done! Run the vulnerability scanner again to verify:"
 echo "/Users/yeneirvine/projects/reliever/check-react-vulnerability.sh"
 echo "=================================================="
 
+
+
